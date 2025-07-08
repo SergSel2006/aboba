@@ -1,7 +1,6 @@
 import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
-  doc, setDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -13,6 +12,9 @@ const messagesDiv = document.getElementById('messages');
 const chatInputForm = document.getElementById('chatInput');
 const messageInput = document.getElementById('messageInput');
 const loginMsg = document.getElementById('loginMsg');
+const sendServerMsgBtn = document.getElementById('sendServerMsgBtn');
+const serverMsgInput = document.getElementById('serverMsgInput');
+const serverMsgPanel = document.getElementById('serverMsgPanel');
 
 let userNick = null;
 let userAvatar = null;
@@ -30,11 +32,12 @@ setTimeout(() => {
 
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
-  const nick = document.getElementById('nick')?.value.trim();
-  const pass = document.getElementById('password')?.value.trim();
-  const file = document.getElementById('avatarFile')?.files[0];
+  const email = document.getElementById('email').value.trim();
+  const nick = document.getElementById('nick').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const file = document.getElementById('avatarFile').files[0];
 
-  if (!nick || !pass) {
+  if (!email || !nick || !pass) {
     loginMsg.textContent = 'Заполните все поля!';
     return;
   }
@@ -52,6 +55,11 @@ loginForm.onsubmit = async (e) => {
 
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
+
+    // Если ник "Лев", покажем админ-панель (пример)
+    if (userNick === 'Лев') {
+      serverMsgPanel.style.display = 'block';
+    }
 
     startChat();
   } catch (error) {
@@ -77,6 +85,21 @@ chatInputForm.onsubmit = async (e) => {
   }
 };
 
+sendServerMsgBtn.onclick = async () => {
+  const text = serverMsgInput.value.trim();
+  if (!text) return;
+  try {
+    await addDoc(collection(db, "messages"), {
+      text,
+      isServerMessage: true,
+      created: serverTimestamp()
+    });
+    serverMsgInput.value = '';
+  } catch (error) {
+    console.error('Ошибка отправки серверного сообщения:', error);
+  }
+};
+
 function startChat() {
   const q = query(collection(db, "messages"), orderBy("created", "asc"));
   onSnapshot(q, (snapshot) => {
@@ -89,7 +112,7 @@ function startChat() {
         div.classList.add('server');
         div.textContent = d.text;
       } else {
-        div.style.backgroundColor = '#2a2a2a'; // нейтральный фон без цвета юзера
+        div.style.backgroundColor = '#2a2a2a';
         const ava = document.createElement('div');
         ava.className = 'avatar';
         ava.style.backgroundImage = `url(${d.avatar})`;
