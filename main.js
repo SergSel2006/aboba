@@ -1,8 +1,7 @@
-// app.js
 import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
-  doc, setDoc, getDoc, getDocs
+  doc, setDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -37,76 +36,66 @@ async function isColorUsed(color) {
 
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
-  const nick = document.getElementById('nick').value.trim();
-  const pass = document.getElementById('password').value.trim();
-  const captcha = document.getElementById('captcha').value.trim().toLowerCase();
-  const color = document.getElementById('colorPicker').value;
-  const file = document.getElementById('avatarFile').files[0];
+  const nick = document.getElementById('nick')?.value.trim();
+  const pass = document.getElementById('password')?.value.trim();
+  const captcha = document.getElementById('captcha')?.value.trim().toLowerCase();
+  const color = document.getElementById('colorPicker')?.value;
+  const file = document.getElementById('avatarFile')?.files[0];
 
-  if (captcha !== 'абоба') return loginMsg.textContent = 'Неверное проверочное слово';
-  if (await isColorUsed(color)) return loginMsg.textContent = 'Цвет уже занят';
-
-  userNick = nick;
-  userColor = color;
-
-  if (file) {
-    const avatarRef = ref(storage, 'avatars/' + nick);
-    await uploadBytes(avatarRef, file);
-    userAvatar = await getDownloadURL(avatarRef);
-  } else {
-    userAvatar = 'https://i.imgur.com/4AiXzf8.png';
+  if (!nick || !pass || !captcha || !color) {
+    loginMsg.textContent = 'Заполните все поля!';
+    return;
+  }
+  if (captcha !== 'абоба') {
+    loginMsg.textContent = 'Неверное проверочное слово';
+    return;
+  }
+  if (await isColorUsed(color)) {
+    loginMsg.textContent = 'Цвет уже занят';
+    return;
   }
 
-  await addDoc(collection(db, "usedColors"), { color });
+  try {
+    userNick = nick;
+    userColor = color;
 
-  loginForm.style.display = 'none';
-  chatDiv.style.display = 'flex';
-  if (userNick === "Лев") document.getElementById('serverMsgPanel').style.display = 'block';
-  document.getElementById('bgUploadPanel').style.display = 'block';
+    if (file) {
+      const avatarRef = ref(storage, 'avatars/' + nick);
+      await uploadBytes(avatarRef, file);
+      userAvatar = await getDownloadURL(avatarRef);
+    } else {
+      userAvatar = 'https://i.imgur.com/4AiXzf8.png';
+    }
 
-  startChat();
+    await addDoc(collection(db, "usedColors"), { color });
+
+    loginForm.style.display = 'none';
+    chatDiv.style.display = 'flex';
+
+    startChat();
+  } catch (error) {
+    loginMsg.textContent = 'Ошибка при входе: ' + error.message;
+  }
 };
 
 chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
   if (!text) return;
-  await addDoc(collection(db, "messages"), {
-    nick: userNick,
-    text,
-    avatar: userAvatar,
-    color: userColor,
-    created: serverTimestamp(),
-    isServerMessage: false
-  });
-  messageInput.value = '';
-};
-
-document.getElementById('sendServerMsgBtn').onclick = async () => {
-  const text = document.getElementById('serverMsgInput').value.trim();
-  if (!text) return;
-  await addDoc(collection(db, "messages"), {
-    text,
-    isServerMessage: true,
-    created: serverTimestamp()
-  });
-  document.getElementById('serverMsgInput').value = '';
-};
-
-document.getElementById('uploadBgBtn').onclick = async () => {
-  const file = document.getElementById('bgFile').files[0];
-  if (!file) return;
-  const bgRef = ref(storage, 'backgrounds/mainBg');
-  await uploadBytes(bgRef, file);
-  const url = await getDownloadURL(bgRef);
-  await setDoc(doc(db, "settings", "background"), { url });
-};
-
-onSnapshot(doc(db, "settings", "background"), (snap) => {
-  if (snap.exists()) {
-    document.getElementById('chat').style.backgroundImage = `url(${snap.data().url})`;
+  try {
+    await addDoc(collection(db, "messages"), {
+      nick: userNick,
+      text,
+      avatar: userAvatar,
+      color: userColor,
+      created: serverTimestamp(),
+      isServerMessage: false
+    });
+    messageInput.value = '';
+  } catch (error) {
+    console.error('Ошибка отправки сообщения:', error);
   }
-});
+};
 
 function startChat() {
   const q = query(collection(db, "messages"), orderBy("created", "asc"));
