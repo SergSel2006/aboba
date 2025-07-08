@@ -8,16 +8,13 @@
 </head>
 <body>
   <div id="splash">Абоба<span id="dots">...</span></div>
+
   <div id="app">
-    <form id="loginForm">
-      <h2>Вход / Регистрация</h2>
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Пароль" required />
-      <input type="text" id="nick" placeholder="Ник (отображаемый)" required />
-      <input type="file" id="avatarFile" accept="image/*" />
-      <button type="submit">Войти / Зарегистрироваться</button>
+    <div id="loginForm">
+      <h2>Войти через Google</h2>
+      <button id="googleLoginBtn">🔐 Войти с Google</button>
       <p id="loginMsg" style="color:#f55;"></p>
-    </form>
+    </div>
 
     <div id="chat" style="display:none;">
       <div id="messages"></div>
@@ -27,8 +24,8 @@
       </form>
 
       <div id="serverMsgPanel" style="display:none; margin: 10px auto; max-width: 400px;">
-        <input type="text" id="serverMsgInput" placeholder="Серверное сообщение" style="width: 70%; padding: 8px; border-radius: 5px; border: none; margin-right: 10px;" />
-        <button id="sendServerMsgBtn" style="padding: 8px 15px; border-radius: 5px; border: none; background: #6200ee; color: white; cursor: pointer;">Отправить (админ)</button>
+        <input type="text" id="serverMsgInput" placeholder="Серверное сообщение" />
+        <button id="sendServerMsgBtn">Отправить (админ)</button>
       </div>
     </div>
   </div>
