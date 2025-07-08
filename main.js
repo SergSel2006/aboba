@@ -120,7 +120,11 @@ function startChat() {
       }
 
       messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
+
+    // Вынес скролл в setTimeout чтобы DOM обновился
+    setTimeout(() => {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, 0);
   });
 }
