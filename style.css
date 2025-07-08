@@ -157,3 +157,17 @@ html, body, #app {
 #chatInput button:hover {
   background: #3700b3;
 }
+
+.date-divider {
+  font-style: italic;
+  font-weight: 600;
+  text-align: center;
+  margin: 15px 0;
+  color: #888;
+}
+
+.msg-time {
+  user-select: none;
+  padding-left: 10px;
+  white-space: nowrap;
+}
