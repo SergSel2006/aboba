@@ -39,7 +39,7 @@ const dotInterval = setInterval(() => {
   splashMain.innerText = `Абоба${'.'.repeat(dotCount)}`;
   // Обновляем нижний мелкий текст случайным из массива
   splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
-}, 1000);
+}, 1700);
 
 setTimeout(() => {
   clearInterval(dotInterval); // останавливаем интервал
