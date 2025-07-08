@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Абоба-сервер</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="splash">Абоба<span id="dots">...</span></div>
+  <div id="app">
+    <form id="loginForm">
+      <h2>Вход / Регистрация</h2>
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Пароль" required />
+      <input type="text" id="nick" placeholder="Ник (отображаемый)" required />
+      <input type="file" id="avatarFile" accept="image/*" />
+      <button type="submit">Войти / Зарегистрироваться</button>
+      <p id="loginMsg" style="color:#f55;"></p>
+    </form>
+    <div id="chat" style="display:none;">
+      <div id="messages"></div>
+      <form id="chatInput">
+        <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" required />
+        <button type="submit">Отправить</button>
+      </form>
+    </div>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
