@@ -1,4 +1,3 @@
-НУ ТЫ ТО ПРОВЕЬ И НАПИШИ Я ЖЕ ТЕБЯ ПРОСИЛ
 import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
