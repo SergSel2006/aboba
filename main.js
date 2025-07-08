@@ -17,7 +17,7 @@ const splashDuration = 3000 + Math.random() * 3000;
 
 const dotInterval = setInterval(() => {
   dotCount = (dotCount + 1) % 4;
-  splashMain.innerText = `Абоба${'.'.repeat(dotCount)}`;
+  splashMain.innerText = `абоба${'.'.repeat(dotCount)}`;
   splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
 }, 1700);
 
