@@ -1,23 +1,37 @@
 * { box-sizing: border-box; }
-html, body {
-  margin: 0; padding: 0; height: 100%;
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #121212; color: #eee;
-  display: flex; flex-direction: column;
+  background: #121212;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
 }
+
 #splash {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   background: #222;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  font-size: 2rem; font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
   z-index: 9999;
 }
+
 #app {
   flex-grow: 1;
   display: none;
   flex-direction: column;
+  height: 100vh;
   overflow: hidden;
 }
+
 #loginForm {
   max-width: 400px;
   margin: auto;
@@ -26,6 +40,7 @@ html, body {
   border-radius: 10px;
   box-shadow: 0 0 10px #000;
 }
+
 #loginForm input {
   width: 100%;
   padding: 10px;
@@ -35,6 +50,7 @@ html, body {
   color: #eee;
   border-radius: 5px;
 }
+
 #loginForm button {
   width: 100%;
   padding: 10px;
@@ -45,14 +61,20 @@ html, body {
   border-radius: 5px;
   cursor: pointer;
 }
+
 #loginForm button:hover {
   background: #3700b3;
 }
+
+/* Чат */
+
 #chat {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  background-color: #181818; /* Просто темно-серый фон */
+  background-color: #181818;
+  height: 100%;
+  overflow: hidden;
 }
 
 #messages {
@@ -61,11 +83,12 @@ html, body {
   padding: 10px;
   display: flex;
   flex-direction: column;
+  gap: 8px; /* отступы между сообщениями */
 }
+
 .msg {
   max-width: 60%;
   background: #2a2a2a;
-  margin-bottom: 8px;
   padding: 10px;
   border-radius: 15px;
   color: #eee;
@@ -74,6 +97,7 @@ html, body {
   display: flex;
   align-items: center;
 }
+
 .msg.server {
   background: #555;
   margin: 10px auto;
@@ -81,8 +105,10 @@ html, body {
   border-radius: 20px;
   font-style: italic;
 }
+
 .msg .avatar {
-  width: 36px; height: 36px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
@@ -90,16 +116,22 @@ html, body {
   flex-shrink: 0;
   border: 2px solid #fff8;
 }
+
 .msg .username {
   font-weight: 700;
   margin-right: 8px;
   user-select: none;
 }
+
+/* Форма ввода — всегда снизу */
+
 #chatInput {
   display: flex;
   padding: 10px;
   background: #222;
+  flex-shrink: 0;
 }
+
 #chatInput input {
   flex-grow: 1;
   padding: 10px;
@@ -109,6 +141,7 @@ html, body {
   color: #eee;
   font-size: 1rem;
 }
+
 #chatInput button {
   background: #6200ee;
   border: none;
@@ -119,6 +152,7 @@ html, body {
   border-radius: 10px;
   cursor: pointer;
 }
+
 #chatInput button:hover {
   background: #3700b3;
 }
