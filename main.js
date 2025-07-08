@@ -15,7 +15,6 @@ const messageInput = document.getElementById('messageInput');
 const loginMsg = document.getElementById('loginMsg');
 
 let userNick = null;
-let userColor = null;
 let userAvatar = null;
 
 const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра"];
@@ -29,35 +28,19 @@ setTimeout(() => {
   appDiv.style.display = 'flex';
 }, 3000);
 
-async function isColorUsed(color) {
-  const snap = await getDocs(collection(db, "usedColors"));
-  return snap.docs.some(doc => doc.data().color === color);
-}
-
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
   const nick = document.getElementById('nick')?.value.trim();
   const pass = document.getElementById('password')?.value.trim();
-  const captcha = document.getElementById('captcha')?.value.trim().toLowerCase();
-  const color = document.getElementById('colorPicker')?.value;
   const file = document.getElementById('avatarFile')?.files[0];
 
-  if (!nick || !pass || !captcha || !color) {
+  if (!nick || !pass) {
     loginMsg.textContent = 'Заполните все поля!';
-    return;
-  }
-  if (captcha !== 'абоба') {
-    loginMsg.textContent = 'Неверное проверочное слово';
-    return;
-  }
-  if (await isColorUsed(color)) {
-    loginMsg.textContent = 'Цвет уже занят';
     return;
   }
 
   try {
     userNick = nick;
-    userColor = color;
 
     if (file) {
       const avatarRef = ref(storage, 'avatars/' + nick);
@@ -66,8 +49,6 @@ loginForm.onsubmit = async (e) => {
     } else {
       userAvatar = 'https://i.imgur.com/4AiXzf8.png';
     }
-
-    await addDoc(collection(db, "usedColors"), { color });
 
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
@@ -87,7 +68,6 @@ chatInputForm.onsubmit = async (e) => {
       nick: userNick,
       text,
       avatar: userAvatar,
-      color: userColor,
       created: serverTimestamp(),
       isServerMessage: false
     });
@@ -109,7 +89,7 @@ function startChat() {
         div.classList.add('server');
         div.textContent = d.text;
       } else {
-        div.style.backgroundColor = d.color;
+        div.style.backgroundColor = '#2a2a2a'; // нейтральный фон без цвета юзера
         const ava = document.createElement('div');
         ava.className = 'avatar';
         ava.style.backgroundImage = `url(${d.avatar})`;
