@@ -1,4 +1,3 @@
-// main.js
 import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
@@ -77,9 +76,9 @@ chatInputForm.onsubmit = async (e) => {
 
   try {
     await addDoc(collection(db, "messages"), {
-      nick: userNick,
+      nick: userNick || "Anon",
       text,
-      avatar: userAvatar,
+      avatar: userAvatar || 'https://i.imgur.com/4AiXzf8.png',
       created: serverTimestamp(),
       isServerMessage: false
     });
