@@ -25,16 +25,27 @@ let userAvatar = null;
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра"];
+const splashMain = document.getElementById('splashMain');
+const splashSubs = document.getElementById('splashSubs');
+
+const splashTexts = ["Абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу"];
 let dotCount = 0;
-setInterval(() => {
+
+// Рандомное время от 3 до 6 секунд (в миллисекундах)
+const splashDuration = 3000 + Math.random() * 3000;
+
+const dotInterval = setInterval(() => {
   dotCount = (dotCount + 1) % 4;
-  splash.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)] + '.'.repeat(dotCount);
+  splashMain.innerText = `Абоба${'.'.repeat(dotCount)}`;
+  // Обновляем нижний мелкий текст случайным из массива
+  splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
 }, 1000);
+
 setTimeout(() => {
-  splash.style.display = 'none';
-  appDiv.style.display = 'flex';
-}, 3000);
+  clearInterval(dotInterval); // останавливаем интервал
+  splashMain.parentElement.style.display = 'none'; // прячем весь контейнер заставки
+  appDiv.style.display = 'flex'; // показываем приложение
+}, splashDuration);
 
 googleLoginBtn.onclick = async () => {
   try {
