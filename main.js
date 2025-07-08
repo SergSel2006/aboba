@@ -53,7 +53,7 @@ loginForm.onsubmit = async (e) => {
       await uploadBytes(avatarRef, file);
       userAvatar = await getDownloadURL(avatarRef);
     } else {
-      userAvatar = 'https://i.imgur.com/4AiXzf8.png';
+      userAvatar = 'https://tenor.com/ru/view/goobers-gif-776788273695273966';
     }
 
     loginForm.style.display = 'none';
