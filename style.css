@@ -52,7 +52,7 @@ html, body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  background: #181818 url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+  background: #181818 url('https://static.wikia.nocookie.net/rec-room/images/5/52/B09378c3e8e7410f9e58d4c10451603c.jpg/revision/latest/scale-to-width-down/1200?cb=20210901201040') no-repeat center center fixed;
   background-size: cover;
 }
 #messages {
