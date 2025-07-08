@@ -7,13 +7,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Заставка -->
   <div id="splash">Абоба<span id="dots">...</span></div>
-
-  <!-- Основное приложение -->
   <div id="app">
-
-    <!-- Форма входа / регистрации -->
     <form id="loginForm">
       <h2>Вход / Регистрация</h2>
       <input type="email" id="email" placeholder="Email" required />
@@ -24,41 +19,20 @@
       <p id="loginMsg" style="color:#f55;"></p>
     </form>
 
-    <!-- Чат -->
-    <div id="chat" style="display: none;">
+    <div id="chat" style="display:none;">
       <div id="messages"></div>
-
-      <!-- Ввод сообщения -->
       <form id="chatInput">
-        <input
-          type="text"
-          id="messageInput"
-          placeholder="Написать сообщение..."
-          autocomplete="off"
-          required
-        />
+        <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" required />
         <button type="submit">Отправить</button>
       </form>
 
-      <!-- Панель серверных сообщений (только для админа) -->
       <div id="serverMsgPanel" style="display:none; margin: 10px auto; max-width: 400px;">
-        <input
-          type="text"
-          id="serverMsgInput"
-          placeholder="Серверное сообщение"
-          style="width: 70%; padding: 8px; border-radius: 5px; border: none; margin-right: 10px;"
-        />
-        <button
-          id="sendServerMsgBtn"
-          style="padding: 8px 15px; border-radius: 5px; border: none; background: #6200ee; color: white; cursor: pointer;"
-        >
-          Отправить (админ)
-        </button>
+        <input type="text" id="serverMsgInput" placeholder="Серверное сообщение" style="width: 70%; padding: 8px; border-radius: 5px; border: none; margin-right: 10px;" />
+        <button id="sendServerMsgBtn" style="padding: 8px 15px; border-radius: 5px; border: none; background: #6200ee; color: white; cursor: pointer;">Отправить (админ)</button>
       </div>
     </div>
   </div>
 
-  <!-- Основной JS -->
   <script type="module" src="main.js"></script>
 </body>
 </html>
