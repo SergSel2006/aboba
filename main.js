@@ -6,7 +6,27 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const splash = document.getElementById('splash');
+const splashMain = document.getElementById('splashMain');
+const splashSubs = document.getElementById('splashSubs');
+
+const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу"];
+let dotCount = 0;
+
+// Рандомное время от 3 до 6 секунд (в миллисекундах)
+const splashDuration = 3000 + Math.random() * 3000;
+
+const dotInterval = setInterval(() => {
+  dotCount = (dotCount + 1) % 4;
+  splashMain.innerText = `Абоба${'.'.repeat(dotCount)}`;
+  splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
+}, 1700);
+
+setTimeout(() => {
+  clearInterval(dotInterval);
+  splashMain.parentElement.style.display = 'none';
+  appDiv.style.display = 'flex';
+}, splashDuration);
+
 const appDiv = document.getElementById('app');
 const loginForm = document.getElementById('loginForm');
 const chatDiv = document.getElementById('chat');
@@ -24,28 +44,6 @@ let userAvatar = null;
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
-
-const splashMain = document.getElementById('splashMain');
-const splashSubs = document.getElementById('splashSubs');
-
-const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу"];
-let dotCount = 0;
-
-// Рандомное время от 3 до 6 секунд (в миллисекундах)
-const splashDuration = 3000 + Math.random() * 3000;
-
-const dotInterval = setInterval(() => {
-  dotCount = (dotCount + 1) % 4;
-  splashMain.innerText = `Абоба${'.'.repeat(dotCount)}`;
-  // Обновляем нижний мелкий текст случайным из массива
-  splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
-}, 1700);
-
-setTimeout(() => {
-  clearInterval(dotInterval); // останавливаем интервал
-  splashMain.parentElement.style.display = 'none'; // прячем весь контейнер заставки
-  appDiv.style.display = 'flex'; // показываем приложение
-}, splashDuration);
 
 googleLoginBtn.onclick = async () => {
   try {
@@ -103,12 +101,41 @@ sendServerMsgBtn.onclick = async () => {
   }
 };
 
+function formatTime(date) {
+  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function formatDate(date) {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (date.toDateString() === now.toDateString()) return "Сегодня";
+  if (date.toDateString() === yesterday.toDateString()) return "Вчера";
+  return date.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
+}
+
 function startChat() {
   const q = query(collection(db, "messages"), orderBy("created", "asc"));
+  let lastDateStr = null;
+
   onSnapshot(q, (snapshot) => {
     messagesDiv.innerHTML = '';
+    lastDateStr = null;
+
     snapshot.forEach(doc => {
       const d = doc.data();
+      const createdDate = d.created ? d.created.toDate() : new Date();
+      const dateStr = createdDate.toDateString();
+
+      if (dateStr !== lastDateStr) {
+        lastDateStr = dateStr;
+        const dateDiv = document.createElement('div');
+        dateDiv.classList.add('date-divider');
+        dateDiv.textContent = formatDate(createdDate);
+        messagesDiv.appendChild(dateDiv);
+      }
+
       const div = document.createElement('div');
       div.classList.add('msg');
 
@@ -117,23 +144,35 @@ function startChat() {
         div.textContent = d.text;
       } else {
         div.style.backgroundColor = '#2a2a2a';
+
         const ava = document.createElement('div');
         ava.className = 'avatar';
         ava.style.backgroundImage = `url(${d.avatar})`;
+
         const name = document.createElement('div');
         name.className = 'username';
         name.textContent = d.nick;
+
         const text = document.createElement('div');
         text.textContent = d.text;
+
+        const time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = formatTime(createdDate);
+
+        time.style.marginLeft = 'auto';
+        time.style.fontSize = '0.75rem';
+        time.style.color = '#aaa';
+
         div.appendChild(ava);
         div.appendChild(name);
         div.appendChild(text);
+        div.appendChild(time);
       }
 
       messagesDiv.appendChild(div);
     });
 
-    // Вынес скролл в setTimeout чтобы DOM обновился
     setTimeout(() => {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }, 0);
