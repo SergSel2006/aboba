@@ -1,11 +1,11 @@
-import { app, db, storage } from './firebase-config.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// main.js
+import { db, storage } from './firebase-config.js';
 import {
-  collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
+  collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-const auth = getAuth(app);
+import {
+  ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const splash = document.getElementById('splash');
 const appDiv = document.getElementById('app');
@@ -15,9 +15,9 @@ const messagesDiv = document.getElementById('messages');
 const chatInputForm = document.getElementById('chatInput');
 const messageInput = document.getElementById('messageInput');
 const loginMsg = document.getElementById('loginMsg');
-const sendServerMsgBtn = document.getElementById('sendServerMsgBtn');
-const serverMsgInput = document.getElementById('serverMsgInput');
 const serverMsgPanel = document.getElementById('serverMsgPanel');
+const serverMsgInput = document.getElementById('serverMsgInput');
+const sendServerMsgBtn = document.getElementById('sendServerMsgBtn');
 
 let userNick = null;
 let userAvatar = null;
@@ -35,6 +35,7 @@ setTimeout(() => {
 
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
+
   const email = document.getElementById('email').value.trim();
   const nick = document.getElementById('nick').value.trim();
   const pass = document.getElementById('password').value.trim();
@@ -46,48 +47,34 @@ loginForm.onsubmit = async (e) => {
   }
 
   try {
-    // Пробуем зарегистрировать пользователя
-    await createUserWithEmailAndPassword(auth, email, pass);
-  } catch (regError) {
-    // Если уже зарегистрирован, пробуем войти
-    if (regError.code === 'auth/email-already-in-use') {
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (signInError) {
-        loginMsg.textContent = 'Ошибка входа: ' + signInError.message;
-        return;
-      }
+    userNick = nick;
+
+    if (file) {
+      const avatarRef = ref(storage, 'avatars/' + nick);
+      await uploadBytes(avatarRef, file);
+      userAvatar = await getDownloadURL(avatarRef);
     } else {
-      loginMsg.textContent = 'Ошибка регистрации: ' + regError.message;
-      return;
+      userAvatar = 'https://i.imgur.com/4AiXzf8.png';
     }
+
+    loginForm.style.display = 'none';
+    chatDiv.style.display = 'flex';
+
+    if (userNick === "Campie") {
+      serverMsgPanel.style.display = 'block';
+    }
+
+    startChat();
+  } catch (error) {
+    loginMsg.textContent = 'Ошибка при входе: ' + error.message;
   }
-
-  // Успешный вход или регистрация
-  userNick = nick;
-
-  if (file) {
-    const avatarRef = ref(storage, 'avatars/' + nick);
-    await uploadBytes(avatarRef, file);
-    userAvatar = await getDownloadURL(avatarRef);
-  } else {
-    userAvatar = 'https://i.imgur.com/4AiXzf8.png';
-  }
-
-  loginForm.style.display = 'none';
-  chatDiv.style.display = 'flex';
-
-  if (userNick === 'Campie') {
-    serverMsgPanel.style.display = 'block';
-  }
-
-  startChat();
 };
 
 chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
   if (!text) return;
+
   try {
     await addDoc(collection(db, "messages"), {
       nick: userNick,
@@ -97,14 +84,15 @@ chatInputForm.onsubmit = async (e) => {
       isServerMessage: false
     });
     messageInput.value = '';
-  } catch (error) {
-    console.error('Ошибка отправки сообщения:', error);
+  } catch (err) {
+    console.error("Ошибка отправки:", err);
   }
 };
 
 sendServerMsgBtn.onclick = async () => {
   const text = serverMsgInput.value.trim();
   if (!text) return;
+
   try {
     await addDoc(collection(db, "messages"), {
       text,
@@ -112,8 +100,8 @@ sendServerMsgBtn.onclick = async () => {
       created: serverTimestamp()
     });
     serverMsgInput.value = '';
-  } catch (error) {
-    console.error('Ошибка отправки серверного сообщения:', error);
+  } catch (err) {
+    console.error("Ошибка серверного сообщения:", err);
   }
 };
 
@@ -125,6 +113,7 @@ function startChat() {
       const d = doc.data();
       const div = document.createElement('div');
       div.classList.add('msg');
+
       if (d.isServerMessage) {
         div.classList.add('server');
         div.textContent = d.text;
@@ -142,6 +131,7 @@ function startChat() {
         div.appendChild(name);
         div.appendChild(text);
       }
+
       messagesDiv.appendChild(div);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
