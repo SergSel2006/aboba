@@ -1,17 +1,11 @@
-import { db, storage } from './firebase-config.js';
+import { app, db, storage } from './firebase-config.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const auth = getAuth(app);
 
 const splash = document.getElementById('splash');
 const appDiv = document.getElementById('app');
@@ -25,13 +19,10 @@ const sendServerMsgBtn = document.getElementById('sendServerMsgBtn');
 const serverMsgInput = document.getElementById('serverMsgInput');
 const serverMsgPanel = document.getElementById('serverMsgPanel');
 
-const auth = getAuth();
-
 let userNick = null;
 let userAvatar = null;
-let userEmail = null;
 
-const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра", "Типа ДС для своих"];
+const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра"];
 let dotCount = 0;
 setInterval(() => {
   dotCount = (dotCount + 1) % 4;
@@ -42,39 +33,8 @@ setTimeout(() => {
   appDiv.style.display = 'flex';
 }, 3000);
 
-// Отслеживаем смену авторизации
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    userEmail = user.email;
-    userNick = user.displayName || userEmail.split('@')[0];
-    userAvatar = user.photoURL || 'https://i.imgur.com/4AiXzf8.png';
-
-    loginForm.style.display = 'none';
-    chatDiv.style.display = 'flex';
-
-    // Показываем админ-панель если email админа (замени на свой)
-    if (userEmail === 'admin@example.com') {
-      serverMsgPanel.style.display = 'block';
-    } else {
-      serverMsgPanel.style.display = 'none';
-    }
-
-    loginMsg.textContent = '';
-    startChat();
-  } else {
-    userNick = null;
-    userAvatar = null;
-    userEmail = null;
-    loginForm.style.display = 'block';
-    chatDiv.style.display = 'none';
-    serverMsgPanel.style.display = 'none';
-  }
-});
-
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
-  loginMsg.textContent = '';
-
   const email = document.getElementById('email').value.trim();
   const nick = document.getElementById('nick').value.trim();
   const pass = document.getElementById('password').value.trim();
@@ -86,56 +46,55 @@ loginForm.onsubmit = async (e) => {
   }
 
   try {
-    // Пытаемся зарегистрировать
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    const user = userCredential.user;
-
-    // Обновляем профиль с ником и аватаром
-    let photoURL = 'https://i.imgur.com/4AiXzf8.png';
-
-    if (file) {
-      const avatarRef = ref(storage, 'avatars/' + user.uid);
-      await uploadBytes(avatarRef, file);
-      photoURL = await getDownloadURL(avatarRef);
-    }
-
-    await updateProfile(user, {
-      displayName: nick,
-      photoURL
-    });
-
-  } catch (error) {
-    // Если почта занята — пытаемся залогиниться
-    if (error.code === 'auth/email-already-in-use') {
+    // Пробуем зарегистрировать пользователя
+    await createUserWithEmailAndPassword(auth, email, pass);
+  } catch (regError) {
+    // Если уже зарегистрирован, пробуем войти
+    if (regError.code === 'auth/email-already-in-use') {
       try {
         await signInWithEmailAndPassword(auth, email, pass);
       } catch (signInError) {
-        loginMsg.textContent = 'Неверный пароль или ошибка: ' + signInError.message;
+        loginMsg.textContent = 'Ошибка входа: ' + signInError.message;
+        return;
       }
     } else {
-      loginMsg.textContent = 'Ошибка: ' + error.message;
+      loginMsg.textContent = 'Ошибка регистрации: ' + regError.message;
+      return;
     }
   }
+
+  // Успешный вход или регистрация
+  userNick = nick;
+
+  if (file) {
+    const avatarRef = ref(storage, 'avatars/' + nick);
+    await uploadBytes(avatarRef, file);
+    userAvatar = await getDownloadURL(avatarRef);
+  } else {
+    userAvatar = 'https://i.imgur.com/4AiXzf8.png';
+  }
+
+  loginForm.style.display = 'none';
+  chatDiv.style.display = 'flex';
+
+  if (userNick === 'Campie') {
+    serverMsgPanel.style.display = 'block';
+  }
+
+  startChat();
 };
 
 chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
   if (!text) return;
-
-  if (!userNick || !userEmail) {
-    loginMsg.textContent = 'Вы не авторизованы!';
-    return;
-  }
-
   try {
     await addDoc(collection(db, "messages"), {
       nick: userNick,
       text,
       avatar: userAvatar,
       created: serverTimestamp(),
-      isServerMessage: false,
-      email: userEmail
+      isServerMessage: false
     });
     messageInput.value = '';
   } catch (error) {
@@ -173,10 +132,10 @@ function startChat() {
         div.style.backgroundColor = '#2a2a2a';
         const ava = document.createElement('div');
         ava.className = 'avatar';
-        ava.style.backgroundImage = `url(${d.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+        ava.style.backgroundImage = `url(${d.avatar})`;
         const name = document.createElement('div');
         name.className = 'username';
-        name.textContent = d.nick || 'Аноним';
+        name.textContent = d.nick;
         const text = document.createElement('div');
         text.textContent = d.text;
         div.appendChild(ava);
