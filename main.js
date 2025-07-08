@@ -31,7 +31,7 @@ let userNick = null;
 let userAvatar = null;
 let userEmail = null;
 
-const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра"];
+const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра", "Типа ДС для своих"];
 let dotCount = 0;
 setInterval(() => {
   dotCount = (dotCount + 1) % 4;
