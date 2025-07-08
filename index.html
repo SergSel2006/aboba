@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Абоба-сервер</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="splash">Абоба<span id="dots">...</span></div>
@@ -18,14 +18,21 @@
       <button type="submit">Войти / Зарегистрироваться</button>
       <p id="loginMsg" style="color:#f55;"></p>
     </form>
+
     <div id="chat" style="display:none;">
       <div id="messages"></div>
       <form id="chatInput">
         <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" required />
         <button type="submit">Отправить</button>
       </form>
+
+      <div id="serverMsgPanel" style="display:none; margin: 10px auto; max-width: 400px;">
+        <input type="text" id="serverMsgInput" placeholder="Серверное сообщение" style="width: 70%; padding: 8px; border-radius: 5px; border: none; margin-right: 10px;" />
+        <button id="sendServerMsgBtn" style="padding: 8px 15px; border-radius: 5px; border: none; background: #6200ee; color: white; cursor: pointer;">Отправить (админ)</button>
+      </div>
     </div>
   </div>
+
   <script type="module" src="main.js"></script>
 </body>
 </html>
