@@ -2,7 +2,16 @@ import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const splash = document.getElementById('splash');
 const appDiv = document.getElementById('app');
@@ -16,8 +25,11 @@ const sendServerMsgBtn = document.getElementById('sendServerMsgBtn');
 const serverMsgInput = document.getElementById('serverMsgInput');
 const serverMsgPanel = document.getElementById('serverMsgPanel');
 
+const auth = getAuth();
+
 let userNick = null;
 let userAvatar = null;
+let userEmail = null;
 
 const splashTexts = ["Абоба", "Абобушка", "АбоБаБа", "Абобатор", "Абобяра"];
 let dotCount = 0;
@@ -30,8 +42,39 @@ setTimeout(() => {
   appDiv.style.display = 'flex';
 }, 3000);
 
+// Отслеживаем смену авторизации
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    userEmail = user.email;
+    userNick = user.displayName || userEmail.split('@')[0];
+    userAvatar = user.photoURL || 'https://i.imgur.com/4AiXzf8.png';
+
+    loginForm.style.display = 'none';
+    chatDiv.style.display = 'flex';
+
+    // Показываем админ-панель если email админа (замени на свой)
+    if (userEmail === 'admin@example.com') {
+      serverMsgPanel.style.display = 'block';
+    } else {
+      serverMsgPanel.style.display = 'none';
+    }
+
+    loginMsg.textContent = '';
+    startChat();
+  } else {
+    userNick = null;
+    userAvatar = null;
+    userEmail = null;
+    loginForm.style.display = 'block';
+    chatDiv.style.display = 'none';
+    serverMsgPanel.style.display = 'none';
+  }
+});
+
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
+  loginMsg.textContent = '';
+
   const email = document.getElementById('email').value.trim();
   const nick = document.getElementById('nick').value.trim();
   const pass = document.getElementById('password').value.trim();
@@ -43,27 +86,35 @@ loginForm.onsubmit = async (e) => {
   }
 
   try {
-    userNick = nick;
+    // Пытаемся зарегистрировать
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    const user = userCredential.user;
+
+    // Обновляем профиль с ником и аватаром
+    let photoURL = 'https://i.imgur.com/4AiXzf8.png';
 
     if (file) {
-      const avatarRef = ref(storage, 'avatars/' + nick);
+      const avatarRef = ref(storage, 'avatars/' + user.uid);
       await uploadBytes(avatarRef, file);
-      userAvatar = await getDownloadURL(avatarRef);
-    } else {
-      userAvatar = 'https://i.imgur.com/4AiXzf8.png';
+      photoURL = await getDownloadURL(avatarRef);
     }
 
-    loginForm.style.display = 'none';
-    chatDiv.style.display = 'flex';
+    await updateProfile(user, {
+      displayName: nick,
+      photoURL
+    });
 
-    // Если ник "Лев", покажем админ-панель (пример)
-    if (userNick === 'Лев') {
-      serverMsgPanel.style.display = 'block';
-    }
-
-    startChat();
   } catch (error) {
-    loginMsg.textContent = 'Ошибка при входе: ' + error.message;
+    // Если почта занята — пытаемся залогиниться
+    if (error.code === 'auth/email-already-in-use') {
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (signInError) {
+        loginMsg.textContent = 'Неверный пароль или ошибка: ' + signInError.message;
+      }
+    } else {
+      loginMsg.textContent = 'Ошибка: ' + error.message;
+    }
   }
 };
 
@@ -71,13 +122,20 @@ chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
   if (!text) return;
+
+  if (!userNick || !userEmail) {
+    loginMsg.textContent = 'Вы не авторизованы!';
+    return;
+  }
+
   try {
     await addDoc(collection(db, "messages"), {
       nick: userNick,
       text,
       avatar: userAvatar,
       created: serverTimestamp(),
-      isServerMessage: false
+      isServerMessage: false,
+      email: userEmail
     });
     messageInput.value = '';
   } catch (error) {
@@ -115,10 +173,10 @@ function startChat() {
         div.style.backgroundColor = '#2a2a2a';
         const ava = document.createElement('div');
         ava.className = 'avatar';
-        ava.style.backgroundImage = `url(${d.avatar})`;
+        ava.style.backgroundImage = `url(${d.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
         const name = document.createElement('div');
         name.className = 'username';
-        name.textContent = d.nick;
+        name.textContent = d.nick || 'Аноним';
         const text = document.createElement('div');
         text.textContent = d.text;
         div.appendChild(ava);
