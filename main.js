@@ -1,16 +1,11 @@
-import { db, storage, auth } from './firebase-config.js';
+НУ ТЫ ТО ПРОВЕЬ И НАПИШИ Я ЖЕ ТЕБЯ ПРОСИЛ
+import { db, storage } from './firebase-config.js';
 import {
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   ref, uploadBytes, getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const splash = document.getElementById('splash');
 const appDiv = document.getElementById('app');
@@ -33,7 +28,6 @@ setInterval(() => {
   dotCount = (dotCount + 1) % 4;
   splash.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)] + '.'.repeat(dotCount);
 }, 1000);
-
 setTimeout(() => {
   splash.style.display = 'none';
   appDiv.style.display = 'flex';
@@ -53,26 +47,14 @@ loginForm.onsubmit = async (e) => {
   }
 
   try {
-    // Пробуем залогиниться
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (error) {
-      // Если юзера нет — регаем
-      if (error.code === 'auth/user-not-found') {
-        await createUserWithEmailAndPassword(auth, email, pass);
-      } else {
-        throw error;
-      }
-    }
-
     userNick = nick;
 
     if (file) {
-      const avatarRef = ref(storage, 'avatars/' + auth.currentUser.uid);
+      const avatarRef = ref(storage, 'avatars/' + nick);
       await uploadBytes(avatarRef, file);
       userAvatar = await getDownloadURL(avatarRef);
     } else {
-      userAvatar = 'https://i.imgur.com/4AiXzf8.png'; // дефолт аватар
+      userAvatar = 'https://tenor.com/ru/view/goobers-gif-776788273695273966';
     }
 
     loginForm.style.display = 'none';
@@ -83,7 +65,6 @@ loginForm.onsubmit = async (e) => {
     }
 
     startChat();
-
   } catch (error) {
     loginMsg.textContent = 'Ошибка при входе: ' + error.message;
   }
@@ -96,7 +77,6 @@ chatInputForm.onsubmit = async (e) => {
 
   try {
     await addDoc(collection(db, "messages"), {
-      uid: auth.currentUser.uid,
       nick: userNick || "Anon",
       text,
       avatar: userAvatar || 'https://i.imgur.com/4AiXzf8.png',
@@ -157,13 +137,3 @@ function startChat() {
     });
   });
 }
-
-// Отслеживаем выход пользователя (опционально)
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    chatDiv.style.display = 'none';
-    loginForm.style.display = 'flex';
-    userNick = null;
-    userAvatar = null;
-  }
-});
