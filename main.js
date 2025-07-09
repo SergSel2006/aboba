@@ -60,6 +60,50 @@ googleLoginBtn.onclick = async () => {
       serverMsgPanel.style.display = 'block';
     }
 
+    const profileBtn = document.getElementById('profileBtn');
+const profilePanel = document.getElementById('profilePanel');
+const profileForm = document.getElementById('profileForm');
+const profileNick = document.getElementById('profileNick');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileColor = document.getElementById('profileColor');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Открытие/закрытие панели
+profileBtn.onclick = () => {
+  profilePanel.style.display = profilePanel.style.display === 'none' ? 'block' : 'none';
+};
+
+// Подгрузка профиля при старте (если есть)
+window.addEventListener('load', () => {
+  const saved = JSON.parse(localStorage.getItem('profile'));
+  if (saved) {
+    userNick = saved.nick;
+    userAvatar = saved.avatar;
+    profileNick.value = saved.nick;
+    profileAvatar.value = saved.avatar;
+    profileColor.value = saved.color || '#ffffff';
+  }
+});
+
+// Сохранение настроек
+profileForm.onsubmit = (e) => {
+  e.preventDefault();
+  userNick = profileNick.value.trim() || 'Безымянный';
+  userAvatar = profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png';
+  const color = profileColor.value || '#ffffff';
+
+  localStorage.setItem('profile', JSON.stringify({ nick: userNick, avatar: userAvatar, color }));
+
+  profilePanel.style.display = 'none';
+};
+
+// Выход из аккаунта
+logoutBtn.onclick = () => {
+  localStorage.removeItem('profile');
+  auth.signOut().then(() => location.reload());
+};
+
+    
     startChat();
   } catch (error) {
     loginMsg.textContent = "Ошибка входа: " + error.message;
