@@ -36,6 +36,19 @@
     </div>
   </div>
 
+  <button id="profileBtn" style="margin-left: 10px;">Настройки профиля</button>
+
+<div id="profilePanel" style="display:none; margin: 10px auto; max-width: 400px;">
+  <form id="profileForm">
+    <h3>Настройки профиля</h3>
+    <input id="profileNick" name="nick" placeholder="Ник" required /><br />
+    <input id="profileAvatar" name="avatar" placeholder="Ссылка на аватар" /><br />
+    <input id="profileColor" name="color" type="color" value="#ffffff" /><br />
+    <button type="submit">Сохранить</button>
+    <button type="button" id="logoutBtn">Выйти</button>
+  </form>
+</div>
+
   <script type="module" src="main.js"></script>
 </body>
 </html>
