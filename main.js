@@ -179,6 +179,8 @@ function formatDate(date) {
   return date.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
 }
 
+profileBtn.style.display = 'block'; //НАДО ПРОВЕРИТЬ
+
 // Запускаем чат: слушаем сообщения и профили (для обновления цвета/ника)
 function startChat() {
   onSnapshot(collection(db, "profiles"), (snap) => {
