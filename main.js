@@ -1,18 +1,13 @@
-// main.js — обновлённый, рабочий
-
-// Импорты — оставляем снаружи
 import { db } from './firebase-config.js';
 
 import {
-  collection, doc, getDoc, getDocs, query, where, onSnapshot,
-  updateDoc, arrayUnion, addDoc, orderBy, serverTimestamp, setDoc
+  collection, doc, getDoc, query, onSnapshot,
+  addDoc, orderBy, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-// Всё остальное — внутрь DOMContentLoaded
 
 document.addEventListener('DOMContentLoaded', () => {
   const splashMain = document.getElementById('splashMain');
@@ -94,6 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
       profileBtn.style.display = 'block';
       if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
       startChat();
+    } else {
+      currentUser = null;
+      loginForm.style.display = 'block';
+      chatDiv.style.display = 'none';
+      profileBtn.style.display = 'none';
+      serverMsgPanel.style.display = 'none';
     }
   });
 
@@ -118,6 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   async function loadOrCreateProfile() {
+    if (!currentUser) return;
+
     const profileRef = doc(db, "profiles", currentUser.uid);
     const snap = await getDoc(profileRef);
 
@@ -134,23 +137,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function refreshProfileUI() {
+    if (!currentUser) return;
+
     const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const data = snap.data();
-    profileNick.value = data.nick;
-    profileAvatar.value = data.avatar;
+    const data = snap.data() || {};
+    profileNick.value = data.nick || '';
+    profileAvatar.value = data.avatar || '';
     profileColor.value = data.color || '#ffffff';
     profileStatus.value = data.status || '';
-    statusCounter.textContent = `Осталось ${80 - profileStatus.value.length} символов`;
+    statusCounter.textContent = `Осталось ${80 - (profileStatus.value.length || 0)} символов`;
   }
 
   profileForm.onsubmit = async (e) => {
     e.preventDefault();
+    if (!currentUser) return;
+
     const updatedProfile = {
       nick: profileNick.value.trim() || "Безымянный",
       avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
       color: profileColor.value || '#ffffff',
       status: profileStatus.value.trim().slice(0, 80)
     };
+
     await setDoc(doc(db, "profiles", currentUser.uid), updatedProfile);
   };
 
@@ -165,10 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chatInputForm.onsubmit = async (e) => {
     e.preventDefault();
+    if (!currentUser) return;
+
     const text = messageInput.value.trim();
     if (!text) return;
 
-    const userProfile = profilesCache[currentUser.uid] || {};
+    // Защита от ошибки null с профилем
+    const userProfile = profilesCache?.[currentUser.uid] || {};
+
     try {
       await addDoc(collection(db, "messages"), {
         uid: currentUser.uid,
@@ -186,6 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   sendServerMsgBtn.onclick = async () => {
+    if (!currentUser) return;
+
     const text = serverMsgInput.value.trim();
     if (!text) return;
 
