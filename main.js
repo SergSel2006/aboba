@@ -51,7 +51,7 @@ function showUserProfileModal(uid) {
   const prof = profilesCache[uid];
   if (!prof) return;
 
-  userModalAvatar.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+  userModalAvatar.style.backgroundImage = url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'});
   userModalNick.textContent = prof.nick || 'Безымянный';
   userModalNick.style.color = prof.color || '#fff';
   userModalStatus.textContent = prof.status || 'Нет статуса';
@@ -70,7 +70,7 @@ const provider = new GoogleAuthProvider();
 
 const dotInterval = setInterval(() => {
   dotCount = (dotCount + 1) % 4;
-  splashMain.innerText = `абоба${'.'.repeat(dotCount)}`;
+  splashMain.innerText = абоба${'.'.repeat(dotCount)};
   splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
 }, 1700);
 
@@ -135,7 +135,7 @@ async function refreshProfileUI() {
   profileAvatar.value = data.avatar;
   profileColor.value = data.color || '#ffffff';
   profileStatus.value = data.status || '';
-  statusCounter.textContent = `Осталось ${80 - profileStatus.value.length} символов`;
+  statusCounter.textContent = Осталось ${80 - profileStatus.value.length} символов;
 }
 
 profileForm.onsubmit = async (e) => {
@@ -151,7 +151,7 @@ profileForm.onsubmit = async (e) => {
 
 profileStatus.oninput = () => {
   const remaining = 80 - profileStatus.value.length;
-  statusCounter.textContent = `Осталось ${remaining} символов`;
+  statusCounter.textContent = Осталось ${remaining} символов;
 };
 
 profileBtn.onclick = () => {
@@ -249,7 +249,7 @@ function startChat() {
 
         const ava = document.createElement('div');
         ava.className = 'avatar';
-        ava.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+        ava.style.backgroundImage = url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'});
         ava.style.cursor = 'pointer';
         ava.onclick = () => showUserProfileModal(d.uid);
 
