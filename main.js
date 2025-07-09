@@ -51,7 +51,7 @@ function showUserProfileModal(uid) {
   const prof = profilesCache[uid];
   if (!prof) return;
 
-  userModalAvatar.style.backgroundImage = url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'});
+  userModalAvatar.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
   userModalNick.textContent = prof.nick || 'Безымянный';
   userModalNick.style.color = prof.color || '#fff';
   userModalStatus.textContent = prof.status || 'Нет статуса';
