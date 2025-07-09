@@ -42,11 +42,12 @@ closeProfileModal.onclick = () => {
 function showUserProfileModal(uid) {
   const prof = profilesCache[uid];
   if (!prof) return;
+
   userModalAvatar.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
   userModalNick.textContent = prof.nick || 'Безымянный';
   userModalNick.style.color = prof.color || '#fff';
-  userModalUid.textContent = `UID: ${uid}`;
-  userProfileModal.style.display = 'flex';
+  userModalStatus.textContent = prof.status || 'Нет статуса';
+  userProfileModal.style.display = 'block';
 }
 
 // Скрываем кнопку профиля по умолчанию
@@ -117,8 +118,16 @@ async function loadOrCreateProfile() {
       nick: currentUser.displayName || "Безымянный",
       avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
       color: '#ffffff'
+      status: ''
     });
   }
+  await setDoc(profileRef, {
+  nick: currentUser.displayName || "Безымянный",
+  avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
+  color: '#ffffff',
+  status: ''
+});
+
   await refreshProfileUI();
 }
 
@@ -128,17 +137,26 @@ async function refreshProfileUI() {
   profileNick.value = data.nick;
   profileAvatar.value = data.avatar;
   profileColor.value = data.color || '#ffffff';
+  profileStatus.value = data.status || '';
+  statusCounter.textContent = `Осталось ${80 - profileStatus.value.length} символов`;
 }
 
 profileForm.onsubmit = async (e) => {
   e.preventDefault();
   const updatedProfile = {
-    nick: profileNick.value.trim() || "Безымянный",
-    avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
-    color: profileColor.value || '#ffffff'
-  };
+  nick: profileNick.value.trim() || "Безымянный",
+  avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
+  color: profileColor.value || '#ffffff',
+  status: profileStatus.value.trim().slice(0, 80)
+};
   await setDoc(doc(db, "profiles", currentUser.uid), updatedProfile);
 };
+
+profileStatus.oninput = () => {
+  const remaining = 80 - profileStatus.value.length;
+  statusCounter.textContent = `Осталось ${remaining} символов`;
+};
+
 
 profileBtn.onclick = () => {
   profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
