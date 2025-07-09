@@ -28,6 +28,27 @@ const profileAvatar = document.getElementById('profileAvatar');
 const profileColor = document.getElementById('profileColor');
 const logoutBtn = document.getElementById('logoutBtn');
 
+// Модалка для профиля пользователя
+const userProfileModal = document.getElementById('userProfileModal');
+const userModalAvatar = document.getElementById('userModalAvatar');
+const userModalNick = document.getElementById('userModalNick');
+const userModalUid = document.getElementById('userModalUid');
+const closeProfileModal = document.getElementById('closeProfileModal');
+
+closeProfileModal.onclick = () => {
+  userProfileModal.style.display = 'none';
+};
+
+function showUserProfileModal(uid) {
+  const prof = profilesCache[uid];
+  if (!prof) return;
+  userModalAvatar.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+  userModalNick.textContent = prof.nick || 'Безымянный';
+  userModalNick.style.color = prof.color || '#fff';
+  userModalUid.textContent = `UID: ${uid}`;
+  userProfileModal.style.display = 'flex';
+}
+
 // Скрываем кнопку профиля по умолчанию
 profileBtn.style.display = 'none';
 
@@ -215,6 +236,13 @@ function startChat() {
         const ava = document.createElement('div');
         ava.className = 'avatar';
         ava.style.backgroundImage = `url(${prof.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+        ava.style.cursor = 'pointer';
+        ava.onclick = () => showUserProfileModal(d.uid);
+
+        const content = document.createElement('div');
+        content.style.display = 'flex';
+        content.style.flexDirection = 'column';
+        content.style.maxWidth = '100%';
 
         const name = document.createElement('div');
         name.className = 'username';
@@ -231,9 +259,11 @@ function startChat() {
         time.style.fontSize = '0.75rem';
         time.style.color = '#aaa';
 
+        content.appendChild(name);
+        content.appendChild(text);
+
         div.appendChild(ava);
-        div.appendChild(name);
-        div.appendChild(text);
+        div.appendChild(content);
         div.appendChild(time);
       }
 
