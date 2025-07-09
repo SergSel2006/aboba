@@ -1,11 +1,15 @@
+// main.js — обновлённый, рабочий
+
 import { db } from './firebase-config.js';
 import {
-  collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, getDoc, setDoc
+  collection, addDoc, query, orderBy, onSnapshot,
+  serverTimestamp, doc, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+// DOM-элементы
 const splashMain = document.getElementById('splashMain');
 const splashSubs = document.getElementById('splashSubs');
 const appDiv = document.getElementById('app');
@@ -26,14 +30,18 @@ const profileForm = document.getElementById('profileForm');
 const profileNick = document.getElementById('profileNick');
 const profileAvatar = document.getElementById('profileAvatar');
 const profileColor = document.getElementById('profileColor');
+const profileStatus = document.getElementById('profileStatus');
+const statusCounter = document.getElementById('statusCounter');
 const logoutBtn = document.getElementById('logoutBtn');
 
-// Модалка для профиля пользователя
 const userProfileModal = document.getElementById('userProfileModal');
 const userModalAvatar = document.getElementById('userModalAvatar');
 const userModalNick = document.getElementById('userModalNick');
-const userModalUid = document.getElementById('userModalUid');
+const userModalStatus = document.getElementById('userModalStatus');
 const closeProfileModal = document.getElementById('closeProfileModal');
+
+let currentUser = null;
+let profilesCache = {};
 
 closeProfileModal.onclick = () => {
   userProfileModal.style.display = 'none';
@@ -47,23 +55,19 @@ function showUserProfileModal(uid) {
   userModalNick.textContent = prof.nick || 'Безымянный';
   userModalNick.style.color = prof.color || '#fff';
   userModalStatus.textContent = prof.status || 'Нет статуса';
+
   userProfileModal.style.display = 'block';
 }
 
-// Скрываем кнопку профиля по умолчанию
 profileBtn.style.display = 'none';
 
 const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу"];
 let dotCount = 0;
 const splashDuration = 3000 + Math.random() * 3000;
 
-let currentUser = null;
-let profilesCache = {};
-
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-// Сплеш-экран
 const dotInterval = setInterval(() => {
   dotCount = (dotCount + 1) % 4;
   splashMain.innerText = `абоба${'.'.repeat(dotCount)}`;
@@ -76,14 +80,13 @@ setTimeout(() => {
   appDiv.style.display = 'flex';
 }, splashDuration);
 
-// Авторизация
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
     await loadOrCreateProfile();
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
-    profileBtn.style.display = 'block'; // показываем кнопку только после входа
+    profileBtn.style.display = 'block';
     if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
     startChat();
   }
@@ -96,7 +99,7 @@ googleLoginBtn.onclick = async () => {
     await loadOrCreateProfile();
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
-    profileBtn.style.display = 'block'; // показываем кнопку только после входа
+    profileBtn.style.display = 'block';
     if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
     startChat();
   } catch (error) {
@@ -117,16 +120,10 @@ async function loadOrCreateProfile() {
     await setDoc(profileRef, {
       nick: currentUser.displayName || "Безымянный",
       avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
-      color: '#ffffff'
+      color: '#ffffff',
       status: ''
     });
   }
-  await setDoc(profileRef, {
-  nick: currentUser.displayName || "Безымянный",
-  avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
-  color: '#ffffff',
-  status: ''
-});
 
   await refreshProfileUI();
 }
@@ -144,11 +141,11 @@ async function refreshProfileUI() {
 profileForm.onsubmit = async (e) => {
   e.preventDefault();
   const updatedProfile = {
-  nick: profileNick.value.trim() || "Безымянный",
-  avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
-  color: profileColor.value || '#ffffff',
-  status: profileStatus.value.trim().slice(0, 80)
-};
+    nick: profileNick.value.trim() || "Безымянный",
+    avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
+    color: profileColor.value || '#ffffff',
+    status: profileStatus.value.trim().slice(0, 80)
+  };
   await setDoc(doc(db, "profiles", currentUser.uid), updatedProfile);
 };
 
@@ -156,7 +153,6 @@ profileStatus.oninput = () => {
   const remaining = 80 - profileStatus.value.length;
   statusCounter.textContent = `Осталось ${remaining} символов`;
 };
-
 
 profileBtn.onclick = () => {
   profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
