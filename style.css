@@ -171,3 +171,64 @@ html, body, #app {
   padding-left: 10px;
   white-space: nowrap;
 }
+
+#profileBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 1000;
+  display: none; /* Показываем только после входа */
+}
+
+#profileBtn:hover {
+  background: #444;
+}
+
+#profilePanel {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: #1e1e1e;
+  padding: 15px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #000a;
+  z-index: 1000;
+  display: none;
+  width: 220px;
+}
+
+#profilePanel input[type="text"],
+#profilePanel input[type="color"] {
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #eee;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+#profilePanel button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: #6200ee;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#profilePanel button:hover {
+  background: #3700b3;
+}
+
