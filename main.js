@@ -116,13 +116,15 @@ chatInputForm.onsubmit = async (e) => {
   if (!text) return;
 
   try {
+    const profile = JSON.parse(localStorage.getItem('profile')) || {};
     await addDoc(collection(db, "messages"), {
       nick: userNick,
       text,
       avatar: userAvatar,
+      color: profile.color || '#ffffff',
       created: serverTimestamp(),
       isServerMessage: false
-    });
+});
     messageInput.value = '';
   } catch (err) {
     console.error("Ошибка отправки:", err);
@@ -196,6 +198,7 @@ function startChat() {
         const name = document.createElement('div');
         name.className = 'username';
         name.textContent = d.nick;
+        if (d.color) name.style.color = d.color;
 
         const text = document.createElement('div');
         text.textContent = d.text;
