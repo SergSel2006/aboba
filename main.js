@@ -28,17 +28,20 @@ const profileAvatar = document.getElementById('profileAvatar');
 const profileColor = document.getElementById('profileColor');
 const logoutBtn = document.getElementById('logoutBtn');
 
+// Скрываем кнопку профиля по умолчанию
+profileBtn.style.display = 'none';
+
 const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу"];
 let dotCount = 0;
 const splashDuration = 3000 + Math.random() * 3000;
 
 let currentUser = null;
-let profilesCache = {}; // кеш всех профилей
+let profilesCache = {};
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-// Сплеш-эффект
+// Сплеш-экран
 const dotInterval = setInterval(() => {
   dotCount = (dotCount + 1) % 4;
   splashMain.innerText = `абоба${'.'.repeat(dotCount)}`;
@@ -51,13 +54,14 @@ setTimeout(() => {
   appDiv.style.display = 'flex';
 }, splashDuration);
 
-// Вход и автологин
+// Авторизация
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
     await loadOrCreateProfile();
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
+    profileBtn.style.display = 'block'; // показываем кнопку только после входа
     if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
     startChat();
   }
@@ -70,6 +74,7 @@ googleLoginBtn.onclick = async () => {
     await loadOrCreateProfile();
     loginForm.style.display = 'none';
     chatDiv.style.display = 'flex';
+    profileBtn.style.display = 'block'; // показываем кнопку только после входа
     if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
     startChat();
   } catch (error) {
@@ -82,13 +87,11 @@ logoutBtn.onclick = async () => {
   location.reload();
 };
 
-// Загрузка или создание профиля в Firestore
 async function loadOrCreateProfile() {
   const profileRef = doc(db, "profiles", currentUser.uid);
   const snap = await getDoc(profileRef);
 
   if (!snap.exists()) {
-    // создаём профиль по умолчанию
     await setDoc(profileRef, {
       nick: currentUser.displayName || "Безымянный",
       avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
@@ -98,7 +101,6 @@ async function loadOrCreateProfile() {
   await refreshProfileUI();
 }
 
-// Обновляем настройки в UI
 async function refreshProfileUI() {
   const snap = await getDoc(doc(db, "profiles", currentUser.uid));
   const data = snap.data();
@@ -107,7 +109,6 @@ async function refreshProfileUI() {
   profileColor.value = data.color || '#ffffff';
 }
 
-// Сохраняем профиль (нажатие сохранить)
 profileForm.onsubmit = async (e) => {
   e.preventDefault();
   const updatedProfile = {
@@ -118,12 +119,10 @@ profileForm.onsubmit = async (e) => {
   await setDoc(doc(db, "profiles", currentUser.uid), updatedProfile);
 };
 
-// Открытие/закрытие панели профиля
 profileBtn.onclick = () => {
   profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
 };
 
-// Отправка сообщения
 chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
@@ -146,7 +145,6 @@ chatInputForm.onsubmit = async (e) => {
   }
 };
 
-// Отправка серверного сообщения
 sendServerMsgBtn.onclick = async () => {
   const text = serverMsgInput.value.trim();
   if (!text) return;
@@ -163,12 +161,10 @@ sendServerMsgBtn.onclick = async () => {
   }
 };
 
-// Формат времени "чч:мм"
 function formatTime(date) {
-  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Формат даты "Сегодня", "Вчера", или дата
 function formatDate(date) {
   const now = new Date();
   const yesterday = new Date(now);
@@ -176,12 +172,9 @@ function formatDate(date) {
 
   if (date.toDateString() === now.toDateString()) return "Сегодня";
   if (date.toDateString() === yesterday.toDateString()) return "Вчера";
-  return date.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-profileBtn.style.display = 'block'; //НАДО ПРОВЕРИТЬ
-
-// Запускаем чат: слушаем сообщения и профили (для обновления цвета/ника)
 function startChat() {
   onSnapshot(collection(db, "profiles"), (snap) => {
     profilesCache = {};
