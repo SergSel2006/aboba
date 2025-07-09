@@ -36,14 +36,16 @@
     </div>
   </div>
 
-  <button id="profileBtn" style="margin-left: 10px;">Настройки профиля</button>
+ <button id="profileBtn">⚙ Настройки</button>
 
-<div id="profilePanel" style="display:none; margin: 10px auto; max-width: 400px;">
+<div id="profilePanel">
   <form id="profileForm">
-    <h3>Настройки профиля</h3>
-    <input id="profileNick" name="nick" placeholder="Ник" required /><br />
-    <input id="profileAvatar" name="avatar" placeholder="Ссылка на аватар" /><br />
-    <input id="profileColor" name="color" type="color" value="#ffffff" /><br />
+    <label>Ник:</label>
+    <input type="text" id="profileNick" placeholder="Твой ник" />
+    <label>Аватар (ссылка):</label>
+    <input type="text" id="profileAvatar" placeholder="https://..." />
+    <label>Цвет ника:</label>
+    <input type="color" id="profileColor" />
     <button type="submit">Сохранить</button>
     <button type="button" id="logoutBtn">Выйти</button>
   </form>
