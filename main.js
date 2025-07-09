@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = user;
       await loadOrCreateProfile();
       loginForm.style.display = 'none';
-      chatDiv.style.display = 'flex';
+      const chatDiv = document.getElementById('chatSection');
       profileBtn.style.display = 'block';
       if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
       startChat();
