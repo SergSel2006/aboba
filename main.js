@@ -1,308 +1,145 @@
-// main.js
-import { db } from './firebase-config.js';
+/* style.css */
+* { box-sizing: border-box; }
+html, body, #app {
+  margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #121212; color: #eee; display: flex; flex-direction: column;
+}
+#splash {
+  position: fixed; inset: 0; background: #222; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; font-size: 2rem; font-weight: bold; z-index: 9999;
+}
+#app {
+  flex-grow: 1; display: none; flex-direction: column; height: 100vh; overflow: hidden;
+}
+#loginForm {
+  max-width: 400px; margin: auto; padding: 20px; background: #1e1e1e; border-radius: 10px;
+  box-shadow: 0 0 10px #000;
+}
+#loginForm button {
+  width: 100%; padding: 10px; background: #6200ee; border: none; color: white;
+  font-weight: bold; border-radius: 5px; cursor: pointer;
+}
+#loginForm button:hover {
+  background: #3700b3;
+}
 
-import {
-  collection, doc, getDoc, query, orderBy, serverTimestamp,
-  addDoc, onSnapshot, setDoc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+#chatLayout {
+  display: flex; flex-grow: 1; height: 100%;
+  overflow: hidden;
+}
 
-import {
-  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+#groupList {
+  width: 220px; background: #1c1c1c; border-right: 1px solid #333; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-  const splashMain = document.getElementById('splashMain');
-  const splashSubs = document.getElementById('splashSubs');
-  const splash = document.getElementById('splash');
-  const appDiv = document.getElementById('app');
-  const loginForm = document.getElementById('loginForm');
-  const chatLayout = document.getElementById('chatLayout');
-  const groupList = document.getElementById('groupList');
-  const groupNameDisplay = document.getElementById('groupNameDisplay');
-  const messagesDiv = document.getElementById('messages');
-  const chatInputForm = document.getElementById('chatInput');
-  const messageInput = document.getElementById('messageInput');
-  const loginMsg = document.getElementById('loginMsg');
-  const profileBtn = document.getElementById('profileBtn');
-  const profilePanel = document.getElementById('profilePanel');
-  const profileForm = document.getElementById('profileForm');
-  const profileNick = document.getElementById('profileNick');
-  const profileAvatar = document.getElementById('profileAvatar');
-  const profileColor = document.getElementById('profileColor');
-  const profileStatus = document.getElementById('profileStatus');
-  const statusCounter = document.getElementById('statusCounter');
-  const logoutBtn = document.getElementById('logoutBtn');
+.group-item {
+  padding: 10px; background: #292929; color: #eee; border-radius: 8px;
+  cursor: pointer; text-align: center; font-weight: bold; user-select: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
-  const auth = getAuth();
-  const provider = new GoogleAuthProvider();
+.group-item:hover {
+  background: #444;
+}
 
-  // Группы с паролями
-  const groups = [
-    { name: "aboba global", id: "aboba_global", password: null },
-    { name: "закрытая 1", id: "private_1", password: "1234" },
-    { name: "закрытая 2", id: "private_2", password: "abcd" }
-  ];
+.group-item.active {
+  background: #6200ee;
+  color: #fff;
+}
 
-  let currentUser = null;
-  let profilesCache = {};
-  let selectedGroupId = "aboba_global";
-  let unsubscribeMessages = null;
-  let unsubscribeProfiles = null;
+#chatArea {
+  flex-grow: 1; display: flex; flex-direction: column; height: 100%;
+}
 
-  // Сплэш и тексты
-  const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу", "ладно", "абобно"];
-  let dotCount = 0;
-  const splashDuration = 3000 + Math.random() * 3000;
+#groupNameDisplay {
+  padding: 10px; font-weight: bold; font-size: 1.2rem; background: #222;
+  color: #eee; border-bottom: 1px solid #333;
+}
 
-  const dotInterval = setInterval(() => {
-    dotCount = (dotCount + 1) % 4;
-    splashMain.innerText = `абоба${'.'.repeat(dotCount)}`;
-    splashSubs.innerText = splashTexts[Math.floor(Math.random() * splashTexts.length)];
-  }, 1700);
+#messages {
+  flex-grow: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth;
+  background-color: #181818;
+}
 
-  setTimeout(() => {
-    clearInterval(dotInterval);
-    splash.style.display = 'none';
-    appDiv.style.display = 'flex';
-    loginForm.style.display = 'block';
-  }, splashDuration);
+.msg {
+  max-width: 60%; background: #2a2a2a; padding: 10px; border-radius: 15px;
+  color: #eee; word-break: break-word; box-shadow: 0 0 5px #000;
+  display: flex; align-items: center;
+}
 
-  // Подписка на профили (кэш)
-  function subscribeProfiles() {
-    if (unsubscribeProfiles) unsubscribeProfiles();
-    unsubscribeProfiles = onSnapshot(collection(db, "profiles"), (snapshot) => {
-      profilesCache = {};
-      snapshot.forEach(doc => {
-        profilesCache[doc.id] = doc.data();
-      });
-    });
-  }
+.msg.server {
+  background: #555; margin: 10px auto; max-width: 40%; border-radius: 20px;
+  font-style: italic; text-align: center;
+}
 
-  // Аутентификация и профиль
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      await loadOrCreateProfile();
-      loginForm.style.display = 'none';
-      chatLayout.style.display = 'flex';
-      profileBtn.style.display = 'block';
-      subscribeProfiles();
-      renderGroupList();
-      startChat();
-    } else {
-      currentUser = null;
-      loginForm.style.display = 'block';
-      chatLayout.style.display = 'none';
-      profileBtn.style.display = 'none';
-      if (unsubscribeProfiles) unsubscribeProfiles();
-      if (unsubscribeMessages) unsubscribeMessages();
-    }
-  });
+.msg .avatar {
+  width: 36px; height: 36px; border-radius: 50%; background-size: cover;
+  background-position: center; margin-right: 10px; flex-shrink: 0;
+  border: 2px solid #fff8;
+  cursor: pointer;
+}
 
-  document.getElementById('googleLoginBtn').onclick = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      currentUser = result.user;
-      await loadOrCreateProfile();
-      loginForm.style.display = 'none';
-      chatLayout.style.display = 'flex';
-      profileBtn.style.display = 'block';
-      subscribeProfiles();
-      renderGroupList();
-      startChat();
-    } catch (error) {
-      loginMsg.textContent = "Ошибка входа: " + error.message;
-    }
-  };
+.msg .username {
+  font-weight: 700; margin-right: 8px; user-select: none;
+}
 
-  logoutBtn.onclick = async () => {
-    await signOut(auth);
-    location.reload();
-  };
+#chatInput {
+  display: flex; padding: 10px; background: #222; flex-shrink: 0;
+}
 
-  async function loadOrCreateProfile() {
-    const profileRef = doc(db, "profiles", currentUser.uid);
-    const snap = await getDoc(profileRef);
+#chatInput input {
+  flex-grow: 1; padding: 10px; border-radius: 10px; border: none;
+  background: #333; color: #eee; font-size: 1rem;
+}
 
-    if (!snap.exists()) {
-      await setDoc(profileRef, {
-        nick: currentUser.displayName || "Безымянный",
-        avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
-        color: '#ffffff',
-        status: ''
-      });
-    }
+#chatInput button {
+  background: #6200ee; border: none; color: white; font-weight: bold;
+  padding: 10px 15px; margin-left: 10px; border-radius: 10px; cursor: pointer;
+}
 
-    await refreshProfileUI();
-  }
+#chatInput button:hover {
+  background: #3700b3;
+}
 
-  async function refreshProfileUI() {
-    const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const data = snap.data() || {};
-    profileNick.value = data.nick || "";
-    profileAvatar.value = data.avatar || "";
-    profileColor.value = data.color || '#ffffff';
-    profileStatus.value = data.status || '';
-    statusCounter.textContent = `Осталось ${80 - profileStatus.value.length} символов`;
-  }
+#profileBtn {
+  position: absolute; top: 10px; right: 10px; padding: 8px 12px;
+  background: #333; color: #fff; border: 1px solid #555; border-radius: 8px;
+  cursor: pointer; z-index: 1000; display: none;
+}
 
-  profileForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const updatedProfile = {
-      nick: profileNick.value.trim() || "Безымянный",
-      avatar: profileAvatar.value.trim() || 'https://i.imgur.com/4AiXzf8.png',
-      color: profileColor.value || '#ffffff',
-      status: profileStatus.value.trim().slice(0, 80)
-    };
-    await setDoc(doc(db, "profiles", currentUser.uid), updatedProfile);
-  };
+#profileBtn:hover {
+  background: #444;
+}
 
-  profileStatus.oninput = () => {
-    const remaining = 80 - profileStatus.value.length;
-    statusCounter.textContent = `Осталось ${remaining} символов`;
-  };
+#profilePanel {
+  position: absolute; top: 50px; right: 10px; background: #1e1e1e;
+  padding: 15px; border: 1px solid #333; border-radius: 12px;
+  box-shadow: 0 0 10px #000a; z-index: 1000; display: none; width: 220px;
+}
 
-  profileBtn.onclick = () => {
-    profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
-  };
+#profilePanel input[type="text"],
+#profilePanel input[type="color"] {
+  width: 100%; margin: 5px 0; padding: 8px; background: #2a2a2a;
+  color: #eee; border: none; border-radius: 6px; font-size: 0.9rem;
+}
 
-  // Рендер списка групп
-  function renderGroupList() {
-    groupList.innerHTML = '';
-    groups.forEach(group => {
-      const item = document.createElement('div');
-      item.className = 'group-item';
-      item.textContent = `# ${group.name}`;
-      if (group.id === selectedGroupId) item.classList.add('active');
+#profilePanel button {
+  width: 100%; margin-top: 10px; padding: 8px; background: #6200ee;
+  color: white; font-weight: bold; border: none; border-radius: 6px;
+  cursor: pointer;
+}
 
-      item.onclick = async () => {
-        if (group.password) {
-          const pass = prompt(`Введите пароль для группы "${group.name}"`);
-          if (pass !== group.password) {
-            alert("Неверный пароль");
-            return;
-          }
-        }
-        if (unsubscribeMessages) unsubscribeMessages(); // отписываемся от старого чата
-        selectedGroupId = group.id;
-        renderGroupList();
-        startChat();
-      };
+#profilePanel button:hover {
+  background: #3700b3;
+}
 
-      groupList.appendChild(item);
-    });
-  }
+.date-divider {
+  font-style: italic; font-weight: 600; text-align: center;
+  margin: 15px 0; color: #888;
+}
 
-  // Форматирование времени и даты
-  function formatTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function formatDate(date) {
-    const now = new Date();
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-
-    if (date.toDateString() === now.toDateString()) return "Сегодня";
-    if (date.toDateString() === yesterday.toDateString()) return "Вчера";
-    return date.toLocaleDateString();
-  }
-
-  function isValidColor(c) {
-    return /^#([0-9A-F]{3}){1,2}$/i.test(c);
-  }
-
-  // Загрузка и рендер сообщений
-  async function startChat() {
-    messagesDiv.innerHTML = '';
-    groupNameDisplay.textContent = `# ${groups.find(g => g.id === selectedGroupId).name}`;
-
-    const messagesQuery = query(
-      collection(db, "groups", selectedGroupId, "messages"),
-      orderBy("createdAt")
-    );
-
-    unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
-      messagesDiv.innerHTML = '';
-
-      let lastDate = null;
-
-      snapshot.docs.forEach(docSnap => {
-        const msg = docSnap.data();
-
-        // Добавляем разделитель по дате
-        const msgDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
-        if (!lastDate || msgDate.toDateString() !== lastDate.toDateString()) {
-          const dateDivider = document.createElement('div');
-          dateDivider.className = 'date-divider';
-          dateDivider.textContent = formatDate(msgDate);
-          messagesDiv.appendChild(dateDivider);
-          lastDate = msgDate;
-        }
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg';
-
-        if (msg.type === 'server') {
-          msgDiv.classList.add('server');
-          msgDiv.textContent = msg.text;
-          messagesDiv.appendChild(msgDiv);
-          return;
-        }
-
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'avatar';
-        avatarDiv.style.backgroundImage = `url(${msg.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-        avatarDiv.title = msg.nick;
-        avatarDiv.onclick = () => {
-          const prof = profilesCache[msg.uid] || {};
-          alert(`Профиль: ${msg.nick}\nСтатус: ${prof.status || 'нет'}`);
-        };
-
-        const usernameSpan = document.createElement('span');
-        usernameSpan.className = 'username';
-        usernameSpan.textContent = msg.nick;
-        usernameSpan.style.color = isValidColor(msg.color) ? msg.color : '#fff';
-
-        const textSpan = document.createElement('span');
-        textSpan.textContent = msg.text;
-
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'msg-time';
-        timeSpan.textContent = formatTime(msgDate);
-
-        msgDiv.appendChild(avatarDiv);
-        msgDiv.appendChild(usernameSpan);
-        msgDiv.appendChild(textSpan);
-        msgDiv.appendChild(timeSpan);
-
-        messagesDiv.appendChild(msgDiv);
-      });
-
-      // Скролл вниз
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-
-  // Отправка сообщения
-  chatInputForm.onsubmit = async (e) => {
-    e.preventDefault();
-    if (!messageInput.value.trim()) return;
-
-    const profileSnap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const profile = profileSnap.exists() ? profileSnap.data() : {};
-
-    const msgData = {
-      uid: currentUser.uid,
-      nick: profile.nick || "Безымянный",
-      avatar: profile.avatar || 'https://i.imgur.com/4AiXzf8.png',
-      color: profile.color || '#ffffff',
-      text: messageInput.value.trim(),
-      createdAt: serverTimestamp(),
-      type: 'user'
-    };
-
-    await addDoc(collection(db, "groups", selectedGroupId, "messages"), msgData);
-    messageInput.value = '';
-  };
-});
+.msg-time {
+  user-select: none; padding-left: 10px; white-space: nowrap;
+}
