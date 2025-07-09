@@ -1,4 +1,6 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html, body, #app {
   margin: 0;
@@ -32,6 +34,7 @@ html, body, #app {
   overflow: hidden;
 }
 
+/* Авторизация */
 #loginForm {
   max-width: 400px;
   margin: auto;
@@ -67,7 +70,6 @@ html, body, #app {
 }
 
 /* Чат */
-
 #chat {
   flex-grow: 1;
   display: flex;
@@ -77,6 +79,18 @@ html, body, #app {
   overflow: hidden;
 }
 
+#groupNameDisplay {
+  padding: 10px 0;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  background: #1c1c1c;
+  border-bottom: 1px solid #333;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 #messages {
   flex-grow: 1;
   overflow-y: auto;
@@ -84,7 +98,7 @@ html, body, #app {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  scroll-behavior: smooth; /* плавный скролл */
+  scroll-behavior: smooth;
 }
 
 .msg {
@@ -105,6 +119,8 @@ html, body, #app {
   max-width: 40%;
   border-radius: 20px;
   font-style: italic;
+  justify-content: center;
+  text-align: center;
 }
 
 .msg .avatar {
@@ -124,8 +140,16 @@ html, body, #app {
   user-select: none;
 }
 
-/* Форма ввода — всегда снизу */
+.msg-time {
+  user-select: none;
+  padding-left: 10px;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-left: auto;
+}
 
+/* Ввод */
 #chatInput {
   display: flex;
   padding: 10px;
@@ -166,12 +190,35 @@ html, body, #app {
   color: #888;
 }
 
-.msg-time {
-  user-select: none;
-  padding-left: 10px;
-  white-space: nowrap;
+#serverMsgPanel {
+  margin: 10px auto;
+  display: none;
+  max-width: 400px;
 }
 
+#serverMsgPanel input {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #333;
+  color: #eee;
+  margin-right: 10px;
+}
+
+#serverMsgPanel button {
+  padding: 10px;
+  background: #444;
+  color: #eee;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#serverMsgPanel button:hover {
+  background: #666;
+}
+
+/* Профиль */
 #profileBtn {
   position: absolute;
   top: 10px;
@@ -183,7 +230,7 @@ html, body, #app {
   border-radius: 8px;
   cursor: pointer;
   z-index: 1000;
-  display: none; /* Показываем только после входа */
+  display: none;
 }
 
 #profileBtn:hover {
@@ -205,7 +252,8 @@ html, body, #app {
 }
 
 #profilePanel input[type="text"],
-#profilePanel input[type="color"] {
+#profilePanel input[type="color"],
+#profilePanel textarea {
   width: 100%;
   margin: 5px 0;
   padding: 8px;
