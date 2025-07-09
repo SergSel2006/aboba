@@ -288,4 +288,17 @@ function startChat() {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }, 0);
   });
+  const scrollDownBtn = document.getElementById('scrollDownBtn');
+
+messagesDiv.addEventListener('scroll', () => {
+  // Показываем кнопку, если прокручено выше 200px от низа
+  const threshold = 200;
+  const isScrolledUp = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight > threshold;
+  scrollDownBtn.style.display = isScrolledUp ? 'block' : 'none';
+});
+
+scrollDownBtn.onclick = () => {
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  scrollDownBtn.style.display = 'none';
+};
 }
