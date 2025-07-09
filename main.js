@@ -1,22 +1,19 @@
-// main.js — обновлённый, рабочий
-
-// Импорты — оставляем снаружи
 import { db } from './firebase-config.js';
 
 import {
-  collection, doc, getDoc, getDocs, query, where, onSnapshot,
-  updateDoc, arrayUnion, addDoc, orderBy, serverTimestamp, setDoc
+  collection, doc, getDoc, query, onSnapshot,
+  addDoc, orderBy, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Всё остальное — внутрь DOMContentLoaded
-
 document.addEventListener('DOMContentLoaded', () => {
   const splashMain = document.getElementById('splashMain');
   const splashSubs = document.getElementById('splashSubs');
+  const splash = document.getElementById('splash');
+
   const appDiv = document.getElementById('app');
   const loginForm = document.getElementById('loginForm');
   const chatDiv = document.getElementById('chatSection');
@@ -81,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(() => {
     clearInterval(dotInterval);
-    splashMain.parentElement.style.display = 'none';
+    splash.style.display = 'none';
     appDiv.style.display = 'flex';
   }, splashDuration);
 
@@ -90,10 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = user;
       await loadOrCreateProfile();
       loginForm.style.display = 'none';
-      const chatDiv = document.getElementById('chatSection');
+      chatDiv.style.display = 'flex';
       profileBtn.style.display = 'block';
       if (currentUser.displayName === "Campie") serverMsgPanel.style.display = 'block';
       startChat();
+    } else {
+      loginForm.style.display = 'block';
+      chatDiv.style.display = 'none';
+      profileBtn.style.display = 'none';
+      serverMsgPanel.style.display = 'none';
     }
   });
 
@@ -216,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startChat() {
+    // Кэш профилей
     onSnapshot(collection(db, "profiles"), (snap) => {
       profilesCache = {};
       snap.forEach(doc => profilesCache[doc.id] = doc.data());
