@@ -231,13 +231,3 @@ html, body, #app {
 #profilePanel button:hover {
   background: #3700b3;
 }
-
-#userModalStatus {
-  font-size: 0.9rem;
-  color: #ccc;
-  margin-top: 5px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
-}
-
