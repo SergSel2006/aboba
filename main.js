@@ -61,7 +61,7 @@ function showUserProfileModal(uid) {
 
 profileBtn.style.display = 'none';
 
-const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу"];
+const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу", "ладно", "абобно"];
 let dotCount = 0;
 const splashDuration = 3000 + Math.random() * 3000;
 
