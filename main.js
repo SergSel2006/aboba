@@ -1,7 +1,9 @@
+// main.js
 import { db } from './firebase-config.js';
 
 import {
-  collection, doc, getDoc, query, orderBy, serverTimestamp, addDoc, onSnapshot, setDoc
+  collection, doc, getDoc, query, orderBy, serverTimestamp,
+  addDoc, onSnapshot, setDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let profilesCache = {};
   let selectedGroupId = "aboba_global";
   let unsubscribeMessages = null;
+  let unsubscribeProfiles = null;
 
   // Сплэш и тексты
   const splashTexts = ["абобушка", "Типа ДС для своих", "Ты знаешь Комп Мастера?", "🅰️🅱️🅾️🅱️🅰️", "окак", "#кириллнечитер", "ML+RRR", "йоу", "абобус", "лабобу", "ладно", "абобно"];
@@ -64,6 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.style.display = 'block';
   }, splashDuration);
 
+  // Подписка на профили (кэш)
+  function subscribeProfiles() {
+    if (unsubscribeProfiles) unsubscribeProfiles();
+    unsubscribeProfiles = onSnapshot(collection(db, "profiles"), (snapshot) => {
+      profilesCache = {};
+      snapshot.forEach(doc => {
+        profilesCache[doc.id] = doc.data();
+      });
+    });
+  }
+
   // Аутентификация и профиль
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -72,16 +86,20 @@ document.addEventListener('DOMContentLoaded', () => {
       loginForm.style.display = 'none';
       chatLayout.style.display = 'flex';
       profileBtn.style.display = 'block';
-      startChat();
+      subscribeProfiles();
       renderGroupList();
+      startChat();
     } else {
+      currentUser = null;
       loginForm.style.display = 'block';
       chatLayout.style.display = 'none';
       profileBtn.style.display = 'none';
+      if (unsubscribeProfiles) unsubscribeProfiles();
+      if (unsubscribeMessages) unsubscribeMessages();
     }
   });
 
-  googleLoginBtn.onclick = async () => {
+  document.getElementById('googleLoginBtn').onclick = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       currentUser = result.user;
@@ -89,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loginForm.style.display = 'none';
       chatLayout.style.display = 'flex';
       profileBtn.style.display = 'block';
+      subscribeProfiles();
       renderGroupList();
       startChat();
     } catch (error) {
@@ -119,9 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function refreshProfileUI() {
     const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const data = snap.data();
-    profileNick.value = data.nick;
-    profileAvatar.value = data.avatar;
+    const data = snap.data() || {};
+    profileNick.value = data.nick || "";
+    profileAvatar.value = data.avatar || "";
     profileColor.value = data.color || '#ffffff';
     profileStatus.value = data.status || '';
     statusCounter.textContent = `Осталось ${80 - profileStatus.value.length} символов`;
@@ -189,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return date.toLocaleDateString();
   }
 
+  function isValidColor(c) {
+    return /^#([0-9A-F]{3}){1,2}$/i.test(c);
+  }
+
   // Загрузка и рендер сообщений
   async function startChat() {
     messagesDiv.innerHTML = '';
@@ -199,12 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
       orderBy("createdAt")
     );
 
-    unsubscribeMessages = onSnapshot(messagesQuery, async (snapshot) => {
+    unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
       messagesDiv.innerHTML = '';
 
       let lastDate = null;
 
-      for (const docSnap of snapshot.docs) {
+      snapshot.docs.forEach(docSnap => {
         const msg = docSnap.data();
 
         // Добавляем разделитель по дате
@@ -217,27 +240,29 @@ document.addEventListener('DOMContentLoaded', () => {
           lastDate = msgDate;
         }
 
-        // Создаем элемент сообщения
         const msgDiv = document.createElement('div');
         msgDiv.className = 'msg';
 
-        // Серверные сообщения
         if (msg.type === 'server') {
           msgDiv.classList.add('server');
           msgDiv.textContent = msg.text;
           messagesDiv.appendChild(msgDiv);
-          continue;
+          return;
         }
 
-        // Пользовательские
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'avatar';
         avatarDiv.style.backgroundImage = `url(${msg.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
         avatarDiv.title = msg.nick;
+        avatarDiv.onclick = () => {
+          const prof = profilesCache[msg.uid] || {};
+          alert(`Профиль: ${msg.nick}\nСтатус: ${prof.status || 'нет'}`);
+        };
 
         const usernameSpan = document.createElement('span');
         usernameSpan.className = 'username';
         usernameSpan.textContent = msg.nick;
+        usernameSpan.style.color = isValidColor(msg.color) ? msg.color : '#fff';
 
         const textSpan = document.createElement('span');
         textSpan.textContent = msg.text;
@@ -252,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         msgDiv.appendChild(timeSpan);
 
         messagesDiv.appendChild(msgDiv);
-      }
+      });
 
       // Скролл вниз
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -280,5 +305,4 @@ document.addEventListener('DOMContentLoaded', () => {
     await addDoc(collection(db, "groups", selectedGroupId, "messages"), msgData);
     messageInput.value = '';
   };
-
 });
