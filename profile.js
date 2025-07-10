@@ -68,3 +68,4 @@ export function setupProfileUI() {
     profilePanel.style.display = 'none';
   };
 }
+
