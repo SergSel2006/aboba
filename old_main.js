@@ -29,7 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         profileColor = document.getElementById('profileColor'),
         profileStatus = document.getElementById('profileStatus'),
         statusCounter = document.getElementById('statusCounter'),
-        logoutBtn = document.getElementById('logoutBtn');
+        logoutBtn = document.getElementById('logoutBtn'),
+
+        userProfileModal = document.getElementById('userProfileModal'),
+        userModalAvatar = document.getElementById('userModalAvatar'),
+        userModalNick = document.getElementById('userModalNick'),
+        userModalStatus = document.getElementById('userModalStatus'),
+        closeUserModal = document.getElementById('closeUserModal');
 
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
@@ -60,15 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if(user) {
       currentUser = user;
       await loadOrCreateProfile();
-      loginForm.style.display='none';
-      profileBtn.style.display='block';
-      chatLayout.style.display='flex';
+      loginForm.style.display = 'none';
+      profileBtn.style.display = 'block';
+      chatLayout.style.display = 'flex';
       renderGroups();
       startChat();
     } else {
-      loginForm.style.display='block';
-      chatLayout.style.display='none';
-      profileBtn.style.display='none';
+      loginForm.style.display = 'block';
+      chatLayout.style.display = 'none';
+      profileBtn.style.display = 'none';
     }
   });
 
@@ -152,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msgDiv = document.createElement('div');
         msgDiv.className = m.type === 'server' ? 'msg server' : 'msg';
         msgDiv.innerHTML = `
-          ${m.type === 'user' ? `<div class="avatar" style="background-image:url(${m.avatar})"></div>` : ''}
+          ${m.type === 'user' ? `<div class="avatar" style="background-image:url(${m.avatar})" data-uid="${m.uid}"></div>` : ''}
           <div class="content">
             ${m.type === 'user'
               ? `<div class="msg-header">
@@ -165,6 +171,25 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesDiv.appendChild(msgDiv);
       });
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Открытие профиля по аватарке
+      messagesDiv.querySelectorAll('.avatar').forEach(avatar => {
+        avatar.onclick = async () => {
+          const uid = avatar.dataset.uid;
+          if (!uid) return;
+
+          const snap = await getDoc(doc(db, "profiles", uid));
+          if (!snap.exists()) return;
+
+          const data = snap.data();
+          userModalAvatar.style.backgroundImage = `url(${data.avatar || ''})`;
+          userModalNick.innerText = data.nick || 'Безымянный';
+          userModalNick.style.color = data.color || '#fff';
+          userModalStatus.innerText = data.status || '—';
+
+          userProfileModal.style.display = 'flex';
+        };
+      });
     });
   }
 
@@ -194,4 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if(d.toDateString() === yesterday.toDateString()) return "Вчера";
     return d.toLocaleDateString();
   }
+
+  closeUserModal.onclick = () => {
+    userProfileModal.style.display = 'none';
+  };
+  window.onclick = (e) => {
+    if (e.target === userProfileModal) {
+      userProfileModal.style.display = 'none';
+    }
+  };
 });
