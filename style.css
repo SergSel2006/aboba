@@ -1,42 +1,102 @@
-/* style.css */
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
 html, body, #app {
-  margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #121212; color: #eee; display: flex; flex-direction: column;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #121212;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
 }
+
 #splash {
-  position: fixed; inset: 0; background: #222; display: flex; flex-direction: column;
-  justify-content: center; align-items: center; font-size: 2rem; font-weight: bold; z-index: 9999;
+  position: fixed;
+  inset: 0;
+  background: #222;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  z-index: 9999;
 }
+
+#splashMain {
+  animation: blink 1.4s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 #app {
-  flex-grow: 1; display: none; flex-direction: column; height: 100vh; overflow: hidden;
+  flex-grow: 1;
+  display: none;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
+
 #loginForm {
-  max-width: 400px; margin: auto; padding: 20px; background: #1e1e1e; border-radius: 10px;
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+  background: #1e1e1e;
+  border-radius: 10px;
   box-shadow: 0 0 10px #000;
 }
+
 #loginForm button {
-  width: 100%; padding: 10px; background: #6200ee; border: none; color: white;
-  font-weight: bold; border-radius: 5px; cursor: pointer;
+  width: 100%;
+  padding: 10px;
+  background: #6200ee;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
 }
+
 #loginForm button:hover {
   background: #3700b3;
 }
 
 #chatLayout {
-  display: flex; flex-grow: 1; height: 100%;
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
   overflow: hidden;
 }
 
 #groupList {
-  width: 220px; background: #1c1c1c; border-right: 1px solid #333; padding: 10px;
-  display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  width: 220px;
+  background: #1c1c1c;
+  border-right: 1px solid #333;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
 }
 
 .group-item {
-  padding: 10px; background: #292929; color: #eee; border-radius: 8px;
-  cursor: pointer; text-align: center; font-weight: bold; user-select: none;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 10px;
+  background: #292929;
+  color: #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .group-item:hover {
@@ -49,54 +109,111 @@ html, body, #app {
 }
 
 #chatArea {
-  flex-grow: 1; display: flex; flex-direction: column; height: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 #groupNameDisplay {
-  padding: 10px; font-weight: bold; font-size: 1.2rem; background: #222;
-  color: #eee; border-bottom: 1px solid #333;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  background: #222;
+  color: #eee;
+  border-bottom: 1px solid #333;
 }
 
 #messages {
-  flex-grow: 1; overflow-y: auto; padding: 10px;
-  display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
   background-color: #181818;
 }
 
 .msg {
-  max-width: 60%; background: #2a2a2a; padding: 10px; border-radius: 15px;
-  color: #eee; word-break: break-word; box-shadow: 0 0 5px #000;
-  display: flex; align-items: center;
+  max-width: 70%;
+  background: #2a2a2a;
+  padding: 10px 12px;
+  border-radius: 15px;
+  color: #eee;
+  word-break: break-word;
+  box-shadow: 0 0 5px #000;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  position: relative;
 }
 
 .msg.server {
-  background: #555; margin: 10px auto; max-width: 40%; border-radius: 20px;
-  font-style: italic; text-align: center;
+  background: #555;
+  margin: 10px auto;
+  max-width: 40%;
+  border-radius: 20px;
+  font-style: italic;
+  text-align: center;
+  justify-content: center;
 }
 
 .msg .avatar {
-  width: 36px; height: 36px; border-radius: 50%; background-size: cover;
-  background-position: center; margin-right: 10px; flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin-right: 10px;
+  flex-shrink: 0;
   border: 2px solid #fff8;
   cursor: pointer;
 }
 
 .msg .username {
-  font-weight: 700; margin-right: 8px; user-select: none;
+  font-weight: 700;
+  margin-right: 8px;
+  color: inherit;
+  display: inline-block;
+}
+
+.msg-time {
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-size: 0.75rem;
+  color: #aaa;
+  user-select: none;
 }
 
 #chatInput {
-  display: flex; padding: 10px; background: #222; flex-shrink: 0;
+  display: flex;
+  padding: 10px;
+  background: #222;
+  flex-shrink: 0;
 }
 
 #chatInput input {
-  flex-grow: 1; padding: 10px; border-radius: 10px; border: none;
-  background: #333; color: #eee; font-size: 1rem;
+  flex-grow: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #333;
+  color: #eee;
+  font-size: 1rem;
 }
 
 #chatInput button {
-  background: #6200ee; border: none; color: white; font-weight: bold;
-  padding: 10px 15px; margin-left: 10px; border-radius: 10px; cursor: pointer;
+  background: #6200ee;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 10px 15px;
+  margin-left: 10px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 #chatInput button:hover {
@@ -104,9 +221,17 @@ html, body, #app {
 }
 
 #profileBtn {
-  position: absolute; top: 10px; right: 10px; padding: 8px 12px;
-  background: #333; color: #fff; border: 1px solid #555; border-radius: 8px;
-  cursor: pointer; z-index: 1000; display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 1000;
+  display: none;
 }
 
 #profileBtn:hover {
@@ -114,20 +239,41 @@ html, body, #app {
 }
 
 #profilePanel {
-  position: absolute; top: 50px; right: 10px; background: #1e1e1e;
-  padding: 15px; border: 1px solid #333; border-radius: 12px;
-  box-shadow: 0 0 10px #000a; z-index: 1000; display: none; width: 220px;
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: #1e1e1e;
+  padding: 15px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #000a;
+  z-index: 1000;
+  display: none;
+  width: 220px;
 }
 
 #profilePanel input[type="text"],
-#profilePanel input[type="color"] {
-  width: 100%; margin: 5px 0; padding: 8px; background: #2a2a2a;
-  color: #eee; border: none; border-radius: 6px; font-size: 0.9rem;
+#profilePanel input[type="color"],
+#profilePanel textarea {
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #eee;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
 }
 
 #profilePanel button {
-  width: 100%; margin-top: 10px; padding: 8px; background: #6200ee;
-  color: white; font-weight: bold; border: none; border-radius: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: #6200ee;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -136,10 +282,9 @@ html, body, #app {
 }
 
 .date-divider {
-  font-style: italic; font-weight: 600; text-align: center;
-  margin: 15px 0; color: #888;
-}
-
-.msg-time {
-  user-select: none; padding-left: 10px; white-space: nowrap;
+  font-style: italic;
+  font-weight: 600;
+  text-align: center;
+  margin: 15px 0;
+  color: #888;
 }
