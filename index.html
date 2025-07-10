@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>абоба</title>
+  <title>абоба чат</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,40 +14,36 @@
     <div id="splashSubs"></div>
   </div>
 
-  <div id="app" style="display:none; flex-direction: column; height: 100vh;">
+  <div id="app">
     <div id="loginForm">
       <h2>Войти через Google</h2>
       <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg" style="color:#f55;"></p>
+      <p id="loginMsg"></p>
     </div>
 
-    <div id="chatLayout" style="display:none; flex-grow:1;">
+    <div id="chatLayout">
       <aside id="groupList"></aside>
 
       <main id="chatArea">
-        <div id="groupNameDisplay" style="padding:10px; font-weight:bold; font-size:1.2rem; background:#222; color:#eee; border-bottom:1px solid #333;"></div>
+        <div id="groupNameDisplay"></div>
         <div id="messages"></div>
 
         <form id="chatInput">
-          <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" required />
+          <input type="text" id="messageInput" placeholder="Написать..." required />
           <button type="submit">Отправить</button>
         </form>
       </main>
     </div>
 
-    <button id="profileBtn">⚙ Настройки</button>
+    <button id="profileBtn">⚙</button>
 
     <div id="profilePanel">
       <form id="profileForm">
-        <label>Ник:</label>
-        <input type="text" id="profileNick" placeholder="Твой ник" />
-        <label>Аватар (ссылка):</label>
-        <input type="text" id="profileAvatar" placeholder="https://..." />
-        <label>Цвет ника:</label>
+        <input id="profileNick" placeholder="Ник" />
+        <input id="profileAvatar" placeholder="Аватар URL" />
         <input type="color" id="profileColor" />
-        <label>Статус:</label>
-        <textarea id="profileStatus" maxlength="80" rows="2" style="resize:none;"></textarea>
-        <small id="statusCounter" style="color:#888;">80</small>
+        <textarea id="profileStatus" maxlength="80"></textarea>
+        <small id="statusCounter">80</small>
         <button type="submit">Сохранить</button>
         <button type="button" id="logoutBtn">Выйти</button>
       </form>
