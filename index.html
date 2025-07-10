@@ -2,55 +2,54 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aboba</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>абоба чат</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="splash">aboba loading...</div>
 
-  <div id="app" style="display: none">
+  <!-- Сплэш -->
+  <div id="splash">
+    <div id="splashMain">абоба</div>
+    <div id="splashSubs"></div>
+  </div>
+
+  <div id="app">
     <div id="loginForm">
-      <button id="googleLoginBtn">Войти через Google</button>
+      <h2>Войти через Google</h2>
+      <button id="googleLoginBtn">🔐 Войти с Google</button>
+      <p id="loginMsg"></p>
     </div>
 
-    <div id="mainLayout">
-      <aside>
-        <div id="groupList"></div>
-        <div id="dmList"></div>
-      </aside>
+    <div id="chatLayout">
+      <aside id="groupList"></aside>
 
-      <main>
-        <div id="groupNameDisplay">Выберите группу</div>
-        <div id="messages" class="chat-box"></div>
+      <main id="chatArea">
+        <div id="groupNameDisplay"></div>
+        <div id="messages"></div>
+
         <form id="chatInput">
-          <input id="messageInput" type="text" placeholder="Сообщение..." autocomplete="off" />
-          <button type="submit">➤</button>
+          <input type="text" id="messageInput" placeholder="Написать..." required />
+          <button type="submit">Отправить</button>
         </form>
       </main>
     </div>
 
-    <button id="profileBtn">Профиль</button>
+    <button id="profileBtn">⚙</button>
+
     <div id="profilePanel">
       <form id="profileForm">
-        <input id="profileNick" placeholder="Никнейм" />
+        <input id="profileNick" placeholder="Ник" />
         <input id="profileAvatar" placeholder="Аватар URL" />
-        <input id="profileColor" type="color" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус"></textarea>
-        <div id="statusCounter">Осталось 80</div>
+        <input type="color" id="profileColor" />
+        <textarea id="profileStatus" maxlength="80"></textarea>
+        <small id="statusCounter">80</small>
         <button type="submit">Сохранить</button>
+        <button type="button" id="logoutBtn">Выйти</button>
       </form>
-      <button id="logoutBtn">Выйти</button>
     </div>
   </div>
 
-  <!-- Firebase конфиги -->
-  <script type="module" src="firebase-config.js"></script>
-  <!-- Скрипты -->
-  <script type="module" src="auth.js"></script>
-  <script type="module" src="profile.js"></script>
-  <script type="module" src="groups.js"></script>
-  <script type="module" src="chat.js"></script>
   <script type="module" src="main.js"></script>
 </body>
 </html>
