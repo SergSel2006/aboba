@@ -7,37 +7,37 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="splash">абоба...</div>
+  <div id="splash">
+    <div id="splashMain">абоба</div>
+    <div id="splashSubs"></div>
+  </div>
 
-  <div id="app" style="display:none;">
+  <div id="app">
     <div id="loginForm">
-      <h2>Войти</h2>
-      <button id="googleLoginBtn">Войти через Google</button>
+      <h2>Войти через Google</h2>
+      <button id="googleLoginBtn">🔐 Войти с Google</button>
+      <p id="loginMsg"></p>
     </div>
 
-    <div id="mainLayout">
-      <aside id="sidebar">
-        <div id="groupList"></div>
-        <div id="dmList"></div>
-      </aside>
-
-      <main id="chat">
+    <div id="chatLayout">
+      <aside id="groupList"></aside>
+      <main id="chatArea">
         <div id="groupNameDisplay"></div>
         <div id="messages"></div>
         <form id="chatInput">
-          <input id="messageInput" type="text" placeholder="Написать..." />
-          <button>➡</button>
+          <input type="text" id="messageInput" placeholder="Написать сообщение..." required />
+          <button type="submit">Отправить</button>
         </form>
       </main>
     </div>
 
-    <button id="profileBtn">⚙</button>
-    <div id="profilePanel" style="display:none;">
+    <button id="profileBtn">⚙ Настройки</button>
+    <div id="profilePanel">
       <form id="profileForm">
         <input type="text" id="profileNick" placeholder="Ник" />
-        <input type="text" id="profileAvatar" placeholder="URL аватарки" />
+        <input type="text" id="profileAvatar" placeholder="Аватар URL" />
         <input type="color" id="profileColor" />
-        <textarea id="profileStatus" placeholder="Статус" maxlength="80"></textarea>
+        <textarea id="profileStatus" maxlength="80"></textarea>
         <small id="statusCounter">80</small>
         <button type="submit">Сохранить</button>
         <button type="button" id="logoutBtn">Выйти</button>
