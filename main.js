@@ -1,22 +1,18 @@
+// === Скрипт 1: main.js ===
 import { db } from './firebase-config.js';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './auth.js';
+import { formatTime, formatDate, escapeHtml } from './utils.js';
 import {
   collection, doc, getDoc, query, orderBy,
   serverTimestamp, addDoc, onSnapshot, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getAuth, GoogleAuthProvider, signInWithPopup,
-  onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM элементы
   const splash = document.getElementById('splash');
   const app = document.getElementById('app');
   const loginForm = document.getElementById('loginForm');
   const googleLoginBtn = document.getElementById('googleLoginBtn');
-  const mainLayout = document.getElementById('mainLayout');
   const groupList = document.getElementById('groupList');
-  const dmList = document.getElementById('dmList'); // для будущих ЛС
   const groupNameDisplay = document.getElementById('groupNameDisplay');
   const messagesDiv = document.getElementById('messages');
   const chatInputForm = document.getElementById('chatInput');
@@ -31,10 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusCounter = document.getElementById('statusCounter');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  const auth = getAuth();
-  const provider = new GoogleAuthProvider();
-
-  // Предустановленные группы
   const groups = [
     { name: "aboba global", id: "aboba_global", password: null },
     { name: "закрытая 1", id: "private_1", password: "1234" },
@@ -42,32 +34,28 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let currentUser = null;
-  let profilesCache = {};
   let selectedGroupId = null;
   let unsubscribeMessages = null;
 
-  // === Сплэш (показать 2.5 секунды, потом перейти в приложение)
   setTimeout(() => {
     splash.style.display = 'none';
     app.style.display = 'flex';
   }, 2500);
 
-  // === Слежение за авторизацией
   onAuthStateChanged(auth, async user => {
     if (user) {
       currentUser = user;
       await loadOrCreateProfile();
       loginForm.style.display = 'none';
-      mainLayout.style.display = 'flex';
+      document.getElementById('chatLayout').style.display = 'flex';
       profileBtn.style.display = 'block';
       renderGroupList();
-      // Автоматически зайти в первую группу (чтобы чат показывался)
       if (!selectedGroupId) joinGroup(groups[0]);
     } else {
       currentUser = null;
       if (unsubscribeMessages) unsubscribeMessages();
       loginForm.style.display = 'block';
-      mainLayout.style.display = 'none';
+      document.getElementById('chatLayout').style.display = 'none';
       profileBtn.style.display = 'none';
       messagesDiv.innerHTML = '';
       groupNameDisplay.textContent = '';
@@ -75,14 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // === Кнопки логина/логаута
   googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
   logoutBtn.onclick = async () => {
     await signOut(auth);
     location.reload();
   };
 
-  // === Загрузка или создание профиля пользователя
   async function loadOrCreateProfile() {
     const ref = doc(db, 'profiles', currentUser.uid);
     const snap = await getDoc(ref);
@@ -102,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     statusCounter.textContent = `Осталось ${80 - (data.status?.length || 0)}`;
   }
 
-  // === Сохранение профиля
   profileForm.onsubmit = async e => {
     e.preventDefault();
     await setDoc(doc(db, 'profiles', currentUser.uid), {
@@ -114,30 +99,26 @@ document.addEventListener('DOMContentLoaded', () => {
     profilePanel.style.display = 'none';
   };
 
-  // Обновление счетчика символов в статусе
   profileStatus.oninput = () => {
     statusCounter.textContent = `Осталось ${80 - profileStatus.value.length}`;
   };
 
-  // Переключение панели профиля
   profileBtn.onclick = () => {
     profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
   };
 
-  // === Рендер списка групп
   function renderGroupList() {
     groupList.innerHTML = '';
     groups.forEach(g => {
       const btn = document.createElement('button');
       btn.textContent = g.name;
-      btn.className = 'group-btn';
+      btn.className = 'group-item';
       if (selectedGroupId === g.id) btn.classList.add('active');
       btn.onclick = () => joinGroup(g);
       groupList.append(btn);
     });
   }
 
-  // === Присоединение к группе с проверкой пароля
   async function joinGroup(g) {
     if (g.password) {
       const pass = prompt(`Введите пароль для группы "${g.name}"`);
@@ -153,33 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGroupList();
   }
 
-  // === Форматирование времени
-  function formatTime(dt) {
-    return new Date(dt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  // === Форматирование даты
-  function formatDate(dt) {
-    const d = new Date(dt);
-    const now = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(now.getDate() - 1);
-
-    if (d.toDateString() === now.toDateString()) return 'Сегодня';
-    if (d.toDateString() === yesterday.toDateString()) return 'Вчера';
-    return d.toLocaleDateString();
-  }
-
-  // === Запуск чата, подписка на обновления сообщений
   async function startChat() {
     messagesDiv.innerHTML = '';
     if (!selectedGroupId) return;
 
-    const q = query(
-      collection(db, 'groups', selectedGroupId, 'messages'),
-      orderBy('createdAt')
-    );
-
+    const q = query(collection(db, 'groups', selectedGroupId, 'messages'), orderBy('createdAt'));
     unsubscribeMessages = onSnapshot(q, snap => {
       messagesDiv.innerHTML = '';
       let lastDate = '';
@@ -218,39 +177,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // === Отправка сообщения
   chatInputForm.onsubmit = async e => {
     e.preventDefault();
     if (!messageInput.value.trim()) return;
-    if (!selectedGroupId) {
-      alert('Выберите группу');
-      return;
-    }
+    if (!selectedGroupId) return alert('Выберите группу');
+
     const profileSnap = await getDoc(doc(db, 'profiles', currentUser.uid));
     const profile = profileSnap.exists() ? profileSnap.data() : {};
-    await addDoc(
-      collection(db, 'groups', selectedGroupId, 'messages'),
-      {
-       type: 'user',
-uid: currentUser.uid,
-nick: profile.nick || "Безымянный",
-avatar: profile.avatar || 'https://i.imgur.com/4AiXzf8.png',
-color: profile.color || '#ffffff',
-text: messageInput.value.trim(),
-createdAt: serverTimestamp()
-}
-);
-messageInput.value = '';
-};
 
-// Защита от XSS
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, match => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  }[match]));
-}
+    await addDoc(collection(db, 'groups', selectedGroupId, 'messages'), {
+      type: 'user',
+      uid: currentUser.uid,
+      nick: profile.nick || "Безымянный",
+      avatar: profile.avatar || 'https://i.imgur.com/4AiXzf8.png',
+      color: profile.color || '#ffffff',
+      text: messageInput.value.trim(),
+      createdAt: serverTimestamp()
+    });
+
+    messageInput.value = '';
+  };
 });
