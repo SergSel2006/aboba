@@ -2,49 +2,55 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>абоба</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aboba</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="splash">
-    <div id="splashMain">абоба</div>
-    <div id="splashSubs"></div>
-  </div>
+  <div id="splash">aboba loading...</div>
 
-  <div id="app">
+  <div id="app" style="display: none">
     <div id="loginForm">
-      <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
+      <button id="googleLoginBtn">Войти через Google</button>
     </div>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
-      <main id="chatArea">
-        <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
+    <div id="mainLayout">
+      <aside>
+        <div id="groupList"></div>
+        <div id="dmList"></div>
+      </aside>
+
+      <main>
+        <div id="groupNameDisplay">Выберите группу</div>
+        <div id="messages" class="chat-box"></div>
         <form id="chatInput">
-          <input type="text" id="messageInput" placeholder="Написать сообщение..." required />
-          <button type="submit">Отправить</button>
+          <input id="messageInput" type="text" placeholder="Сообщение..." autocomplete="off" />
+          <button type="submit">➤</button>
         </form>
       </main>
     </div>
 
-    <button id="profileBtn">⚙ Настройки</button>
+    <button id="profileBtn">Профиль</button>
     <div id="profilePanel">
       <form id="profileForm">
-        <input type="text" id="profileNick" placeholder="Ник" />
-        <input type="text" id="profileAvatar" placeholder="Аватар URL" />
-        <input type="color" id="profileColor" />
-        <textarea id="profileStatus" maxlength="80"></textarea>
-        <small id="statusCounter">80</small>
+        <input id="profileNick" placeholder="Никнейм" />
+        <input id="profileAvatar" placeholder="Аватар URL" />
+        <input id="profileColor" type="color" />
+        <textarea id="profileStatus" maxlength="80" placeholder="Статус"></textarea>
+        <div id="statusCounter">Осталось 80</div>
         <button type="submit">Сохранить</button>
-        <button type="button" id="logoutBtn">Выйти</button>
       </form>
+      <button id="logoutBtn">Выйти</button>
     </div>
   </div>
 
+  <!-- Firebase конфиги -->
+  <script type="module" src="firebase-config.js"></script>
+  <!-- Скрипты -->
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="profile.js"></script>
+  <script type="module" src="groups.js"></script>
+  <script type="module" src="chat.js"></script>
   <script type="module" src="main.js"></script>
 </body>
 </html>
