@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box‑sizing: border‑box; }
 
 html, body, #app {
   margin: 0;
@@ -26,15 +24,6 @@ html, body, #app {
   z-index: 9999;
 }
 
-#splashMain {
-  animation: blink 1.4s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
 #app {
   flex-grow: 1;
   display: none;
@@ -52,6 +41,16 @@ html, body, #app {
   box-shadow: 0 0 10px #000;
 }
 
+#loginForm input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #333;
+  border: none;
+  color: #eee;
+  border-radius: 5px;
+}
+
 #loginForm button {
   width: 100%;
   padding: 10px;
@@ -67,6 +66,7 @@ html, body, #app {
   background: #3700b3;
 }
 
+/* Общий чат */
 #chatLayout {
   display: flex;
   flex-grow: 1;
@@ -136,17 +136,15 @@ html, body, #app {
 }
 
 .msg {
-  max-width: 70%;
+  max-width: 60%;
   background: #2a2a2a;
-  padding: 10px 12px;
+  padding: 10px;
   border-radius: 15px;
   color: #eee;
   word-break: break-word;
   box-shadow: 0 0 5px #000;
   display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
   position: relative;
 }
 
@@ -157,7 +155,6 @@ html, body, #app {
   border-radius: 20px;
   font-style: italic;
   text-align: center;
-  justify-content: center;
 }
 
 .msg .avatar {
@@ -175,17 +172,18 @@ html, body, #app {
 .msg .username {
   font-weight: 700;
   margin-right: 8px;
-  color: inherit;
-  display: inline-block;
+  user-select: none;
 }
 
 .msg-time {
+  user-select: none;
+  padding-left: 10px;
+  white-space: nowrap;
   position: absolute;
-  bottom: 5px;
-  right: 10px;
+  bottom: 4px;
+  right: 8px;
   font-size: 0.75rem;
   color: #aaa;
-  user-select: none;
 }
 
 #chatInput {
@@ -218,6 +216,14 @@ html, body, #app {
 
 #chatInput button:hover {
   background: #3700b3;
+}
+
+.date-divider {
+  font-style: italic;
+  font-weight: 600;
+  text-align: center;
+  margin: 15px 0;
+  color: #888;
 }
 
 #profileBtn {
@@ -253,7 +259,17 @@ html, body, #app {
 }
 
 #profilePanel input[type="text"],
-#profilePanel input[type="color"],
+#profilePanel input[type="color"] {
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #eee;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
 #profilePanel textarea {
   width: 100%;
   margin: 5px 0;
@@ -279,12 +295,4 @@ html, body, #app {
 
 #profilePanel button:hover {
   background: #3700b3;
-}
-
-.date-divider {
-  font-style: italic;
-  font-weight: 600;
-  text-align: center;
-  margin: 15px 0;
-  color: #888;
 }
