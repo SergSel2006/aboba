@@ -11,13 +11,18 @@ import {
 
 // === Firebase config и инициализация ===
 const firebaseConfig = {
-  // твои данные Firebase
+  apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
+  authDomain: "abobaserver-49923.firebaseapp.com",
+  projectId: "abobaserver-49923",
+  storageBucket: "abobaserver-49923.appspot.com",
+  messagingSenderId: "364642279962",
+  appId: "1:364642279962:web:d383373e63e81353d067a3"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// === Элементы DOM ===
+// === DOM элементы ===
 const splash = document.getElementById("splash");
 const loginForm = document.getElementById("loginForm");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
@@ -38,7 +43,7 @@ const profileStatus = document.getElementById("profileStatus");
 const statusCounter = document.getElementById("statusCounter");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Модалка другого пользователя
+// Модалка чужого профиля
 const userProfileModal = document.getElementById("userProfileModal");
 const closeUserModalBtn = document.getElementById("closeUserModal");
 const userModalAvatar = document.getElementById("userModalAvatar");
@@ -51,26 +56,26 @@ let currentUser = null;
 let groups = [];
 let selectedGroup = null;
 let unsubscribe = null;
-const profilesCache = {}; // кеш профилей, key = uid, value = профиль
+const profilesCache = {}; // кеш профилей
 
-// --- Вспомогательные функции ---
-function formatTime(date){
-  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+// --- Формат времени и даты ---
+function formatTime(date) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-function formatDate(date){
+function formatDate(date) {
   return date.toLocaleDateString();
 }
 
-// --- Загрузка профиля и кеширование ---
-async function loadProfile(uid){
-  if(profilesCache[uid]) return profilesCache[uid];
+// --- Загрузка профиля с кешем ---
+async function loadProfile(uid) {
+  if (profilesCache[uid]) return profilesCache[uid];
   try {
-    const snap = await getDoc(doc(db,"profiles",uid));
-    if(snap.exists()){
+    const snap = await getDoc(doc(db, "profiles", uid));
+    if (snap.exists()) {
       profilesCache[uid] = snap.data();
       return profilesCache[uid];
     }
-  } catch(e) {
+  } catch (e) {
     console.error("Ошибка загрузки профиля:", e);
   }
   return {
@@ -81,26 +86,29 @@ async function loadProfile(uid){
   };
 }
 
-// --- Отображение сообщений ---
-async function startChat(){
+// --- Отображение чата ---
+async function startChat() {
   messagesDiv.innerHTML = "";
-  if(!selectedGroup) return;
+  if (!selectedGroup) return;
 
   groupNameDisplay.innerText = groups.find(g => g.id === selectedGroup)?.name || "Группа";
 
-  const q = query(collection(db,"groups",selectedGroup,"messages"), orderBy("createdAt"));
-  if(unsubscribe) unsubscribe();
+  const q = query(collection(db, "groups", selectedGroup, "messages"), orderBy("createdAt"));
+  if (unsubscribe) unsubscribe();
 
   unsubscribe = onSnapshot(q, async (snap) => {
     messagesDiv.innerHTML = "";
     let lastDate = "";
-    for(const docSnap of snap.docs){
+    const profileLoadPromises = snap.docs.map(docSnap => loadProfile(docSnap.data().uid));
+    const profiles = await Promise.all(profileLoadPromises);
+
+    for (let i = 0; i < snap.docs.length; i++) {
+      const docSnap = snap.docs[i];
       const m = docSnap.data();
       const date = m.createdAt?.toDate?.() || new Date();
       const dateStr = date.toDateString();
 
-      // Разделитель по дате
-      if(dateStr !== lastDate){
+      if (dateStr !== lastDate) {
         const d = document.createElement('div');
         d.className = 'date-divider';
         d.innerText = formatDate(date);
@@ -108,17 +116,15 @@ async function startChat(){
         lastDate = dateStr;
       }
 
-      // Получаем профиль для сообщения
-      const profile = await loadProfile(m.uid);
+      const profile = profiles[i];
 
-      // Создаем сообщение
       const msgDiv = document.createElement('div');
       msgDiv.className = m.type === 'server' ? 'msg server' : 'msg';
 
       const avatarDiv = document.createElement('div');
       avatarDiv.className = 'avatar';
       avatarDiv.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-      if(m.type === 'user'){
+      if (m.type === 'user') {
         avatarDiv.style.cursor = 'pointer';
         avatarDiv.onclick = () => openUserModal(m.uid);
       }
@@ -127,7 +133,7 @@ async function startChat(){
       contentDiv.className = 'content';
 
       let headerHTML = "";
-      if(m.type === 'user'){
+      if (m.type === 'user') {
         headerHTML = `
           <div class="msg-header">
             <span class="username" style="color:${profile.color}">${profile.nick}</span>
@@ -145,8 +151,8 @@ async function startChat(){
   });
 }
 
-// --- Отображение списка групп ---
-function renderGroups(){
+// --- Рендер списка групп ---
+function renderGroups() {
   groupList.innerHTML = "";
   groups.forEach(g => {
     const el = document.createElement('div');
@@ -161,20 +167,20 @@ function renderGroups(){
   });
 }
 
-// --- Открыть модалку профиля другого пользователя ---
-async function openUserModal(uid){
+// --- Открытие чужого профиля ---
+async function openUserModal(uid) {
   const profile = await loadProfile(uid);
   userModalAvatar.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
   userModalNick.textContent = profile.nick || "Безымянный";
   userModalStatus.textContent = profile.status || "Пользователь без статуса";
-  userModalMsgBtn.disabled = true; // пока без функционала отправки сообщений
+  userModalMsgBtn.disabled = true;
   userProfileModal.style.display = "flex";
 }
 closeUserModalBtn.onclick = () => {
   userProfileModal.style.display = "none";
 };
 
-// --- Обновление счётчика символов для статуса ---
+// --- Обновление счетчика символов статуса ---
 profileStatus.addEventListener('input', () => {
   statusCounter.textContent = 80 - profileStatus.value.length;
 });
@@ -195,19 +201,18 @@ logoutBtn.onclick = () => {
 // --- Отслеживание авторизации ---
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-  if(user){
+  if (user) {
     loginForm.style.display = "none";
     chatLayout.style.display = "flex";
     profileBtn.style.display = "block";
     splash.style.display = "none";
-    await loadUserProfile(); // загружаем профиль пользователя
+    await loadUserProfile();
 
-    // Загружаем группы (жёстко, для примера)
     groups = [
-      {id: "group1", name: "Общий чат"},
-      {id: "group2", name: "Фан-зона"}
+      { id: "group1", name: "Общий чат" },
+      { id: "group2", name: "Фан-зона" }
     ];
-    if(!selectedGroup) selectedGroup = groups[0].id;
+    if (!selectedGroup) selectedGroup = groups[0].id;
     renderGroups();
     startChat();
   } else {
@@ -218,18 +223,18 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Загрузка профиля текущего пользователя в форму ---
-async function loadUserProfile(){
-  if(!currentUser) return;
+// --- Загрузка профиля текущего пользователя ---
+async function loadUserProfile() {
+  if (!currentUser) return;
   const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-  if(snap.exists()){
+  if (snap.exists()) {
     const p = snap.data();
     profilesCache[currentUser.uid] = p;
     profileNick.value = p.nick || "";
     profileAvatar.value = p.avatar || "";
     profileColor.value = p.color || "#cccccc";
     profileStatus.value = p.status || "";
-    statusCounter.textContent = 80 - (profileStatus.value.length);
+    statusCounter.textContent = 80 - profileStatus.value.length;
   } else {
     profileNick.value = "";
     profileAvatar.value = "";
@@ -242,7 +247,7 @@ async function loadUserProfile(){
 // --- Сохранение профиля ---
 profileForm.onsubmit = async (e) => {
   e.preventDefault();
-  if(!currentUser) return;
+  if (!currentUser) return;
 
   const newProfile = {
     nick: profileNick.value.trim() || "Безымянный",
@@ -251,7 +256,7 @@ profileForm.onsubmit = async (e) => {
     status: profileStatus.value.trim()
   };
 
-  await setDoc(doc(db,"profiles",currentUser.uid), newProfile);
+  await setDoc(doc(db, "profiles", currentUser.uid), newProfile);
   profilesCache[currentUser.uid] = newProfile;
   alert("Профиль сохранён!");
 };
@@ -259,9 +264,9 @@ profileForm.onsubmit = async (e) => {
 // --- Отправка сообщений ---
 chatInputForm.onsubmit = async (e) => {
   e.preventDefault();
-  if(!currentUser) return;
+  if (!currentUser) return;
   const text = messageInput.value.trim();
-  if(!text) return;
+  if (!text) return;
 
   const msgData = {
     uid: currentUser.uid,
@@ -271,21 +276,21 @@ chatInputForm.onsubmit = async (e) => {
   };
 
   try {
-    await addDoc(collection(db,"groups",selectedGroup,"messages"), msgData);
+    await addDoc(collection(db, "groups", selectedGroup, "messages"), msgData);
     messageInput.value = "";
-  } catch(e){
+  } catch (e) {
     alert("Ошибка отправки: " + e.message);
   }
 };
 
-// --- Кнопка открытия/закрытия панели профиля ---
+// --- Кнопка профиля ---
 profileBtn.onclick = () => {
   profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
 };
 
 // --- Закрытие панели при клике вне ---
 document.addEventListener('click', e => {
-  if(!profilePanel.contains(e.target) && e.target !== profileBtn){
+  if (!profilePanel.contains(e.target) && e.target !== profileBtn) {
     profilePanel.style.display = "none";
   }
 });
