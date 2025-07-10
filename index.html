@@ -1,58 +1,297 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>абоба</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>абоба</title>
+<style>
+/* ======= Твой CSS сюда ======= */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: #eaeaea;
+}
+button, input, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+/* --- Сплэш нет, так что ниже стили для логина и чата --- */
+#loginForm {
+  display: none;
+  text-align: center;
+  padding: 2em;
+}
+#googleLoginBtn {
+  background: #4285f4;
+  color: white;
+  padding: 0.6em 1.2em;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#googleLoginBtn:hover {
+  background: #357ae8;
+}
+#loginMsg {
+  margin-top: 1em;
+  color: #f44336;
+}
+#chatLayout {
+  display: none;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+#groupList {
+  width: 220px;
+  background: #1c1c1c;
+  padding: 1em;
+  overflow-y: auto;
+  border-right: 1px solid #2a2a2a;
+}
+.group-item {
+  padding: 0.6em;
+  margin-bottom: 0.4em;
+  background: #2a2a2a;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.group-item:hover {
+  background: #3a3a3a;
+}
+.group-item.active {
+  background: #505050;
+  font-weight: bold;
+}
+#chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #141414;
+}
+#groupNameDisplay {
+  padding: 1em;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-bottom: 1px solid #2a2a2a;
+}
+#messages {
+  flex: 1;
+  padding: 1em;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+.date-divider {
+  text-align: center;
+  font-size: 0.85em;
+  color: #888;
+  margin: 1em 0 0.5em;
+}
+.msg {
+  display: flex;
+  gap: 0.75em;
+}
+.msg.server {
+  justify-content: center;
+  color: #aaa;
+  font-style: italic;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+.content {
+  flex: 1;
+}
+.msg-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  margin-bottom: 2px;
+}
+.username {
+  font-weight: bold;
+}
+.msg-time {
+  color: #999;
+}
+.content > div {
+  word-wrap: break-word;
+}
+#chatInput {
+  display: flex;
+  border-top: 1px solid #2a2a2a;
+  padding: 0.5em;
+  background: #1b1b1b;
+}
+#messageInput {
+  flex: 1;
+  background: #2a2a2a;
+  color: white;
+  padding: 0.6em;
+  border-radius: 4px;
+}
+#chatInput button {
+  margin-left: 0.5em;
+  background: #444;
+  color: white;
+  padding: 0.6em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#chatInput button:hover {
+  background: #555;
+}
+#profileBtn {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+  background: #2a2a2a;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.3em;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+}
+#profilePanel {
+  position: fixed;
+  bottom: 70px;
+  right: 1em;
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 1em;
+  width: 260px;
+  display: none;
+  z-index: 10;
+}
+#profilePanel input,
+#profilePanel textarea,
+#profilePanel button {
+  width: 100%;
+  margin-bottom: 0.6em;
+  padding: 0.5em;
+  border-radius: 4px;
+  background: #2d2d2d;
+  color: white;
+}
+#profilePanel textarea {
+  resize: none;
+}
+#profilePanel small {
+  text-align: right;
+  display: block;
+  color: #888;
+}
+#profilePanel button {
+  background: #3a3a3a;
+  cursor: pointer;
+}
+#profilePanel button:hover {
+  background: #4a4a4a;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 12px;
+  width: 280px;
+  text-align: center;
+  position: relative;
+  color: white;
+}
+.modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin: 0 auto 10px;
+}
+.close {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #aaa;
+}
+#userModalMsgBtn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  background: #333;
+  color: #aaa;
+  cursor: not-allowed;
+  border-radius: 6px;
+}
+</style>
 </head>
 <body>
 
-  <!-- Сплэш -->
-  <div id="splash">
-    <div id="splashMain">абоба</div>
-    <div id="splashSubs"></div>
+<div id="app">
+  <div id="loginForm">
+    <h2>Войти через Google</h2>
+    <button id="googleLoginBtn">🔐 Войти с Google</button>
+    <p id="loginMsg"></p>
   </div>
 
-  <div id="app">
-    <div id="loginForm">
-      <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
-    </div>
+  <div id="chatLayout">
+    <aside id="groupList"></aside>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
+    <main id="chatArea">
+      <div id="groupNameDisplay"></div>
+      <div id="messages"></div>
 
-      <main id="chatArea">
-        <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
-
-        <form id="chatInput">
-          <input type="text" id="messageInput" placeholder="Написать..." required />
-          <button type="submit">Отправить</button>
-        </form>
-      </main>
-    </div>
-
-    <button id="profileBtn">⚙</button>
-
-    <div id="profilePanel">
-      <form id="profileForm">
-        <input id="profileNick" placeholder="Ник" />
-        <input id="profileAvatar" placeholder="Аватар URL" />
-        <input type="color" id="profileColor" />
-        <textarea id="profileStatus" maxlength="80"></textarea>
-        <small id="statusCounter">80</small>
-        <button type="submit">Сохранить</button>
-        <button type="button" id="logoutBtn">Выйти</button>
+      <form id="chatInput">
+        <input type="text" id="messageInput" placeholder="Написать..." required />
+        <button type="submit">Отправить</button>
       </form>
-    </div>
+    </main>
   </div>
 
-  <script type="module" src="old_main.js"></script>
+  <button id="profileBtn">⚙</button>
 
-  <!-- Профиль другого пользователя -->
+  <div id="profilePanel">
+    <form id="profileForm">
+      <input id="profileNick" placeholder="Ник" />
+      <input id="profileAvatar" placeholder="Аватар URL" />
+      <input type="color" id="profileColor" />
+      <textarea id="profileStatus" maxlength="80"></textarea>
+      <small id="statusCounter">80</small>
+      <button type="submit">Сохранить</button>
+      <button type="button" id="logoutBtn">Выйти</button>
+    </form>
+  </div>
+</div>
+
+<!-- Модалка профиля другого пользователя -->
 <div id="userProfileModal" class="modal">
   <div class="modal-content">
     <span id="closeUserModal" class="close">&times;</span>
@@ -63,6 +302,301 @@
   </div>
 </div>
 
-  
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy,
+  onSnapshot, addDoc, serverTimestamp, doc,
+  getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import {
+  getAuth, signInWithPopup, GoogleAuthProvider,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
+  authDomain: "abobaserver-49923.firebaseapp.com",
+  projectId: "abobaserver-49923",
+  storageBucket: "abobaserver-49923.appspot.com",
+  messagingSenderId: "364642279962",
+  appId: "1:364642279962:web:d383373e63e81353d067a3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// DOM elements
+const loginForm = document.getElementById("loginForm");
+const googleLoginBtn = document.getElementById("googleLoginBtn");
+const loginMsg = document.getElementById("loginMsg");
+const chatLayout = document.getElementById("chatLayout");
+const groupList = document.getElementById("groupList");
+const groupNameDisplay = document.getElementById("groupNameDisplay");
+const messagesDiv = document.getElementById("messages");
+const chatInputForm = document.getElementById("chatInput");
+const messageInput = document.getElementById("messageInput");
+const profileBtn = document.getElementById("profileBtn");
+const profilePanel = document.getElementById("profilePanel");
+const profileForm = document.getElementById("profileForm");
+const profileNick = document.getElementById("profileNick");
+const profileAvatar = document.getElementById("profileAvatar");
+const profileColor = document.getElementById("profileColor");
+const profileStatus = document.getElementById("profileStatus");
+const statusCounter = document.getElementById("statusCounter");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const userProfileModal = document.getElementById("userProfileModal");
+const closeUserModalBtn = document.getElementById("closeUserModal");
+const userModalAvatar = document.getElementById("userModalAvatar");
+const userModalNick = document.getElementById("userModalNick");
+const userModalStatus = document.getElementById("userModalStatus");
+const userModalMsgBtn = document.getElementById("userModalMsgBtn");
+
+let currentUser = null;
+let groups = [];
+let selectedGroup = null;
+let unsubscribe = null;
+const profilesCache = {};
+
+function formatTime(date){
+  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+function formatDate(date){
+  return date.toLocaleDateString();
+}
+
+async function loadProfile(uid){
+  if(profilesCache[uid]) return profilesCache[uid];
+  try {
+    const snap = await getDoc(doc(db,"profiles",uid));
+    if(snap.exists()){
+      profilesCache[uid] = snap.data();
+      return profilesCache[uid];
+    }
+  } catch(e) {
+    console.error("Ошибка загрузки профиля:", e);
+  }
+  return {
+    nick: "Безымянный",
+    avatar: "https://i.imgur.com/4AiXzf8.png",
+    color: "#ccc",
+    status: ""
+  };
+}
+
+async function openUserModal(uid){
+  const profile = await loadProfile(uid);
+  userModalAvatar.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+  userModalNick.textContent = profile.nick || "Безымянный";
+  userModalStatus.textContent = profile.status || "Пользователь без статуса";
+  userModalMsgBtn.disabled = true;
+  userProfileModal.style.display = "flex";
+}
+closeUserModalBtn.onclick = () => {
+  userProfileModal.style.display = "none";
+};
+
+profileStatus.addEventListener('input', () => {
+  statusCounter.textContent = 80 - profileStatus.value.length;
+});
+
+googleLoginBtn.onclick = () => {
+  loginMsg.textContent = "";
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider).catch(e => loginMsg.textContent = "Ошибка входа: " + e.message);
+};
+
+logoutBtn.onclick = () => {
+  if(unsubscribe){
+    unsubscribe();
+    unsubscribe = null;
+  }
+  signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if(user){
+    loginForm.style.display = "none";
+    chatLayout.style.display = "flex";
+    profileBtn.style.display = "block";
+
+    await loadUserProfile();
+
+    groups = [
+      {id: "group1", name: "Общий чат"},
+      {id: "group2", name: "Фан-зона"}
+    ];
+    if(!selectedGroup) selectedGroup = groups[0].id;
+
+    renderGroups();
+    startChat();
+  } else {
+    loginForm.style.display = "block";
+    chatLayout.style.display = "none";
+    profileBtn.style.display = "none";
+
+    if(unsubscribe){
+      unsubscribe();
+      unsubscribe = null;
+    }
+  }
+});
+
+async function loadUserProfile(){
+  if(!currentUser) return;
+  const snap = await getDoc(doc(db, "profiles", currentUser.uid));
+  if(snap.exists()){
+    const p = snap.data();
+    profilesCache[currentUser.uid] = p;
+    profileNick.value = p.nick || "";
+    profileAvatar.value = p.avatar || "";
+    profileColor.value = p.color || "#cccccc";
+    profileStatus.value = p.status || "";
+    statusCounter.textContent = 80 - (profileStatus.value.length);
+  } else {
+    profileNick.value = "";
+    profileAvatar.value = "";
+    profileColor.value = "#cccccc";
+    profileStatus.value = "";
+    statusCounter.textContent = 80;
+  }
+}
+
+profileForm.onsubmit = async (e) => {
+  e.preventDefault();
+  if(!currentUser) return;
+
+  const newProfile = {
+    nick: profileNick.value.trim() || "Безымянный",
+    avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
+    color: profileColor.value || "#cccccc",
+    status: profileStatus.value.trim()
+  };
+
+  await setDoc(doc(db,"profiles",currentUser.uid), newProfile);
+  profilesCache[currentUser.uid] = newProfile;
+  alert("Профиль сохранён!");
+};
+
+function renderGroups(){
+  groupList.innerHTML = "";
+  groups.forEach(g => {
+    const el = document.createElement('div');
+    el.className = 'group-item' + (g.id === selectedGroup ? ' active' : '');
+    el.textContent = g.name;
+    el.onclick = () => {
+      selectedGroup = g.id;
+      startChat();
+      renderGroups();
+    };
+    groupList.appendChild(el);
+  });
+}
+
+function unsubscribeChat(){
+  if(unsubscribe){
+    unsubscribe();
+    unsubscribe = null;
+  }
+}
+
+async function startChat(){
+  if(!selectedGroup) return;
+  messagesDiv.innerHTML = "";
+
+  const q = query(collection(db,"groups",selectedGroup,"messages"), orderBy("createdAt"));
+
+  unsubscribeChat();
+
+  unsubscribe = onSnapshot(q, async (snap) => {
+    messagesDiv.innerHTML = "";
+    let lastDate = "";
+
+    for(const docSnap of snap.docs){
+      const m = docSnap.data();
+      const date = m.createdAt?.toDate?.() || new Date();
+      const dateStr = date.toDateString();
+
+      if(dateStr !== lastDate){
+        const d = document.createElement('div');
+        d.className = 'date-divider';
+        d.innerText = formatDate(date);
+        messagesDiv.appendChild(d);
+        lastDate = dateStr;
+      }
+
+      const profile = await loadProfile(m.uid);
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = m.type === 'server' ? 'msg server' : 'msg';
+
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'avatar';
+      avatarDiv.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
+
+      if(m.type === 'user'){
+        avatarDiv.style.cursor = 'pointer';
+        avatarDiv.onclick = () => openUserModal(m.uid);
+      }
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'content';
+
+      let headerHTML = "";
+      if(m.type === 'user'){
+        headerHTML = `
+          <div class="msg-header">
+            <span class="username" style="color:${profile.color}">${profile.nick}</span>
+            <span class="msg-time">${formatTime(date)}</span>
+          </div>`;
+      }
+
+      contentDiv.innerHTML = headerHTML + `<div>${m.text}</div>`;
+
+      msgDiv.appendChild(avatarDiv);
+      msgDiv.appendChild(contentDiv);
+
+      messagesDiv.appendChild(msgDiv);
+    }
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+
+chatInputForm.onsubmit = async (e) => {
+  e.preventDefault();
+  if(!currentUser) return;
+
+  const text = messageInput.value.trim();
+  if(!text) return;
+
+  const msgData = {
+    uid: currentUser.uid,
+    text,
+    createdAt: serverTimestamp(),
+    type: "user"
+  };
+
+  try {
+    await addDoc(collection(db,"groups",selectedGroup,"messages"), msgData);
+    messageInput.value = "";
+  } catch(e){
+    alert("Ошибка отправки: " + e.message);
+  }
+};
+
+profileBtn.onclick = () => {
+  profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
+};
+
+document.addEventListener('click', e => {
+  if(!profilePanel.contains(e.target) && e.target !== profileBtn){
+    profilePanel.style.display = "none";
+  }
+});
+</script>
 </body>
 </html>
