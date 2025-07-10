@@ -30,3 +30,4 @@ export function initAuth() {
   googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
   logoutBtn.onclick = () => signOut(auth);
 }
+
