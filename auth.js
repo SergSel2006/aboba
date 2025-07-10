@@ -1,6 +1,5 @@
-// auth.js
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { loadOrCreateProfile, renderGroupList, startChat, currentUser, setCurrentUser } from './profile.js';
+import { loadOrCreateProfile, renderGroupList, startChat, setCurrentUser } from './profile.js';
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
@@ -14,8 +13,8 @@ export function initAuth() {
 
   onAuthStateChanged(auth, async user => {
     if (user) {
-      setCurrentUser(user);
-      await loadOrCreateProfile();
+      setCurrentUser(user);               // обновляем currentUser в profile.js
+      await loadOrCreateProfile();       // грузим профиль
       loginForm.style.display = 'none';
       mainLayout.style.display = 'flex';
       profileBtn.style.display = 'block';
