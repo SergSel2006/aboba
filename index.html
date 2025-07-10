@@ -7,42 +7,37 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="splash">абоба...</div>
 
-  <!-- Сплэш -->
-  <div id="splash">
-    <div id="splashMain">абоба</div>
-    <div id="splashSubs"></div>
-  </div>
-
-  <div id="app">
+  <div id="app" style="display:none;">
     <div id="loginForm">
-      <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
+      <h2>Войти</h2>
+      <button id="googleLoginBtn">Войти через Google</button>
     </div>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
+    <div id="mainLayout">
+      <aside id="sidebar">
+        <div id="groupList"></div>
+        <div id="dmList"></div>
+      </aside>
 
-      <main id="chatArea">
+      <main id="chat">
         <div id="groupNameDisplay"></div>
         <div id="messages"></div>
-
         <form id="chatInput">
-          <input type="text" id="messageInput" placeholder="Написать..." required />
-          <button type="submit">Отправить</button>
+          <input id="messageInput" type="text" placeholder="Написать..." />
+          <button>➡</button>
         </form>
       </main>
     </div>
 
     <button id="profileBtn">⚙</button>
-
-    <div id="profilePanel">
+    <div id="profilePanel" style="display:none;">
       <form id="profileForm">
-        <input id="profileNick" placeholder="Ник" />
-        <input id="profileAvatar" placeholder="Аватар URL" />
+        <input type="text" id="profileNick" placeholder="Ник" />
+        <input type="text" id="profileAvatar" placeholder="URL аватарки" />
         <input type="color" id="profileColor" />
-        <textarea id="profileStatus" maxlength="80"></textarea>
+        <textarea id="profileStatus" placeholder="Статус" maxlength="80"></textarea>
         <small id="statusCounter">80</small>
         <button type="submit">Сохранить</button>
         <button type="button" id="logoutBtn">Выйти</button>
@@ -53,4 +48,3 @@
   <script type="module" src="main.js"></script>
 </body>
 </html>
-
