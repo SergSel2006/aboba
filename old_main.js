@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentUser = null, profilesCache = {}, selectedGroup="aboba_global", unsubscribe=null;
 
-  // Сплэш
+  // Сплэш-анимация
   let dot=0;
   const subs=["абобушка","ДС для своих","окак","йоу","лабобус"];
   const iv = setInterval(()=>{
@@ -50,17 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     splashMain.innerText=`абоба${'.'.repeat(dot)}`;
     splashSubs.innerText = subs[Math.floor(Math.random()*subs.length)];
   },1700);
-  setTimeout(()=>{
-    clearInterval(iv);
-    splash.style.display='none';
-    app.style.display='block';
-    loginForm.style.display='block';
-  },2500);
 
   // Аутентификация
   onAuthStateChanged(auth, async user => {
+    clearInterval(iv);
+    splash.style.display='none';
+    app.style.display='block';
+
     if(user) {
-      currentUser=user;
+      currentUser = user;
       await loadOrCreateProfile();
       loginForm.style.display='none';
       profileBtn.style.display='block';
@@ -79,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Профиль
   profileBtn.onclick = () => {
-    profilePanel.style.display = profilePanel.style.display==='block'?'none':'block';
+    profilePanel.style.display = profilePanel.style.display==='block' ? 'none' : 'block';
   };
   profileStatus.oninput = () => {
     statusCounter.innerText = 80 - profileStatus.value.length;
@@ -100,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const snap = await getDoc(ref);
     if(!snap.exists()) {
       await setDoc(ref,{
-        nick: currentUser.displayName||"Безымянный",
+        nick: currentUser.displayName || "Безымянный",
         avatar: currentUser.photoURL || 'https://i.imgur.com/4AiXzf8.png',
         color:"#ffffff", status:''
       });
@@ -110,20 +108,20 @@ document.addEventListener('DOMContentLoaded', () => {
     profileAvatar.value=data.avatar;
     profileColor.value=data.color;
     profileStatus.value=data.status;
-    statusCounter.innerText=80-profileStatus.value.length;
+    statusCounter.innerText = 80 - profileStatus.value.length;
   }
 
   // Группы
   function renderGroups(){
-    groupList.innerHTML='';
+    groupList.innerHTML = '';
     groups.forEach(g => {
       const div = document.createElement('div');
-      div.className='group-item';
+      div.className = 'group-item';
       div.innerText = g.name;
-      if(g.id===selectedGroup) div.classList.add('active');
-      div.onclick = ()=>{
-        if(g.password && prompt("Пароль:")!==g.password) return alert("Неверный пароль");
-        selectedGroup=g.id;
+      if(g.id === selectedGroup) div.classList.add('active');
+      div.onclick = () => {
+        if(g.password && prompt("Пароль:") !== g.password) return alert("Неверный пароль");
+        selectedGroup = g.id;
         if(unsubscribe) unsubscribe();
         renderGroups();
         startChat();
@@ -134,35 +132,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Чат
   function startChat(){
-    messagesDiv.innerHTML='';
-    groupNameDisplay.innerText = groups.find(g=>g.id===selectedGroup).name;
-    const q = query(collection(db,"groups",selectedGroup,"messages"),orderBy("createdAt"));
-    unsubscribe = onSnapshot(q, snap=>{
-      messagesDiv.innerHTML='';
-      let lastDate='';
-      snap.forEach(docSnap=>{
+    messagesDiv.innerHTML = '';
+    groupNameDisplay.innerText = groups.find(g => g.id === selectedGroup).name;
+    const q = query(collection(db,"groups",selectedGroup,"messages"), orderBy("createdAt"));
+    unsubscribe = onSnapshot(q, snap => {
+      messagesDiv.innerHTML = '';
+      let lastDate = '';
+      snap.forEach(docSnap => {
         const m = docSnap.data();
         const date = m.createdAt?.toDate?.() || new Date();
         const dateStr = date.toDateString();
-        if(dateStr!==lastDate){
+        if(dateStr !== lastDate){
           const d = document.createElement('div');
-          d.className='date-divider';
+          d.className = 'date-divider';
           d.innerText = formatDate(date);
           messagesDiv.appendChild(d);
-          lastDate=dateStr;
+          lastDate = dateStr;
         }
         const msgDiv = document.createElement('div');
-        msgDiv.className = m.type==='server'?'msg server':'msg';
+        msgDiv.className = m.type === 'server' ? 'msg server' : 'msg';
         msgDiv.innerHTML = `
-          ${m.type==='user' ? `<div class="avatar" style="background-image:url(${m.avatar})"></div>` : ''}
+          ${m.type === 'user' ? `<div class="avatar" style="background-image:url(${m.avatar})"></div>` : ''}
           <div class="content">
-            ${m.type==='user'
+            ${m.type === 'user'
               ? `<div class="msg-header">
                   <span class="username" style="color:${m.color}">${m.nick}</span>
                   <span class="msg-time">${formatTime(date)}</span>
                 </div>`
-              : ''
-            }
+              : ''}
             <div>${m.text}</div>
           </div>`;
         messagesDiv.appendChild(msgDiv);
@@ -171,19 +168,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  chatInput.onsubmit = async e =>{
+  chatInput.onsubmit = async e => {
     e.preventDefault();
     const text = messageInput.value.trim();
     if(!text) return;
     const prof = (await getDoc(doc(db,"profiles",currentUser.uid))).data();
     await addDoc(collection(db,"groups",selectedGroup,"messages"), {
-      type:'user',
-      uid:currentUser.uid,
-      nick:prof.nick, avatar:prof.avatar,
-      color:prof.color, text,
+      type: 'user',
+      uid: currentUser.uid,
+      nick: prof.nick, avatar: prof.avatar,
+      color: prof.color, text,
       createdAt: serverTimestamp()
     });
-    messageInput.value='';
+    messageInput.value = '';
   };
 
   // Вспомогалки
@@ -191,11 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   }
   function formatDate(d){
-    const now= new Date(), yesterday = new Date(now);
-    yesterday.setDate(now.getDate()-1);
-    if(d.toDateString()===now.toDateString()) return "Сегодня";
-    if(d.toDateString()===yesterday.toDateString()) return "Вчера";
+    const now = new Date(), yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if(d.toDateString() === now.toDateString()) return "Сегодня";
+    if(d.toDateString() === yesterday.toDateString()) return "Вчера";
     return d.toLocaleDateString();
   }
 });
-//ЗАГРУЗИСЬ
