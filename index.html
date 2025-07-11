@@ -2,15 +2,32 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>абоба</title>
   <style>
     /* ===== RESET ===== */
     *{box-sizing:border-box;}
     html,body{margin:0;padding:0;height:100%;display:flex;flex-direction:column;font-family:'Segoe UI',sans-serif;background:#121212;color:#eaeaea;-webkit-overflow-scrolling:touch;}
 
+    /* ===== SPLASH SCREEN ===== */
+    #splashScreen {
+      position: fixed;
+      inset: 0;
+      background: #121212;
+      color: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-size: 2em;
+      font-weight: 600;
+      user-select: none;
+      z-index: 2000;
+      transition: opacity 0.5s ease;
+    }
+
     /* ===== LAYOUT ROOT ===== */
-    #app{flex:1;display:flex;flex-direction:column;min-height:0;}
+    #app{flex:1;display:flex;flex-direction:column;min-height:0;opacity: 0; transition: opacity 0.5s ease;}
     #chatLayout{flex:1;display:flex;min-height:0;overflow:hidden;}
 
     /* ===== LOGIN ===== */
@@ -25,6 +42,20 @@
     .group-item{padding:0.6em;margin-bottom:0.4em;background:#2a2a2a;border-radius:5px;cursor:pointer;user-select:none;}
     .group-item:hover{background:#3a3a3a;}
     .group-item.active{background:#505050;font-weight:bold;}
+    #addGroupBtn {
+      margin: 0.5em 0 1em 0;
+      padding: 0.4em 0.8em;
+      border-radius: 5px;
+      background: #3a3a3a;
+      color: #eee;
+      font-weight: 600;
+      cursor: pointer;
+      user-select:none;
+      text-align:center;
+    }
+    #addGroupBtn:hover {
+      background: #505050;
+    }
 
     /* ===== CHAT AREA ===== */
     #chatArea{flex:1;display:flex;flex-direction:column;min-height:0;background:#141414;}
@@ -32,16 +63,42 @@
 
     /* ===== MESSAGES ===== */
     #messages{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:0.75em;padding:1em;padding-bottom:90px;/* место под поле ввода */}
-    .msg{display:flex;gap:0.75em;}
+    .msg{display:flex;gap:0.75em;word-break: break-word;}
     .msg.server{justify-content:center;color:#aaa;font-style:italic;}
     .avatar{width:36px;height:36px;border-radius:50%;background-size:cover;background-position:center;flex-shrink:0;}
     .content{flex:1;}
     .msg-header{display:flex;justify-content:space-between;font-size:0.9em;margin-bottom:2px;}
 
     /* ===== CHAT INPUT (fixed) ===== */
-    #chatInput{position:fixed;bottom:0;left:0;right:0;height:60px;display:flex;align-items:center;padding:0 0.5em;background:#1b1b1b;border-top:1px solid #2a2a2a;z-index:1000;}
-    #messageInput{flex:1;padding:0.6em;border-radius:4px;background:#2a2a2a;color:#fff;border:none;}
-    #chatInput button{margin-left:0.5em;background:#444;color:#fff;padding:0.6em 1em;border-radius:4px;cursor:pointer;font-weight:600;border:none;}
+    #chatInput{position:fixed;bottom:0;left:0;right:0;height:80px;display:flex;align-items:center;padding:0 0.5em;background:#1b1b1b;border-top:1px solid #2a2a2a;z-index:1000;}
+    #chatInputForm{flex:1;display:flex;align-items:center;}
+    #messageInput {
+      flex:1;
+      padding:0.6em;
+      border-radius:4px;
+      background:#2a2a2a;
+      color:#fff;
+      border:none;
+      resize:none;
+      font-size:16px; /* важно для моб зума */
+      line-height:1.4em;
+      max-height:6em;
+      overflow-y:auto;
+      min-height:36px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    #chatInput button {
+      margin-left:0.5em;
+      background:#444;
+      color:#fff;
+      padding:0.6em 1em;
+      border-radius:4px;
+      cursor:pointer;
+      font-weight:600;
+      border:none;
+      user-select:none;
+      flex-shrink:0;
+    }
     #chatInput button:hover{background:#555;}
 
     /* ===== PROFILE BUTTON ===== */
@@ -72,7 +129,11 @@
   </style>
 </head>
 <body>
-  <div id="app">
+
+  <!-- SPLASH SCREEN -->
+  <div id="splashScreen">лабобу</div>
+
+  <div id="app" style="opacity:0;">
     <div id="loginForm">
       <div id="googleLoginBtn">Войти через Google</div>
       <div id="loginMsg"></div>
@@ -81,6 +142,8 @@
     <div id="chatLayout" style="display: none">
       <div id="groupList">
         <div class="group-section-title">Группы</div>
+        <div id="addGroupBtn">+ Добавить группу</div>
+        <!-- Статические группы -->
         <div class="group-item" data-id="group1">Абобики с ДС</div>
         <div class="group-item" data-id="group2">Дружные абобы</div>
         <div class="group-item" data-id="group3">aboba global</div>
@@ -95,7 +158,7 @@
 
     <div id="chatInput" style="display: none">
       <form id="chatInputForm" style="flex: 1; display: flex;">
-        <input id="messageInput" type="text" placeholder="Введите сообщение..." autocomplete="off" />
+        <textarea id="messageInput" placeholder="Введите сообщение..." autocomplete="off" rows="1"></textarea>
         <button type="submit">Отправить</button>
       </form>
     </div>
@@ -122,12 +185,20 @@
         <button id="userModalMsgBtn" disabled>Написать в ЛС</button>
       </div>
     </div>
+
+    <!-- Add Group Modal -->
+    <div id="addGroupModal" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <span id="closeAddGroupModal" class="close">×</span>
+        <h3>Добавить группу</h3>
+        <input id="newGroupName" placeholder="Название группы" />
+        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" />
+        <button id="createGroupBtn">Создать</button>
+      </div>
+    </div>
   </div>
 
-
 <script type="module">
-// main.js – версия с режимами групп (open / invite / strict) + ЛС
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
 import {
   getFirestore, collection, query, orderBy,
@@ -159,7 +230,7 @@ const auth = getAuth(app);
  * 1. DOM shortcuts *
  ********************/
 const $ = id => document.getElementById(id);
-const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),privateChatsList=$("privateChatsList");
+const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),privateChatsList=$("privateChatsList"),addGroupBtn=$("addGroupBtn"),addGroupModal=$("addGroupModal"),closeAddGroupModal=$("closeAddGroupModal"),newGroupName=$("newGroupName"),newGroupPassword=$("newGroupPassword"),createGroupBtn=$("createGroupBtn");
 
 /********************
  * 2. Static groups *
@@ -179,83 +250,318 @@ const profileCache={};
  * 3. Helpers        *
  ********************/
 const fmtTime=d=>d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-const fmtDate=d=>{const n=new Date(),day=864e5;if(n-d<day&&n.getDate()==d.getDate())return"Сегодня";if(n-d<2*day&&n.getDate()-1==d.getDate())return"Вчера";return d.toLocaleDateString();};
+const fmtDate=d=>{
+  const n=new Date(),day=864e5;
+  if(n-d<day&&n.getDate()==d.getDate())return"Сегодня";
+  if(n-d<2*day&&n.getDate()-1==d.getDate())return"Вчера";
+  return d.toLocaleDateString();
+};
 const chatIdFor=(a,b)=>[a,b].sort().join("_");
 
 /********************
  * 4. Auth           *
  ********************/
-googleLoginBtn.onclick=()=>{loginMsg.textContent="";signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);};
-logoutBtn.onclick=()=>{unsubscribe?.();signOut(auth);};
+googleLoginBtn.onclick=()=>{
+  loginMsg.textContent="";
+  signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);
+};
+logoutBtn.onclick=()=>{
+  unsubscribe?.();
+  signOut(auth);
+};
 
 onAuthStateChanged(auth,async user=>{
   currentUser=user;
   if(user){
-    loginForm.style.display="none";chatLayout.style.display="flex";chatInput.style.display="flex";profileBtn.style.display="flex";
+    loginForm.style.display="none";
+    chatLayout.style.display="flex";
+    chatInput.style.display="flex";
+    profileBtn.style.display="flex";
     await loadOwnProfile();
     renderSidebar();
     openGroup(selectedGroupId);
+    // Скрываем сплэш плавно
+    splashScreen.style.opacity = "0";
+    setTimeout(()=>{
+      splashScreen.style.display = "none";
+      app.style.opacity = "1";
+    }, 600);
   }else{
-    loginForm.style.display="flex";chatLayout.style.display="none";chatInput.style.display="none";profileBtn.style.display="none";unsubscribe?.();
+    loginForm.style.display="flex";
+    chatLayout.style.display="none";
+    chatInput.style.display="none";
+    profileBtn.style.display="none";
+    unsubscribe?.();
+    // Показываем сплэш если нет юзера
+    splashScreen.style.display = "flex";
+    splashScreen.style.opacity = "1";
+    app.style.opacity = "0";
   }
 });
 
+/********************
+ * 5. Load own profile *
+ ********************/
 async function loadOwnProfile(){
-  if(!currentUser)return;const snap=await getDoc(doc(db,"profiles",currentUser.uid));if(snap.exists())profileCache[currentUser.uid]=snap.data();
-  const p=profileCache[currentUser.uid]||{};profileNick.value=p.nick||"";profileAvatar.value=p.avatar||"";profileColor.value=p.color||"#cccccc";profileStatus.value=p.status||"";statusCounter.textContent=80-(profileStatus.value.length||0);
+  if(!currentUser)return;
+  const snap=await getDoc(doc(db,"profiles",currentUser.uid));
+  if(snap.exists())profileCache[currentUser.uid]=snap.data();
+  const p=profileCache[currentUser.uid]||{};
+  profileNick.value=p.nick||"";
+  profileAvatar.value=p.avatar||"";
+  profileColor.value=p.color||"#cccccc";
+  profileStatus.value=p.status||"";
+  statusCounter.textContent=80-(profileStatus.value.length||0);
 }
 
 /********************
- * 5. Sidebar render *
+ * 6. Sidebar render *
  ********************/
 function renderSidebar(){
-  groupList.querySelectorAll(".group-item").forEach(el=>el.remove());
+  // Удаляем старые группы и ЛС
+  groupList.querySelectorAll(".group-item").forEach(el=>{
+    if(el.id !== 'addGroupBtn') el.remove();
+  });
   privateChatsList.innerHTML="";
-  Object.entries(profileCache).forEach(([uid,p])=>{ if(uid===currentUser.uid) return; const el=document.createElement("div"); el.className="group-item"+(uid===privateUid?" active":""); el.textContent=p.nick||"Безымянный"; el.onclick=()=>openPrivate(uid); privateChatsList.appendChild(el); });
-  groupIds.forEach(id=>{const meta=GROUP_DEFS[id];const el=document.createElement("div");el.className="group-item"+(id===selectedGroupId&&!privateUid?" active":"");el.dataset.id=id;el.textContent=meta.name;el.onclick=()=>openGroup(id);groupList.appendChild(el);});
+
+  // ЛС
+  Object.entries(profileCache).forEach(([uid,p])=>{
+    if(uid===currentUser.uid) return;
+    const el=document.createElement("div");
+    el.className="group-item"+(uid===privateUid?" active":"");
+    el.textContent=p.nick||"Безымянный";
+    el.onclick=()=>openPrivate(uid);
+    privateChatsList.appendChild(el);
+  });
+
+  // Группы - добавляем динамически по GROUP_DEFS
+  groupIds.forEach(id=>{
+    const meta=GROUP_DEFS[id];
+    const el=document.createElement("div");
+    el.className="group-item"+(id===selectedGroupId?" active":"");
+    el.textContent=meta.name;
+    el.dataset.id=id;
+    el.onclick=()=>openGroup(id);
+    groupList.insertBefore(el, addGroupBtn.nextSibling);
+  });
 }
 
 /********************
- * 6. Chat opening   *
+ * 7. Profile save with unique nick check *
  ********************/
-function openGroup(id){privateUid="";selectedGroupId=id;chatInputForm.dataset.chatType="group";chatInputForm.dataset.group=id;groupName.textContent=GROUP_DEFS[id].name;messagesDiv.innerHTML="";unsubscribe?.();const q=query(collection(db,"groups",id,"messages"),orderBy("createdAt"));unsubscribe=onSnapshot(q,renderSnap);updateInputLock();renderSidebar();}
-function openPrivate(uid){selectedGroupId="";privateUid=uid;chatInputForm.dataset.chatType="private";chatInputForm.dataset.targetUid=uid;loadProfile(uid).then(p=>groupName.textContent="Диалог с "+(p.nick||"Безымянный"));messagesDiv.innerHTML="";unsubscribe?.();const q=query(collection(db,"privateChats",chatIdFor(currentUser.uid,uid),"messages"),orderBy("createdAt"));unsubscribe=onSnapshot(q,renderSnap);updateInputLock();renderSidebar();}
+profileForm.onsubmit=async e=>{
+  e.preventDefault();
+  const nick=profileNick.value.trim();
+  if(!nick){
+    alert("Никнейм обязателен");
+    return;
+  }
+  // Проверяем уникальность ника
+  const q= query(collection(db,"profiles"));
+  const snap=await getDocs(q);
+  for(const docSnap of snap.docs){
+    if(docSnap.id!==currentUser.uid && docSnap.data().nick === nick){
+      alert("Никнейм занят, выберите другой");
+      return;
+    }
+  }
+  // Сохраняем профиль
+  await setDoc(doc(db,"profiles",currentUser.uid),{
+    nick,
+    avatar:profileAvatar.value.trim(),
+    color:profileColor.value,
+    status:profileStatus.value.trim()
+  });
+  profilePanel.style.display="none";
+  alert("Профиль сохранён");
+  profileCache[currentUser.uid]={nick,avatar:profileAvatar.value.trim(),color:profileColor.value,status:profileStatus.value.trim()};
+  renderSidebar();
+};
 
 /********************
- * 7. Access control *
+ * 8. Status counter *
  ********************/
-async function updateInputLock(){
-  if(chatInputForm.dataset.chatType==="group"){const id=chatInputForm.dataset.group;const docSnap=await getDoc(doc(db,"groups",id));const data=docSnap.exists()?docSnap.data():{mode:GROUP_DEFS[id].mode,members:[],admins:[]};const mode=data.mode||"open";const canWrite=(mode==="open")||(mode==="invite"&&data.members?.includes(currentUser.uid))||(mode==="strict"&&data.admins?.includes(currentUser.uid));messageInput.disabled=!canWrite;chatInputForm.querySelector("button").disabled=!canWrite;}
-  else{messageInput.disabled=false;chatInputForm.querySelector("button").disabled=false;}
+profileStatus.oninput=()=>{
+  const rem=80-profileStatus.value.length;
+  statusCounter.textContent=rem;
+};
+
+/********************
+ * 9. Open group chat *
+ ********************/
+async function openGroup(id){
+  if(unsubscribe)unsubscribe();
+  selectedGroupId=id;
+  privateUid="";
+  renderSidebar();
+  groupName.textContent=GROUP_DEFS[id]?.name || "Неизвестная группа";
+  messagesDiv.innerHTML="";
+  // Подписка на сообщения
+  const q=query(collection(db,"messages"), orderBy("createdAt"));
+  unsubscribe=onSnapshot(q,snap=>{
+    messagesDiv.innerHTML="";
+    snap.docs.forEach(doc=>{
+      const m=doc.data();
+      if(m.groupId===selectedGroupId){
+        renderMessage(m);
+      }
+    });
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
 }
 
 /********************
- * 8. Snapshot → DOM *
+ * 10. Open private chat *
  ********************/
-function renderSnap(snap){messagesDiv.innerHTML="";let last="";snap.docs.forEach(async d=>{const m=d.data();const dt=m.createdAt?.toDate?.()||new Date();const ds=dt.toDateString();if(ds!==last){const div=document.createElement("div");div.className="date-divider";div.textContent=fmtDate(dt);messagesDiv.appendChild(div);last=ds;}if(m.type==="server"){const s=document.createElement("div");s.className="msg server";s.textContent=m.text;messagesDiv.appendChild(s);return;}const pr=await loadProfile(m.uid);const msg=document.createElement("div");msg.className="msg";const av=document.createElement("div");av.className="avatar";av.style.backgroundImage=`url(${pr.avatar})`;av.onclick=()=>openUserModal(m.uid);const cont=document.createElement("div");cont.className="content";cont.innerHTML=`<div class='msg-header'><span class='username' style='color:${pr.color}'>${pr.nick}</span><span class='msg-time'>${fmtTime(dt)}</span></div><div>${m.text}</div>`;msg.appendChild(av);msg.appendChild(cont);messagesDiv.appendChild(msg);messagesDiv.scrollTop=messagesDiv.scrollHeight;});}
+async function openPrivate(uid){
+  if(unsubscribe)unsubscribe();
+  privateUid=uid;
+  selectedGroupId="";
+  renderSidebar();
+  groupName.textContent="ЛС с "+(profileCache[uid]?.nick || "Безымянный");
+  messagesDiv.innerHTML="";
+  // Подписка на личные сообщения между currentUser и uid
+  const chatId=chatIdFor(currentUser.uid,uid);
+  const q=query(collection(db,"messages"), orderBy("createdAt"));
+  unsubscribe=onSnapshot(q,snap=>{
+    messagesDiv.innerHTML="";
+    snap.docs.forEach(doc=>{
+      const m=doc.data();
+      if(m.chatId===chatId){
+        renderMessage(m);
+      }
+    });
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
+}
 
 /********************
- * 9. Sending        *
+ * 11. Render message *
  ********************/
-chatInputForm.onsubmit=async e=>{e.preventDefault();const txt=messageInput.value.trim();if(!txt)return;const payload={uid:currentUser.uid,text:txt,createdAt:serverTimestamp(),type:"user"};if(chatInputForm.dataset.chatType==="private"){await addDoc(collection(db,"privateChats",chatIdFor(currentUser.uid,chatInputForm.dataset.targetUid),"messages"),payload);}else{await addDoc(collection(db,"groups",selectedGroupId,"messages"),payload);}messageInput.value="";};
+function renderMessage(m){
+  const div=document.createElement("div");
+  div.className="msg";
+  if(m.userId==="server"){
+    div.classList.add("server");
+    div.textContent=m.text;
+    messagesDiv.appendChild(div);
+    return;
+  }
+  const profile=profileCache[m.userId]||{nick:"Безымянный",avatar:"",color:"#999"};
+  const avatar=document.createElement("div");
+  avatar.className="avatar";
+  avatar.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "url('https://i.pravatar.cc/36')";
+  const content=document.createElement("div");
+  content.className="content";
+  const header=document.createElement("div");
+  header.className="msg-header";
+  header.innerHTML=`<b style="color:${profile.color}">${profile.nick}</b><span>${fmtTime(m.createdAt.toDate ? m.createdAt.toDate() : new Date())}</span>`;
+  content.appendChild(header);
+  const text=document.createElement("div");
+  text.textContent=m.text;
+  content.appendChild(text);
+  div.appendChild(avatar);
+  div.appendChild(content);
+  messagesDiv.appendChild(div);
+}
 
 /********************
- * 10. Profiles etc. *
+ * 12. Send message *
  ********************/
-async function loadProfile(uid){if(profileCache[uid])return profileCache[uid];const snap=await getDoc(doc(db,"profiles",uid));const data=snap.exists()?snap.data():{nick:"Безымянный",avatar:"https://i.imgur.com/4AiXzf8.png",color:"#ccc",status:""};profileCache[uid]=data;return data;}
+chatInputForm.onsubmit=async e=>{
+  e.preventDefault();
+  const text=messageInput.value.trim();
+  if(!text) return;
+  const msgData={
+    text,
+    createdAt:serverTimestamp(),
+    userId:currentUser.uid,
+    groupId:selectedGroupId||null,
+    chatId: privateUid ? chatIdFor(currentUser.uid, privateUid) : null
+  };
+  await addDoc(collection(db,"messages"),msgData);
+  messageInput.value="";
+  messageInput.style.height = "auto";
+};
 
-function openUserModal(uid){loadProfile(uid).then(p=>{userModalAvatar.style.backgroundImage=`url(${p.avatar||"https://i.imgur.com/4AiXzf8.png"})`;userModalNick.textContent=p.nick||"Безымянный";userModalNick.style.color=p.color||"#ccc";userModalStatus.textContent=p.status||"";userModal.style.display="flex";userModal.setAttribute("aria-hidden","false");userModalMsgBtn.disabled=true;});}
+/********************
+ * 13. Message input auto resize and key handling *
+ ********************/
+messageInput.addEventListener("input", ()=>{
+  messageInput.style.height = "auto";
+  messageInput.style.height = messageInput.scrollHeight + "px";
+});
 
-closeUserModal.onclick=()=>{userModal.style.display="none";userModal.setAttribute("aria-hidden","true");};
-userModal.onclick=e=>{if(e.target===userModal){userModal.style.display="none";userModal.setAttribute("aria-hidden","true");}};
+// Shift+Enter - перенос строки, Enter - отправка
+messageInput.addEventListener("keydown", e=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    chatInputForm.dispatchEvent(new Event("submit"));
+  }
+});
 
-profileStatus.oninput=()=>{statusCounter.textContent=80-profileStatus.value.length;};
+/********************
+ * 14. Profile button toggle *
+ ********************/
+profileBtn.onclick=()=>{
+  profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
+};
 
-profileForm.onsubmit=async e=>{e.preventDefault();if(!currentUser)return;const newProfile={nick:profileNick.value.trim()||"Безымянный",avatar:profileAvatar.value.trim()||"https://i.imgur.com/4AiXzf8.png",color:profileColor.value||"#cccccc",status:profileStatus.value.trim()};await setDoc(doc(db,"profiles",currentUser.uid),newProfile);profileCache[currentUser.uid]=newProfile;alert("Профиль обновлён!");};
+/********************
+ * 15. User modal handlers (для ЛС) *
+ ********************/
+closeUserModal.onclick=()=>userModal.style.display="none";
+userModalMsgBtn.onclick=()=>{
+  if(privateUid){
+    openPrivate(privateUid);
+  }
+  userModal.style.display="none";
+};
 
-profileBtn.onclick=()=>{profilePanel.style.display=profilePanel.style.display==="block"?"none":"block";};
-document.addEventListener("click",e=>{if(!profilePanel.contains(e.target)&&e.target!==profileBtn)profilePanel.style.display="none";});
+/********************
+ * 16. Add group modal handlers *
+ ********************/
+addGroupBtn.onclick=()=>{
+  addGroupModal.style.display="flex";
+  newGroupName.value="";
+  newGroupPassword.value="";
+};
+
+closeAddGroupModal.onclick=()=>{
+  addGroupModal.style.display="none";
+};
+
+createGroupBtn.onclick=async ()=>{
+  const name=newGroupName.value.trim();
+  if(!name){
+    alert("Название группы обязательно");
+    return;
+  }
+  const password=newGroupPassword.value;
+  // Создаём новую группу - для простоты добавим в локальный объект и Firestore
+  const id="group"+(Object.keys(GROUP_DEFS).length+1);
+  GROUP_DEFS[id]={name,password,mode:"private"};
+  // В Firestore можем создать документ с паролем (в реале - не безопасно хранить открытый пароль)
+  await setDoc(doc(db,"groups",id), {name,password,mode:"private",createdAt:serverTimestamp()});
+  renderSidebar();
+  addGroupModal.style.display="none";
+};
+
+/********************
+ * 17. Splash screen cycling *
+ ********************/
+const splashScreen=$("splashScreen");
+const splashTexts=["лабобу", "Типа ДС для своих", "абобики"];
+let splashIndex=0;
+
+function cycleSplash(){
+  splashIndex++;
+  if(splashIndex >= splashTexts.length) splashIndex = 0;
+  splashScreen.textContent = splashTexts[splashIndex];
+}
+setInterval(cycleSplash, 1000);
 
 </script>
+
 </body>
 </html>
