@@ -443,21 +443,62 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-    import {
-      getFirestore, collection, query, orderBy,
-      onSnapshot, addDoc, serverTimestamp, doc,
-      getDoc, setDoc, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
-    import {
-      getAuth, signInWithPopup, GoogleAuthProvider,
-      signOut, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+    // main.js (или как назовёшь)
 
-    const firebaseConfig = { /* ... */ };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+// --- Firebase SDK через CDN ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+  setDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+
+// --- конфиг теперь в отдельном файле ---
+import { firebaseConfig } from "./firebase-config.js"; // не забудь, путь относительный к этому скрипту
+
+// --- инициализация Firebase ---
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+// --- если нужно закинуть наружу в другие модули ---
+export {
+  app,
+  db,
+  auth,
+  // firestore utils
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+  setDoc,
+  getDocs,
+  // auth utils
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged
+};
+
 
     const loginForm = document.getElementById("loginForm");
     const googleLoginBtn = document.getElementById("googleLoginBtn");
