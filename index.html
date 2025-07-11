@@ -7,7 +7,17 @@
   <style>
     /* ===== RESET ===== */
     *{box-sizing:border-box;}
-    html,body{margin:0;padding:0;height:100%;display:flex;flex-direction:column;font-family:'Segoe UI',sans-serif;background:#121212;color:#eaeaea;-webkit-overflow-scrolling:touch;}
+    html,body{
+      margin:0;
+      padding:0;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      font-family:'Segoe UI',sans-serif;
+      background:#121212;
+      color:#eaeaea;
+      -webkit-overflow-scrolling:touch;
+    }
     /* ===== SPLASH SCREEN ===== */
     #splashScreen {
       position: fixed;
@@ -35,7 +45,17 @@
     /* ===== GROUP LIST ===== */
     #groupList{width:220px;background:#1c1c1c;padding:1em;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #2a2a2a;}
     .group-section-title { color: #aaa; font-size: 0.9em; margin: 0.8em 0 0.3em 0; }
-    .group-item{padding:0.6em;margin-bottom:0.4em;background:#2a2a2a;border-radius:5px;cursor:pointer;user-select:none;}
+    .group-item{
+      padding:0.6em;
+      margin-bottom:0.4em;
+      background:#2a2a2a;
+      border-radius:5px;
+      cursor:pointer;
+      user-select:none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .group-item:hover{background:#3a3a3a;}
     .group-item.active{background:#505050;font-weight:bold;}
     #addGroupBtn {
@@ -48,23 +68,72 @@
       cursor: pointer;
       user-select:none;
       text-align:center;
+      white-space: nowrap;
     }
     #addGroupBtn:hover {
       background: #505050;
     }
     /* ===== CHAT AREA ===== */
     #chatArea{flex:1;display:flex;flex-direction:column;min-height:0;background:#141414;}
-    #groupNameDisplay{padding:1em;font-size:1.2em;font-weight:600;border-bottom:1px solid #2a2a2a;flex-shrink:0;}
+    #groupNameDisplay{padding:1em;font-size:1.2em;font-weight:600;border-bottom:1px solid #2a2a2a;flex-shrink:0;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
     /* ===== MESSAGES ===== */
-    #messages{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:0.75em;padding:1em;padding-bottom:90px;}
-    .msg{display:flex;gap:0.75em;word-break: break-word;}
-    .msg.server{justify-content:center;color:#aaa;font-style:italic;}
-    .avatar{width:36px;height:36px;border-radius:50%;background-size:cover;background-position:center;flex-shrink:0;}
+    #messages{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:0.75em;
+      padding:1em;
+      padding-bottom:90px;
+      word-break: break-word;
+    }
+    .msg{
+      display:flex;
+      gap:0.75em;
+      word-break: break-word;
+    }
+    .msg.server{
+      justify-content:center;
+      color:#aaa;
+      font-style:italic;
+    }
+    .avatar{
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background-size:cover;
+      background-position:center;
+      flex-shrink:0;
+      cursor:pointer;
+      user-select:none;
+    }
     .content{flex:1;}
-    .msg-header{display:flex;justify-content:space-between;font-size:0.9em;margin-bottom:2px;}
+    .msg-header{
+      display:flex;
+      justify-content:space-between;
+      font-size:0.9em;
+      margin-bottom:2px;
+    }
     /* ===== CHAT INPUT (fixed) ===== */
-    #chatInput{position:fixed;bottom:0;left:0;right:0;height:80px;display:flex;align-items:center;padding:0 0.5em;background:#1b1b1b;border-top:1px solid #2a2a2a;z-index:1000;}
-    #chatInputForm{flex:1;display:flex;align-items:center;}
+    #chatInput{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      height:80px;
+      display:flex;
+      align-items:center;
+      padding:0 0.5em;
+      background:#1b1b1b;
+      border-top:1px solid #2a2a2a;
+      z-index:1000;
+    }
+    #chatInputForm{
+      flex:1;
+      display:flex;
+      align-items:center;
+    }
     #messageInput {
       flex:1;
       padding:0.6em;
@@ -91,25 +160,119 @@
       border:none;
       user-select:none;
       flex-shrink:0;
+      white-space: nowrap;
     }
     #chatInput button:hover{background:#555;}
     /* ===== PROFILE BUTTON ===== */
-    #profileBtn{position:fixed;top:1em;right:1em;background:#2a2a2a;border-radius:50%;width:44px;height:44px;font-size:1.3em;color:#fff;cursor:pointer;z-index:1100;display:flex;align-items:center;justify-content:center;}
+    #profileBtn{
+      position:fixed;
+      top:1em;
+      right:1em;
+      background:#2a2a2a;
+      border-radius:50%;
+      width:44px;
+      height:44px;
+      font-size:1.3em;
+      color:#fff;
+      cursor:pointer;
+      z-index:1100;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
     /* ===== PROFILE PANEL ===== */
-    #profilePanel{position:fixed;top:60px;right:1em;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:1em;width:260px;display:none;z-index:1050;}
-    #profilePanel input,#profilePanel textarea,#profilePanel button{width:100%;margin-bottom:0.6em;padding:0.5em;border-radius:4px;background:#2d2d2d;color:#fff;border:none;}
+    #profilePanel{
+      position:fixed;
+      top:60px;
+      right:1em;
+      background:#1e1e1e;
+      border:1px solid #2a2a2a;
+      border-radius:8px;
+      padding:1em;
+      width:260px;
+      display:none;
+      z-index:1050;
+    }
+    #profilePanel input,#profilePanel textarea,#profilePanel button{
+      width:100%;
+      margin-bottom:0.6em;
+      padding:0.5em;
+      border-radius:4px;
+      background:#2d2d2d;
+      color:#fff;
+      border:none;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 14px;
+    }
     #profilePanel textarea{resize:none;min-height:50px;}
-    #profilePanel small{display:block;text-align:right;color:#888;}
+    #profilePanel small{
+      display:block;
+      text-align:right;
+      color:#888;
+      font-size: 12px;
+    }
     /* ===== MODAL ===== */
-    .modal{display:none;position:fixed;z-index:1200;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
-    .modal-content{background:#1e1e1e;padding:20px;border-radius:12px;width:280px;text-align:center;color:#fff;position:relative;}
-    .modal-avatar{width:80px;height:80px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 10px;}
-    .close{position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;color:#aaa;}
+    .modal{
+      display:none;
+      position:fixed;
+      z-index:1200;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.5);
+      justify-content:center;
+      align-items:center;
+      user-select:none;
+    }
+    .modal-content{
+      background:#1e1e1e;
+      padding:20px;
+      border-radius:12px;
+      width:280px;
+      text-align:center;
+      color:#fff;
+      position:relative;
+      user-select:none;
+    }
+    .modal-avatar{
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      background-size:cover;
+      background-position:center;
+      margin:0 auto 10px;
+      user-select:none;
+    }
+    .close{
+      position:absolute;
+      top:10px;
+      right:15px;
+      font-size:20px;
+      cursor:pointer;
+      color:#aaa;
+      user-select:none;
+    }
     /* ===== MOBILE ===== */
     @media(max-width:768px){
-      #groupList{width:100%;height:50px;flex-direction:row;overflow-x:auto;padding:0.3em 0.6em;border-bottom:1px solid #2a2a2a;border-right:none;}
+      #groupList{
+        width:100%;
+        height:50px;
+        flex-direction:row;
+        overflow-x:auto;
+        padding:0.3em 0.6em;
+        border-bottom:1px solid #2a2a2a;
+        border-right:none;
+      }
       .group-section-title { display: none; }
-      .group-item{flex:0 0 auto;margin:0 0.3em;padding:0.5em 0.8em;border-radius:20px;font-size:0.9em;}
+      .group-item{
+        flex:0 0 auto;
+        margin:0 0.3em;
+        padding:0.5em 0.8em;
+        border-radius:20px;
+        font-size:0.9em;
+      }
       #chatLayout{flex-direction:column;}
       #messages{padding:0.5em 1em;padding-bottom:90px;}
       #chatInput{padding:0 0.5em;}
@@ -155,10 +318,10 @@
     <div id="profileBtn">⚙️</div>
     <div id="profilePanel">
       <form id="profileForm">
-        <input id="profileNick" placeholder="Никнейм" />
-        <input id="profileAvatar" placeholder="Ссылка на аватар" />
+        <input id="profileNick" placeholder="Никнейм" autocomplete="off" />
+        <input id="profileAvatar" placeholder="Ссылка на аватар" autocomplete="off" />
         <input id="profileColor" type="color" value="#cccccc" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус..."></textarea>
+        <textarea id="profileStatus" maxlength="80" placeholder="Статус..." autocomplete="off"></textarea>
         <small><span id="statusCounter">80</span> символов осталось</small>
         <button type="submit">Сохранить</button>
       </form>
@@ -167,7 +330,7 @@
 
     <div id="userProfileModal" class="modal" aria-hidden="true">
       <div class="modal-content">
-        <span id="closeUserModal" class="close">×</span>
+        <span id="closeUserModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
         <div id="userModalAvatar" class="modal-avatar"></div>
         <div id="userModalNick"></div>
         <div id="userModalStatus"></div>
@@ -178,10 +341,10 @@
     <!-- Add Group Modal -->
     <div id="addGroupModal" class="modal" aria-hidden="true">
       <div class="modal-content">
-        <span id="closeAddGroupModal" class="close">×</span>
+        <span id="closeAddGroupModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
         <h3>Добавить группу</h3>
-        <input id="newGroupName" placeholder="Название группы" />
-        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" />
+        <input id="newGroupName" placeholder="Название группы" autocomplete="off" />
+        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" autocomplete="off" />
         <button id="createGroupBtn">Создать</button>
       </div>
     </div>
@@ -221,7 +384,18 @@ const auth = getAuth(app);
 const $ = id => document.getElementById(id);
 const splashScreen = $("splashScreen"); // сначала splashScreen
   
-const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),privateChatsList=$("privateChatsList"),addGroupBtn=$("addGroupBtn"),addGroupModal=$("addGroupModal"),closeAddGroupModal=$("closeAddGroupModal"),newGroupName=$("newGroupName"),newGroupPassword=$("newGroupPassword"),createGroupBtn=$("createGroupBtn");
+const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),
+      chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),
+      messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),
+      messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),
+      profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),
+      profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),
+      logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),
+      userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),
+      userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),
+      privateChatsList=$("privateChatsList"),addGroupBtn=$("addGroupBtn"),
+      addGroupModal=$("addGroupModal"),closeAddGroupModal=$("closeAddGroupModal"),
+      newGroupName=$("newGroupName"),newGroupPassword=$("newGroupPassword"),createGroupBtn=$("createGroupBtn");
 
 /********************
  * 2. Static groups *
@@ -319,9 +493,9 @@ async function loadAllProfiles(){
  * 6. Sidebar render *
  ********************/
 function renderSidebar(){
-  // Удаляем только динамические группы (кроме кнопки)
+  // Удаляем динамические группы и ЛС
   [...groupList.querySelectorAll(".group-item")].forEach(el=>{
-    if(el.id !== 'addGroupBtn' && !groupIds.includes(el.dataset.id)){
+    if(el.dataset.id && !groupIds.includes(el.dataset.id)){
       el.remove();
     }
   });
@@ -337,41 +511,40 @@ function renderSidebar(){
     privateChatsList.appendChild(el);
   });
 
-  // Группы - добавляем динамически по GROUP_DEFS
+  // Группы - обновляем класс active и название
   groupIds.forEach(id=>{
     const meta=GROUP_DEFS[id];
-    const exists = [...groupList.querySelectorAll(".group-item")].some(el=>el.dataset.id === id);
-    if(!exists){
-      const el=document.createElement("div");
+    const el = [...groupList.querySelectorAll(".group-item")].find(el=>el.dataset.id === id);
+    if(el){
       el.className="group-item"+(id===selectedGroupId?" active":"");
       el.textContent=meta.name;
-      el.dataset.id=id;
-      el.onclick=()=>openGroup(id);
-      groupList.insertBefore(el, addGroupBtn.nextSibling);
-    } else {
-      const el = [...groupList.querySelectorAll(".group-item")].find(el=>el.dataset.id === id);
-      el.className="group-item"+(id===selectedGroupId?" active":"");
     }
   });
 }
 
 /********************
- * 7. Open group chat *
+ * 7. Open group *
  ********************/
 async function openGroup(id){
-  unsubscribe?.();
-  privateUid="";
-  selectedGroupId=id;
+  privateUid = "";
+  selectedGroupId = id;
   renderSidebar();
-  groupName.textContent = GROUP_DEFS[id].name;
-  messagesDiv.innerHTML="";
-  // Подписка на сообщения группы
-  const messagesRef=collection(db,"groups",id,"messages");
-  const q=query(messagesRef,orderBy("createdAt"));
-  unsubscribe = onSnapshot(q,snap=>{
-    messagesDiv.innerHTML="";
-    snap.docs.forEach(doc=>{
-      renderMessage(doc.data(),doc.id);
+  groupName.textContent = GROUP_DEFS[id]?.name || "Группа";
+
+  unsubscribe?.();
+  messagesDiv.innerHTML = "";
+  scrollToBottom();
+
+  const q = query(
+    collection(db, "groups", id, "messages"),
+    orderBy("createdAt", "asc")
+  );
+
+  unsubscribe = onSnapshot(q, snapshot => {
+    messagesDiv.innerHTML = "";
+    snapshot.docs.forEach(doc=>{
+      const data=doc.data();
+      renderMessage(data);
     });
     scrollToBottom();
   });
@@ -381,21 +554,27 @@ async function openGroup(id){
  * 8. Open private chat *
  ********************/
 async function openPrivate(uid){
-  unsubscribe?.();
-  privateUid=uid;
-  selectedGroupId="";
+  privateUid = uid;
+  selectedGroupId = "";
   renderSidebar();
-  const p = profileCache[uid];
-  groupName.textContent = "ЛС: " + (p?.nick||"Безымянный");
-  messagesDiv.innerHTML="";
-  // Подписка на личку
-  const chatId = chatIdFor(currentUser.uid,uid);
-  const messagesRef=collection(db,"private",chatId,"messages");
-  const q=query(messagesRef,orderBy("createdAt"));
-  unsubscribe = onSnapshot(q,snap=>{
-    messagesDiv.innerHTML="";
-    snap.docs.forEach(doc=>{
-      renderMessage(doc.data(),doc.id);
+  const profile = profileCache[uid] || {};
+  groupName.textContent = profile.nick || "Личный чат";
+
+  unsubscribe?.();
+  messagesDiv.innerHTML = "";
+  scrollToBottom();
+
+  const chatId = chatIdFor(currentUser.uid, uid);
+  const q = query(
+    collection(db, "privateChats", chatId, "messages"),
+    orderBy("createdAt", "asc")
+  );
+
+  unsubscribe = onSnapshot(q, snapshot => {
+    messagesDiv.innerHTML = "";
+    snapshot.docs.forEach(doc=>{
+      const data=doc.data();
+      renderMessage(data);
     });
     scrollToBottom();
   });
@@ -404,162 +583,168 @@ async function openPrivate(uid){
 /********************
  * 9. Render message *
  ********************/
-function renderMessage(msg,id){
-  const el=document.createElement("div");
-  el.className="msg";
-  if(msg.uid==="server") el.className+=" server";
-  else if(msg.uid === currentUser?.uid) el.style.justifyContent = "flex-end";
+function renderMessage(data){
+  const isServer = data.from === "server";
+  const msgEl = document.createElement("div");
+  msgEl.className = "msg" + (isServer ? " server" : "");
+  if(isServer){
+    msgEl.textContent = data.text || "Системное сообщение";
+  } else {
+    // Аватар и ник
+    const avatarEl = document.createElement("div");
+    avatarEl.className = "avatar";
+    const profile = profileCache[data.from] || {};
+    avatarEl.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "url(https://via.placeholder.com/36?text=?)";
+    avatarEl.title = profile.nick || data.from;
+    avatarEl.onclick = () => showUserModal(data.from);
 
-  if(msg.uid==="server"){
-    el.textContent=msg.text;
-    messagesDiv.appendChild(el);
-    return;
+    // Контент сообщения
+    const contentEl = document.createElement("div");
+    contentEl.className = "content";
+
+    const headerEl = document.createElement("div");
+    headerEl.className = "msg-header";
+    const nickSpan = document.createElement("span");
+    nickSpan.textContent = profile.nick || data.from;
+    const timeSpan = document.createElement("span");
+    if(data.createdAt){
+      const d = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      timeSpan.textContent = fmtTime(d);
+    } else {
+      timeSpan.textContent = "";
+    }
+    headerEl.appendChild(nickSpan);
+    headerEl.appendChild(timeSpan);
+
+    const textEl = document.createElement("div");
+    textEl.textContent = data.text;
+
+    contentEl.appendChild(headerEl);
+    contentEl.appendChild(textEl);
+
+    msgEl.appendChild(avatarEl);
+    msgEl.appendChild(contentEl);
   }
-
-  const avatarDiv=document.createElement("div");
-  avatarDiv.className="avatar";
-  const p = profileCache[msg.uid];
-  avatarDiv.style.backgroundImage = `url(${p?.avatar||''})`;
-  avatarDiv.title = p?.nick || "Безымянный";
-  avatarDiv.onclick = () => openUserModal(msg.uid);
-
-  const contentDiv=document.createElement("div");
-  contentDiv.className="content";
-
-  const headerDiv=document.createElement("div");
-  headerDiv.className="msg-header";
-  headerDiv.innerHTML = `<span>${p?.nick||"Безымянный"}</span><span>${fmtTime(msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date())}</span>`;
-
-  const textDiv=document.createElement("div");
-  textDiv.textContent = msg.text;
-
-  contentDiv.appendChild(headerDiv);
-  contentDiv.appendChild(textDiv);
-
-  el.appendChild(avatarDiv);
-  el.appendChild(contentDiv);
-
-  messagesDiv.appendChild(el);
+  messagesDiv.appendChild(msgEl);
 }
 
 /********************
- * 10. Scroll chat *
+ * 10. Scroll bottom *
  ********************/
 function scrollToBottom(){
   setTimeout(()=>{
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   },100);
 }
 
 /********************
  * 11. Send message *
  ********************/
-chatInputForm.onsubmit=async e=>{
+chatInputForm.onsubmit = async e => {
   e.preventDefault();
-  const text=messageInput.value.trim();
-  if(!text) return;
-  messageInput.value="";
-  if(privateUid){
-    // личка
-    const chatId = chatIdFor(currentUser.uid,privateUid);
-    await addDoc(collection(db,"private",chatId,"messages"),{
-      uid: currentUser.uid,
-      text,
-      createdAt: serverTimestamp()
-    });
-  } else if(selectedGroupId){
-    // группа
-    await addDoc(collection(db,"groups",selectedGroupId,"messages"),{
-      uid: currentUser.uid,
-      text,
-      createdAt: serverTimestamp()
-    });
+  if(!messageInput.value.trim()) return;
+
+  const text = messageInput.value.trim();
+  messageInput.value = "";
+  statusCounter.textContent = 80;
+
+  try {
+    if(privateUid){
+      const chatId = chatIdFor(currentUser.uid, privateUid);
+      await addDoc(collection(db,"privateChats",chatId,"messages"),{
+        text,
+        from: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+    } else if(selectedGroupId){
+      await addDoc(collection(db,"groups",selectedGroupId,"messages"),{
+        text,
+        from: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+    }
+  } catch(e){
+    alert("Ошибка отправки: "+e.message);
   }
   scrollToBottom();
 };
 
 /********************
- * 12. Shift+Enter for new line
+ * 12. Profile form *
  ********************/
-messageInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter" && !e.shiftKey){
-    e.preventDefault();
-    chatInputForm.requestSubmit();
-  }
-});
-
-/********************
- * 13. Profile toggle *
- ********************/
-profileBtn.onclick=()=>{
-  profilePanel.style.display = profilePanel.style.display==="block" ? "none" : "block";
-};
-
-profileStatus.oninput=()=>{
-  statusCounter.textContent = 80 - profileStatus.value.length;
-};
-
-/********************
- * 14. Save profile *
- ********************/
-profileForm.onsubmit=async e=>{
+profileForm.onsubmit = async e => {
   e.preventDefault();
   if(!currentUser) return;
-  const nick = profileNick.value.trim();
-  if(!nick){
-    alert("Никнейм не может быть пустым");
-    return;
-  }
-  // Проверка на уникальность ника (примитивная)
-  const existingNicks = Object.values(profileCache).map(p=>p.nick.toLowerCase());
-  if(existingNicks.includes(nick.toLowerCase()) && profileCache[currentUser.uid]?.nick?.toLowerCase() !== nick.toLowerCase()){
-    alert("Никнейм занят");
-    return;
-  }
+
   const data = {
-    nick,
+    nick: profileNick.value.trim(),
     avatar: profileAvatar.value.trim(),
     color: profileColor.value,
-    status: profileStatus.value.trim(),
-    updatedAt: serverTimestamp()
+    status: profileStatus.value.trim()
   };
-  await setDoc(doc(db,"profiles",currentUser.uid),data);
-  profileCache[currentUser.uid]=data;
-  alert("Профиль сохранён");
-  profilePanel.style.display="none";
-  renderSidebar();
+  try {
+    await setDoc(doc(db,"profiles",currentUser.uid),data);
+    profileCache[currentUser.uid] = data;
+    alert("Профиль сохранён");
+  } catch(e){
+    alert("Ошибка сохранения: "+e.message);
+  }
+};
+profileStatus.oninput = () => {
+  statusCounter.textContent = 80 - (profileStatus.value.length||0);
 };
 
 /********************
- * 15. User modal *
+ * 13. Profile btn toggle *
  ********************/
-function openUserModal(uid){
-  if(!profileCache[uid]) return;
+profileBtn.onclick = () => {
+  if(profilePanel.style.display === "none" || profilePanel.style.display === ""){
+    profilePanel.style.display = "block";
+  } else {
+    profilePanel.style.display = "none";
+  }
+};
+
+/********************
+ * 14. User modal *
+ ********************/
+function showUserModal(uid){
+  if(!profileCache[uid])return;
   const p = profileCache[uid];
-  userModalAvatar.style.backgroundImage = `url(${p.avatar||''})`;
-  userModalNick.textContent = p.nick || "Безымянный";
+  userModalAvatar.style.backgroundImage = p.avatar ? `url(${p.avatar})` : "url(https://via.placeholder.com/80?text=?)";
+  userModalNick.textContent = p.nick || uid;
   userModalStatus.textContent = p.status || "";
+  userModalMsgBtn.disabled = uid === currentUser.uid;
+  userModalMsgBtn.onclick = () => {
+    userModal.style.display = "none";
+    openPrivate(uid);
+  };
   userModal.style.display = "flex";
   userModal.setAttribute("aria-hidden","false");
-  userModalMsgBtn.disabled = (uid === currentUser.uid);
-  userModalMsgBtn.onclick = () => {
-    openPrivate(uid);
-    userModal.style.display = "none";
-  }
 }
 closeUserModal.onclick = () => {
   userModal.style.display = "none";
   userModal.setAttribute("aria-hidden","true");
 };
+window.onclick = e => {
+  if(e.target === userModal) {
+    userModal.style.display = "none";
+    userModal.setAttribute("aria-hidden","true");
+  }
+  if(e.target === addGroupModal){
+    addGroupModal.style.display = "none";
+    addGroupModal.setAttribute("aria-hidden","true");
+  }
+};
 
 /********************
- * 16. Add group modal *
+ * 15. Add group modal *
  ********************/
 addGroupBtn.onclick = () => {
-  newGroupName.value="";
-  newGroupPassword.value="";
   addGroupModal.style.display = "flex";
   addGroupModal.setAttribute("aria-hidden","false");
+  newGroupName.value = "";
+  newGroupPassword.value = "";
 };
 closeAddGroupModal.onclick = () => {
   addGroupModal.style.display = "none";
@@ -571,15 +756,8 @@ createGroupBtn.onclick = () => {
     alert("Название группы не может быть пустым");
     return;
   }
-  // Уникальность имени группы
-  const exist = Object.values(GROUP_DEFS).some(g=>g.name.toLowerCase()===name.toLowerCase());
-  if(exist){
-    alert("Группа с таким именем уже есть");
-    return;
-  }
-  // Создаем локально, т.к. серверного управления нет
   const newId = "group" + (Object.keys(GROUP_DEFS).length + 1);
-  GROUP_DEFS[newId] = {name, mode:"open"};
+  GROUP_DEFS[newId] = { name, mode: "open" };
   groupIds.push(newId);
   renderSidebar();
   addGroupModal.style.display = "none";
@@ -588,14 +766,25 @@ createGroupBtn.onclick = () => {
 };
 
 /********************
- * 17. Splash screen text loop *
+ * 16. Message input keyboard *
  ********************/
-const splashTexts = ["лабобу", "абоба", "абоба...", "абобасервер", "Loading..."];
-let splashIndex = 0;
-setInterval(()=>{
-  splashScreen.textContent = splashTexts[splashIndex];
-  splashIndex = (splashIndex + 1) % splashTexts.length;
-},1200);
+messageInput.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    chatInputForm.dispatchEvent(new Event("submit", {cancelable:true, bubbles:true}));
+  }
+});
+
+/********************
+ * 17. Initial UI state *
+ ********************/
+profilePanel.style.display = "none";
+chatLayout.style.display = "none";
+chatInput.style.display = "none";
+profileBtn.style.display = "none";
+userModal.style.display = "none";
+addGroupModal.style.display = "none";
+
 </script>
 </body>
 </html>
