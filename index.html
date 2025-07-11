@@ -20,7 +20,7 @@
     }
     
     /* ===== SPLASH SCREEN ===== */
-    /*#splashScreen {
+    #splashScreen {
       position: fixed;
       inset: 0;
       background: #121212;
@@ -587,10 +587,10 @@ async function openPrivate(uid){
  * 9. Render message *
  ********************/
 function renderMessage(data){
-  const isServer = data.from === "server";
+  const isServerMessage = data.from === "server";
   const msgEl = document.createElement("div");
-  msgEl.className = "msg" + (isServer ? " server" : "");
-  if(isServer){
+  msgEl.className = "msg" + (isServerMessage ? " server" : "");
+  if(isServerMessage){
     msgEl.textContent = data.text || "Системное сообщение";
   } else {
     // Аватар и ник
