@@ -5,16 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>абоба</title>
 <style>
-*{box-sizing:border-box;}
-body {
+/* Reset и базовые стили */
+* {
+  box-sizing: border-box;
+}
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
   font-family: 'Segoe UI', sans-serif;
   background-color: #121212;
   color: #eaeaea;
-  height: 100vh;
+  -webkit-overflow-scrolling: touch;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
+
 button, input, textarea {
   font-family: inherit;
   font-size: 1rem;
@@ -23,10 +35,12 @@ button, input, textarea {
   background: none;
   color: inherit;
 }
+
 a {
   color: inherit;
   text-decoration: none;
 }
+
 #loginForm {
   display: none;
   text-align: center;
@@ -37,6 +51,7 @@ a {
   justify-content: center;
   align-items: center;
 }
+
 #googleLoginBtn {
   background: #4285f4;
   color: white;
@@ -46,20 +61,23 @@ a {
   user-select: none;
   font-weight: 600;
 }
+
 #googleLoginBtn:hover {
   background: #357ae8;
 }
+
 #loginMsg {
   margin-top: 1em;
   color: #f44336;
 }
+
 #chatLayout {
-  display: none;
-  height: 100vh;
   display: flex;
+  flex-direction: row;
+  height: 100vh;
   overflow: hidden;
-  flex: 1;
 }
+
 #groupList {
   width: 220px;
   background: #1c1c1c;
@@ -68,7 +86,20 @@ a {
   border-right: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #555 #222;
 }
+
+#groupList::-webkit-scrollbar {
+  width: 8px;
+}
+
+#groupList::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
 .group-item {
   padding: 0.6em;
   margin-bottom: 0.4em;
@@ -78,25 +109,31 @@ a {
   transition: background 0.2s;
   user-select: none;
 }
+
 .group-item:hover {
   background: #3a3a3a;
 }
+
 .group-item.active {
   background: #505050;
   font-weight: bold;
 }
+
 #chatArea {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: #141414;
+  height: 100%;
 }
+
 #groupNameDisplay {
   padding: 1em;
   font-size: 1.2em;
   font-weight: 600;
   border-bottom: 1px solid #2a2a2a;
 }
+
 #messages {
   flex: 1;
   padding: 1em;
@@ -106,14 +143,19 @@ a {
   gap: 0.75em;
   scrollbar-width: thin;
   scrollbar-color: #555 #222;
+  min-height: 0; /* важный хак для flexbox скролла */
+  -webkit-overflow-scrolling: touch;
 }
+
 #messages::-webkit-scrollbar {
   width: 8px;
 }
+
 #messages::-webkit-scrollbar-thumb {
   background-color: #555;
   border-radius: 4px;
 }
+
 .date-divider {
   text-align: center;
   font-size: 0.85em;
@@ -121,16 +163,19 @@ a {
   margin: 1em 0 0.5em;
   user-select: none;
 }
+
 .msg {
   display: flex;
   gap: 0.75em;
 }
+
 .msg.server {
   justify-content: center;
   color: #aaa;
   font-style: italic;
   user-select: none;
 }
+
 .avatar {
   width: 36px;
   height: 36px;
@@ -140,35 +185,50 @@ a {
   flex-shrink: 0;
   cursor: default;
 }
+
 .avatar.clickable {
   cursor: pointer;
 }
+
 .content {
   flex: 1;
 }
+
 .msg-header {
   display: flex;
   justify-content: space-between;
   font-size: 0.9em;
   margin-bottom: 2px;
 }
+
 .username {
   font-weight: bold;
   user-select: text;
 }
+
 .msg-time {
   color: #999;
   user-select: none;
 }
+
 .content > div {
   word-wrap: break-word;
 }
+
+/* Форма ввода */
 #chatInput {
   display: flex;
   border-top: 1px solid #2a2a2a;
   padding: 0.5em;
   background: #1b1b1b;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  align-items: center;
 }
+
 #messageInput {
   flex: 1;
   background: #2a2a2a;
@@ -176,7 +236,15 @@ a {
   padding: 0.6em;
   border-radius: 4px;
   border: none;
+  resize: none;
+  overflow-y: auto;
+  max-height: 100px;
+  line-height: 1.2em;
+  font-size: 1rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
+
 #chatInput button {
   margin-left: 0.5em;
   background: #444;
@@ -188,40 +256,45 @@ a {
   font-weight: 600;
   border: none;
 }
+
 #chatInput button:hover {
   background: #555;
 }
+
+/* Кнопка профиля справа сверху */
 #profileBtn {
   position: fixed;
-  bottom: 1em;
+  top: 1em;
   right: 1em;
-  background: #2a2a2a;
-  border-radius: 50%;
   width: 44px;
   height: 44px;
+  background: #2a2a2a;
+  border-radius: 50%;
   font-size: 1.3em;
   color: white;
   cursor: pointer;
-  z-index: 10;
+  z-index: 30;
   user-select: none;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
-  display: flex;
 }
+
+/* Панель профиля под кнопкой */
 #profilePanel {
   position: fixed;
-  bottom: 70px;
+  top: 60px;
   right: 1em;
+  width: 260px;
   background: #1e1e1e;
   border: 1px solid #2a2a2a;
   border-radius: 8px;
   padding: 1em;
-  width: 260px;
-  display: none;
-  z-index: 10;
   box-sizing: border-box;
+  display: none;
+  z-index: 30;
 }
+
 #profilePanel input,
 #profilePanel textarea,
 #profilePanel button {
@@ -234,24 +307,30 @@ a {
   border: none;
   box-sizing: border-box;
 }
+
 #profilePanel textarea {
   resize: none;
   min-height: 50px;
 }
+
 #profilePanel small {
   text-align: right;
   display: block;
   color: #888;
   user-select: none;
 }
+
 #profilePanel button {
   background: #3a3a3a;
   cursor: pointer;
   font-weight: 600;
 }
+
 #profilePanel button:hover {
   background: #4a4a4a;
 }
+
+/* Модальные окна */
 .modal {
   display: none;
   position: fixed;
@@ -262,6 +341,7 @@ a {
   justify-content: center;
   align-items: center;
 }
+
 .modal-content {
   background: #1e1e1e;
   padding: 20px;
@@ -272,6 +352,7 @@ a {
   color: white;
   box-sizing: border-box;
 }
+
 .modal-avatar {
   width: 80px;
   height: 80px;
@@ -281,6 +362,7 @@ a {
   margin: 0 auto 10px;
   user-select: none;
 }
+
 .close {
   position: absolute;
   top: 10px; right: 15px;
@@ -289,6 +371,7 @@ a {
   color: #aaa;
   user-select: none;
 }
+
 #userModalMsgBtn {
   margin-top: 15px;
   padding: 10px 20px;
@@ -300,6 +383,7 @@ a {
   user-select: none;
 }
 
+/* Мобильная адаптация */
 @media (max-width: 768px) {
   #groupList {
     width: 100%;
@@ -310,6 +394,7 @@ a {
     border-right: none;
     border-bottom: 1px solid #2a2a2a;
   }
+
   .group-item {
     flex: 0 0 auto;
     margin: 0 0.3em;
@@ -317,29 +402,40 @@ a {
     border-radius: 20px;
     font-size: 0.9em;
   }
+
   #chatLayout {
     flex-direction: column;
     height: 100vh;
   }
+
   #chatArea {
     flex: 1;
+    height: auto;
   }
+
   #groupNameDisplay {
     padding: 0.5em 1em;
   }
+
   #messages {
     padding: 0.5em 1em;
+    min-height: 0;
+    flex: 1;
   }
+
   #chatInput {
     padding: 0.3em 0.5em;
   }
+
   #messageInput {
     padding: 0.5em;
   }
+
   #profilePanel {
     width: 90vw;
     right: 5vw;
-    bottom: 60px;
+    top: 50px;
+    bottom: auto;
   }
 }
 
