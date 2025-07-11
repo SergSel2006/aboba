@@ -126,8 +126,7 @@
 
 
 <script type="module">
-// main.js – полный, переписанный скрипт с поддержкой групповых и личных чатов
-// Всё работает по Firebase 10 SDK (модульная версия)
+// main.js – версия с режимами групп (open / invite / strict) + ЛС
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
 import {
@@ -141,7 +140,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
 /********************
- * 1.  Initial Setup *
+ * 0. Firebase init *
  ********************/
 const firebaseConfig = {
   apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
@@ -156,238 +155,106 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 
-// ============ DOM refs ============ //
+/********************
+ * 1. DOM shortcuts *
+ ********************/
 const $ = id => document.getElementById(id);
-const loginForm      = $("loginForm");
-const googleLoginBtn = $("googleLoginBtn");
-const loginMsg       = $("loginMsg");
-const chatLayout     = $("chatLayout");
-const groupList      = $("groupList");
-const groupName      = $("groupNameDisplay");
-const messagesDiv    = $("messages");
-const chatInput      = $("chatInput");
-const chatInputForm  = $("chatInputForm");
-const messageInput   = $("messageInput");
-const profileBtn     = $("profileBtn");
-const profilePanel   = $("profilePanel");
-const profileForm    = $("profileForm");
-const profileNick    = $("profileNick");
-const profileAvatar  = $("profileAvatar");
-const profileColor   = $("profileColor");
-const profileStatus  = $("profileStatus");
-const statusCounter  = $("statusCounter");
-const logoutBtn      = $("logoutBtn");
-const userModal      = $("userProfileModal");
-const closeUserModal = $("closeUserModal");
-const userModalAvatar= $("userModalAvatar");
-const userModalNick  = $("userModalNick");
-const userModalStatus= $("userModalStatus");
-const userModalMsg   = $("userModalMsgBtn");
+const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),privateChatsList=$("privateChatsList");
 
-// ============ State ============ //
-let currentUser      = null;
-let groups           = [ {id:"group1", name:"Общий чат"}, {id:"group2", name:"Фан-зона"} ];
-let selectedGroupId  = "group1"; // id группового чата
-let privateUid       = "";      // uid пользователя, с которым открыт ЛС ("" если нет)
-let unsubscribe      = null;     // текущий onSnapshot
-const profileCache   = {};       // кэш профилей
-
-/*******************
- * 2.  UI Helpers  *
- *******************/
-const fmtTime = d => d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-const fmtDate = d => {
-  const now  = new Date();
-  const diff = now - d;
-  const day  = 24*60*60*1000;
-  if(diff < day && now.getDate()===d.getDate()) return "Сегодня";
-  if(diff < 2*day && now.getDate()-1===d.getDate()) return "Вчера";
-  return d.toLocaleDateString();
+/********************
+ * 2. Static groups *
+ ********************/
+const GROUP_DEFS = {
+  group1:{name:"Абобики с ДС",  mode:"invite"},
+  group2:{name:"Дружные абобы", mode:"strict"},
+  group3:{name:"aboba global",  mode:"open"}
 };
+const groupIds = Object.keys(GROUP_DEFS);
+let selectedGroupId="group1";
+let privateUid="";
+let currentUser=null,unsubscribe=null;
+const profileCache={};
 
-const getPrivateChatId = (a,b)=>[a,b].sort().join("_");
+/********************
+ * 3. Helpers        *
+ ********************/
+const fmtTime=d=>d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+const fmtDate=d=>{const n=new Date(),day=864e5;if(n-d<day&&n.getDate()==d.getDate())return"Сегодня";if(n-d<2*day&&n.getDate()-1==d.getDate())return"Вчера";return d.toLocaleDateString();};
+const chatIdFor=(a,b)=>[a,b].sort().join("_");
 
-/*******************
- * 3.  Auth Flow   *
- *******************/
-googleLoginBtn.onclick = ()=>{
-  loginMsg.textContent="";
-  signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);
-};
-logoutBtn.onclick = ()=>{ if(unsubscribe)unsubscribe(); signOut(auth); };
+/********************
+ * 4. Auth           *
+ ********************/
+googleLoginBtn.onclick=()=>{loginMsg.textContent="";signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);};
+logoutBtn.onclick=()=>{unsubscribe?.();signOut(auth);};
 
-onAuthStateChanged(auth, async user=>{
-  currentUser = user;
+onAuthStateChanged(auth,async user=>{
+  currentUser=user;
   if(user){
-    loginForm.style.display="none";
-    chatLayout.style.display="flex";
-    chatInput.style.display="flex";
-    profileBtn.style.display="flex";
+    loginForm.style.display="none";chatLayout.style.display="flex";chatInput.style.display="flex";profileBtn.style.display="flex";
     await loadOwnProfile();
-    renderGroupSidebar();
-    openGroupChat(selectedGroupId);
-  } else {
-    loginForm.style.display="flex";
-    chatLayout.style.display="none";
-    chatInput.style.display="none";
-    profileBtn.style.display="none";
-    if(unsubscribe)unsubscribe();
+    renderSidebar();
+    openGroup(selectedGroupId);
+  }else{
+    loginForm.style.display="flex";chatLayout.style.display="none";chatInput.style.display="none";profileBtn.style.display="none";unsubscribe?.();
   }
 });
 
 async function loadOwnProfile(){
-  if(!currentUser) return;
-  const snap=await getDoc(doc(db,"profiles",currentUser.uid));
-  if(snap.exists()){
-    const p=snap.data();
-    profileCache[currentUser.uid]=p;
-    profileNick.value=p.nick||"";
-    profileAvatar.value=p.avatar||"";
-    profileColor.value=p.color||"#cccccc";
-    profileStatus.value=p.status||"";
-    statusCounter.textContent=80-profileStatus.value.length;
-  }
+  if(!currentUser)return;const snap=await getDoc(doc(db,"profiles",currentUser.uid));if(snap.exists())profileCache[currentUser.uid]=snap.data();
+  const p=profileCache[currentUser.uid]||{};profileNick.value=p.nick||"";profileAvatar.value=p.avatar||"";profileColor.value=p.color||"#cccccc";profileStatus.value=p.status||"";statusCounter.textContent=80-(profileStatus.value.length||0);
 }
 
-/*******************
- * 4.  Profile save *
- *******************/
-profileForm.onsubmit = async e=>{
-  e.preventDefault();
-  if(!currentUser)return;
-  const newP={nick:profileNick.value.trim()||"Безымянный", avatar:profileAvatar.value.trim()||"https://i.imgur.com/4AiXzf8.png", color:profileColor.value, status:profileStatus.value.trim()};
-  await setDoc(doc(db,"profiles",currentUser.uid),newP);
-  profileCache[currentUser.uid]=newP;
-  alert("Профиль сохранён");
-};
-profileStatus.oninput=()=>statusCounter.textContent=80-profileStatus.value.length;
-profileBtn.onclick = ()=>{ profilePanel.style.display = (profilePanel.style.display==="none"||!profilePanel.style.display)?"block":"none"; };
-document.addEventListener("click",e=>{ if(!profilePanel.contains(e.target)&&e.target!==profileBtn) profilePanel.style.display="none"; });
-
-/*******************
- * 5.  Sidebar      *
- *******************/
-function renderGroupSidebar(){
-  groupList.innerHTML="";
-  // Личная секция
-  const head=document.createElement("div");
-  head.textContent="💬 Личные";
-  head.style.cssText="padding:0.3em 0;color:#888;font-size:0.85em;";
-  groupList.appendChild(head);
-  // кэш диалогов: показываем только тех, с кем уже общались (можно расширить)
-  Object.entries(profileCache).forEach(([uid,p])=>{
-    if(uid===currentUser.uid) return;
-    const el=document.createElement("div");
-    el.className="group-item"+(uid===privateUid?" active":"");
-    el.textContent=p.nick||"Безымянный";
-    el.onclick=()=>openPrivateChat(uid);
-    groupList.appendChild(el);
-  });
-  // Заголовок групп
-  const head2=document.createElement("div");
-  head2.textContent="📂 Группы";
-  head2.style.cssText="padding:0.3em 0;color:#888;font-size:0.85em;";
-  groupList.appendChild(head2);
-  // группы
-  groups.forEach(g=>{
-    const el=document.createElement("div");
-    el.className="group-item"+(g.id===selectedGroupId&&!privateUid?" active":"");
-    el.textContent=g.name;
-    el.onclick=()=>openGroupChat(g.id);
-    groupList.appendChild(el);
-  });
+/********************
+ * 5. Sidebar render *
+ ********************/
+function renderSidebar(){
+  groupList.querySelectorAll(".group-item").forEach(el=>el.remove());
+  privateChatsList.innerHTML="";
+  Object.entries(profileCache).forEach(([uid,p])=>{ if(uid===currentUser.uid) return; const el=document.createElement("div"); el.className="group-item"+(uid===privateUid?" active":""); el.textContent=p.nick||"Безымянный"; el.onclick=()=>openPrivate(uid); privateChatsList.appendChild(el); });
+  groupIds.forEach(id=>{const meta=GROUP_DEFS[id];const el=document.createElement("div");el.className="group-item"+(id===selectedGroupId&&!privateUid?" active":"");el.dataset.id=id;el.textContent=meta.name;el.onclick=()=>openGroup(id);groupList.appendChild(el);});
 }
 
-/*******************
- * 6.  Chat loaders *
- *******************/
-function clearChat(){
-  messagesDiv.innerHTML="";
-  if(unsubscribe)unsubscribe();
+/********************
+ * 6. Chat opening   *
+ ********************/
+function openGroup(id){privateUid="";selectedGroupId=id;chatInputForm.dataset.chatType="group";chatInputForm.dataset.group=id;groupName.textContent=GROUP_DEFS[id].name;messagesDiv.innerHTML="";unsubscribe?.();const q=query(collection(db,"groups",id,"messages"),orderBy("createdAt"));unsubscribe=onSnapshot(q,renderSnap);updateInputLock();renderSidebar();}
+function openPrivate(uid){selectedGroupId="";privateUid=uid;chatInputForm.dataset.chatType="private";chatInputForm.dataset.targetUid=uid;loadProfile(uid).then(p=>groupName.textContent="Диалог с "+(p.nick||"Безымянный"));messagesDiv.innerHTML="";unsubscribe?.();const q=query(collection(db,"privateChats",chatIdFor(currentUser.uid,uid),"messages"),orderBy("createdAt"));unsubscribe=onSnapshot(q,renderSnap);updateInputLock();renderSidebar();}
+
+/********************
+ * 7. Access control *
+ ********************/
+async function updateInputLock(){
+  if(chatInputForm.dataset.chatType==="group"){const id=chatInputForm.dataset.group;const docSnap=await getDoc(doc(db,"groups",id));const data=docSnap.exists()?docSnap.data():{mode:GROUP_DEFS[id].mode,members:[],admins:[]};const mode=data.mode||"open";const canWrite=(mode==="open")||(mode==="invite"&&data.members?.includes(currentUser.uid))||(mode==="strict"&&data.admins?.includes(currentUser.uid));messageInput.disabled=!canWrite;chatInputForm.querySelector("button").disabled=!canWrite;}
+  else{messageInput.disabled=false;chatInputForm.querySelector("button").disabled=false;}
 }
 
-function openGroupChat(id){
-  privateUid="";
-  selectedGroupId=id;
-  groupName.textContent=groups.find(g=>g.id===id)?.name||"Чат";
-  renderGroupSidebar();
-  clearChat();
-  const q=query(collection(db,"groups",id,"messages"),orderBy("createdAt"));
-  unsubscribe=onSnapshot(q,snap=>renderSnapshot(snap));
-  chatInputForm.dataset.chatType="group";
-}
+/********************
+ * 8. Snapshot → DOM *
+ ********************/
+function renderSnap(snap){messagesDiv.innerHTML="";let last="";snap.docs.forEach(async d=>{const m=d.data();const dt=m.createdAt?.toDate?.()||new Date();const ds=dt.toDateString();if(ds!==last){const div=document.createElement("div");div.className="date-divider";div.textContent=fmtDate(dt);messagesDiv.appendChild(div);last=ds;}if(m.type==="server"){const s=document.createElement("div");s.className="msg server";s.textContent=m.text;messagesDiv.appendChild(s);return;}const pr=await loadProfile(m.uid);const msg=document.createElement("div");msg.className="msg";const av=document.createElement("div");av.className="avatar";av.style.backgroundImage=`url(${pr.avatar})`;av.onclick=()=>openUserModal(m.uid);const cont=document.createElement("div");cont.className="content";cont.innerHTML=`<div class='msg-header'><span class='username' style='color:${pr.color}'>${pr.nick}</span><span class='msg-time'>${fmtTime(dt)}</span></div><div>${m.text}</div>`;msg.appendChild(av);msg.appendChild(cont);messagesDiv.appendChild(msg);messagesDiv.scrollTop=messagesDiv.scrollHeight;});}
 
-function openPrivateChat(uid){
-  privateUid=uid;
-  selectedGroupId="";
-  renderGroupSidebar();
-  loadProfile(uid).then(p=>{ groupName.textContent="Диалог с "+(p.nick||"Безымянный"); });
-  clearChat();
-  const chatId=getPrivateChatId(currentUser.uid,uid);
-  const q=query(collection(db,"privateChats",chatId,"messages"),orderBy("createdAt"));
-  unsubscribe=onSnapshot(q,snap=>renderSnapshot(snap));
-  chatInputForm.dataset.chatType="private";
-  chatInputForm.dataset.targetUid=uid;
-}
+/********************
+ * 9. Sending        *
+ ********************/
+chatInputForm.onsubmit=async e=>{e.preventDefault();const txt=messageInput.value.trim();if(!txt)return;const payload={uid:currentUser.uid,text:txt,createdAt:serverTimestamp(),type:"user"};if(chatInputForm.dataset.chatType==="private"){await addDoc(collection(db,"privateChats",chatIdFor(currentUser.uid,chatInputForm.dataset.targetUid),"messages"),payload);}else{await addDoc(collection(db,"groups",selectedGroupId,"messages"),payload);}messageInput.value="";};
 
-function renderSnapshot(snap){
-  messagesDiv.innerHTML="";
-  let lastDate="";
-  snap.docs.forEach(async d=>{
-    const m=d.data();
-    const date=m.createdAt?.toDate?.()||new Date();
-    const dateStr=date.toDateString();
-    if(dateStr!==lastDate){
-      const div=document.createElement("div");
-      div.className="date-divider";
-      div.textContent=fmtDate(date);
-      messagesDiv.appendChild(div);
-      lastDate=dateStr;
-    }
-    if(m.type==="server"){ const s=document.createElement("div"); s.className="msg server"; s.textContent=m.text; messagesDiv.appendChild(s); return; }
-    const prof=await loadProfile(m.uid);
-    const msgDiv=document.createElement("div"); msgDiv.className="msg";
-    const av=document.createElement("div"); av.className="avatar"; av.style.backgroundImage=`url(${prof.avatar})`; if(m.uid!=="system") av.onclick=()=>openUserModal(m.uid);
-    const cont=document.createElement("div"); cont.className="content";
-    cont.innerHTML=`<div class='msg-header'><span class='username' style='color:${prof.color}'>${prof.nick}</span><span class='msg-time'>${fmtTime(date)}</span></div><div>${m.text}</div>`;
-    msgDiv.appendChild(av); msgDiv.appendChild(cont); messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
-  });
-}
+/********************
+ * 10. Profiles etc. *
+ ********************/
+async function loadProfile(uid){if(profileCache[uid])return profileCache[uid];const snap=await getDoc(doc(db,"profiles",uid));const data=snap.exists()?snap.data():{nick:"Безымянный",avatar:"https://i.imgur.com/4AiXzf8.png",color:"#ccc",status:""};profileCache[uid]=data;return data;}
 
-/*******************
- * 7.  Send message *
- *******************/
-chatInputForm.onsubmit=async e=>{
-  e.preventDefault(); if(!currentUser)return;
-  const text=messageInput.value.trim(); if(!text)return;
-  const payload={uid:currentUser.uid,text,createdAt:serverTimestamp(),type:"user"};
-  if(chatInputForm.dataset.chatType==="private"){
-    const chatId=getPrivateChatId(currentUser.uid,chatInputForm.dataset.targetUid);
-    await addDoc(collection(db,"privateChats",chatId,"messages"),payload);
-  } else {
-    await addDoc(collection(db,"groups",selectedGroupId,"messages"),payload);
-  }
-  messageInput.value="";
-};
+function openUserModal(uid){loadProfile(uid).then(p=>{userModalAvatar.style.backgroundImage=`url(${p.avatar||"https://i.imgur.com/4AiXzf8.png"})`;userModalNick.textContent=p.nick||"Безымянный";userModalNick.style.color=p.color||"#ccc";userModalStatus.textContent=p.status||"";userModal.style.display="flex";userModal.setAttribute("aria-hidden","false");userModalMsgBtn.disabled=true;});}
 
-/*******************
- * 8.  User Modal   *
- *******************/
-async function openUserModal(uid){
-  const p=await loadProfile(uid);
-  userModalAvatar.style.backgroundImage=`url(${p.avatar})`;
-  userModalNick.textContent=p.nick;
-  userModalNick.style.color=p.color;
-  userModalStatus.textContent=p.status||"";
-  userModalMsg.disabled=(uid===currentUser.uid);
-  userModalMsg.onclick=()=>{ userModal.style.display="none"; openPrivateChat(uid); };
-  userModal.style.display="flex"; userModal.setAttribute("aria-hidden","false");
-}
-closeUserModal.onclick=()=>{ userModal.style.display="none"; userModal.setAttribute("aria-hidden","true"); };
-userModal.onclick=e=>{ if(e.target===userModal){userModal.style.display="none"; userModal.setAttribute("aria-hidden","true");} };
+closeUserModal.onclick=()=>{userModal.style.display="none";userModal.setAttribute("aria-hidden","true");};
+userModal.onclick=e=>{if(e.target===userModal){userModal.style.display="none";userModal.setAttribute("aria-hidden","true");}};
 
-console.log("🔥 Абоба чат загружен");
+profileStatus.oninput=()=>{statusCounter.textContent=80-profileStatus.value.length;};
+
+profileForm.onsubmit=async e=>{e.preventDefault();if(!currentUser)return;const newProfile={nick:profileNick.value.trim()||"Безымянный",avatar:profileAvatar.value.trim()||"https://i.imgur.com/4AiXzf8.png",color:profileColor.value||"#cccccc",status:profileStatus.value.trim()};await setDoc(doc(db,"profiles",currentUser.uid),newProfile);profileCache[currentUser.uid]=newProfile;alert("Профиль обновлён!");};
+
+profileBtn.onclick=()=>{profilePanel.style.display=profilePanel.style.display==="block"?"none":"block";};
+document.addEventListener("click",e=>{if(!profilePanel.contains(e.target)&&e.target!==profileBtn)profilePanel.style.display="none";});
 
 </script>
 </body>
