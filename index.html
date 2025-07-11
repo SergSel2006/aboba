@@ -21,6 +21,7 @@
 
     /* ===== GROUP LIST ===== */
     #groupList{width:220px;background:#1c1c1c;padding:1em;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #2a2a2a;}
+    .group-section-title { color: #aaa; font-size: 0.9em; margin: 0.8em 0 0.3em 0; }
     .group-item{padding:0.6em;margin-bottom:0.4em;background:#2a2a2a;border-radius:5px;cursor:pointer;user-select:none;}
     .group-item:hover{background:#3a3a3a;}
     .group-item.active{background:#505050;font-weight:bold;}
@@ -61,6 +62,7 @@
     /* ===== MOBILE ===== */
     @media(max-width:768px){
       #groupList{width:100%;height:50px;flex-direction:row;overflow-x:auto;padding:0.3em 0.6em;border-bottom:1px solid #2a2a2a;border-right:none;}
+      .group-section-title { display: none; }
       .group-item{flex:0 0 auto;margin:0 0.3em;padding:0.5em 0.8em;border-radius:20px;font-size:0.9em;}
       #chatLayout{flex-direction:column;}
       #messages{padding:0.5em 1em;padding-bottom:90px;}
@@ -72,50 +74,61 @@
 <body>
   <div id="app">
     <div id="loginForm">
-      <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
+      <div id="googleLoginBtn">Войти через Google</div>
+      <div id="loginMsg"></div>
     </div>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
-      <main id="chatArea">
+    <div id="chatLayout" style="display: none">
+      <div id="groupList">
+        <div class="group-section-title">Группы</div>
+        <div class="group-item" data-id="group1">Абобики с ДС</div>
+        <div class="group-item" data-id="group2">Дружные абобы</div>
+        <div class="group-item" data-id="group3">aboba global</div>
+        <div class="group-section-title">ЛС</div>
+        <div id="privateChatsList"></div>
+      </div>
+      <div id="chatArea">
         <div id="groupNameDisplay"></div>
         <div id="messages"></div>
-      </main>
+      </div>
     </div>
 
-    <form id="chatInput">
-      <input type="text" id="messageInput" placeholder="Написать..." autocomplete="off" required />
-      <button type="submit">Отправить</button>
-    </form>
-
-    <button id="profileBtn" title="Настройки профиля">⚙</button>
-
-    <div id="profilePanel">
-      <form id="profileForm">
-        <input id="profileNick" placeholder="Ник" autocomplete="off" />
-        <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" />
-        <input type="color" id="profileColor" title="Цвет ника" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус"></textarea>
-        <small id="statusCounter">80</small>
-        <button type="submit">Сохранить</button>
-        <button type="button" id="logoutBtn">Выйти</button>
+    <div id="chatInput" style="display: none">
+      <form id="chatInputForm" style="flex: 1; display: flex;">
+        <input id="messageInput" type="text" placeholder="Введите сообщение..." autocomplete="off" />
+        <button type="submit">Отправить</button>
       </form>
     </div>
-  </div>
 
-  <div id="userProfileModal" class="modal" aria-hidden="true" role="dialog">
-    <div class="modal-content">
-      <span id="closeUserModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
-      <div class="modal-avatar" id="userModalAvatar"></div>
-      <h3 id="userModalNick">Имя</h3>
-      <p id="userModalStatus">Статус пользователя</p>
-      <button id="userModalMsgBtn" disabled>💬 Написать (скоро)</button>
+    <div id="profileBtn">⚙️</div>
+    <div id="profilePanel">
+      <form id="profileForm">
+        <input id="profileNick" placeholder="Никнейм" />
+        <input id="profileAvatar" placeholder="Ссылка на аватар" />
+        <input id="profileColor" type="color" value="#cccccc" />
+        <textarea id="profileStatus" maxlength="80" placeholder="Статус..."></textarea>
+        <small><span id="statusCounter">80</span> символов осталось</small>
+        <button type="submit">Сохранить</button>
+      </form>
+      <button id="logoutBtn">Выйти</button>
+    </div>
+
+    <div id="userProfileModal" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <span id="closeUserModal" class="close">×</span>
+        <div id="userModalAvatar" class="modal-avatar"></div>
+        <div id="userModalNick"></div>
+        <div id="userModalStatus"></div>
+        <button id="userModalMsgBtn" disabled>Написать в ЛС</button>
+      </div>
     </div>
   </div>
 
+
 <script type="module">
+// main.js – полный, переписанный скрипт с поддержкой групповых и личных чатов
+// Всё работает по Firebase 10 SDK (модульная версия)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
 import {
   getFirestore, collection, query, orderBy,
@@ -127,6 +140,9 @@ import {
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
+/********************
+ * 1.  Initial Setup *
+ ********************/
 const firebaseConfig = {
   apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
   authDomain: "abobaserver-49923.firebaseapp.com",
@@ -137,320 +153,242 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db  = getFirestore(app);
 const auth = getAuth(app);
 
-const loginForm = document.getElementById("loginForm");
-const googleLoginBtn = document.getElementById("googleLoginBtn");
-const loginMsg = document.getElementById("loginMsg");
-const chatLayout = document.getElementById("chatLayout");
-const groupList = document.getElementById("groupList");
-const groupNameDisplay = document.getElementById("groupNameDisplay");
-const messagesDiv = document.getElementById("messages");
-const chatInputForm = document.getElementById("chatInput");
-const messageInput = document.getElementById("messageInput");
-const profileBtn = document.getElementById("profileBtn");
-const profilePanel = document.getElementById("profilePanel");
-const profileForm = document.getElementById("profileForm");
-const profileNick = document.getElementById("profileNick");
-const profileAvatar = document.getElementById("profileAvatar");
-const profileColor = document.getElementById("profileColor");
-const profileStatus = document.getElementById("profileStatus");
-const statusCounter = document.getElementById("statusCounter");
-const logoutBtn = document.getElementById("logoutBtn");
+// ============ DOM refs ============ //
+const $ = id => document.getElementById(id);
+const loginForm      = $("loginForm");
+const googleLoginBtn = $("googleLoginBtn");
+const loginMsg       = $("loginMsg");
+const chatLayout     = $("chatLayout");
+const groupList      = $("groupList");
+const groupName      = $("groupNameDisplay");
+const messagesDiv    = $("messages");
+const chatInput      = $("chatInput");
+const chatInputForm  = $("chatInputForm");
+const messageInput   = $("messageInput");
+const profileBtn     = $("profileBtn");
+const profilePanel   = $("profilePanel");
+const profileForm    = $("profileForm");
+const profileNick    = $("profileNick");
+const profileAvatar  = $("profileAvatar");
+const profileColor   = $("profileColor");
+const profileStatus  = $("profileStatus");
+const statusCounter  = $("statusCounter");
+const logoutBtn      = $("logoutBtn");
+const userModal      = $("userProfileModal");
+const closeUserModal = $("closeUserModal");
+const userModalAvatar= $("userModalAvatar");
+const userModalNick  = $("userModalNick");
+const userModalStatus= $("userModalStatus");
+const userModalMsg   = $("userModalMsgBtn");
 
-const userProfileModal = document.getElementById("userProfileModal");
-const closeUserModalBtn = document.getElementById("closeUserModal");
-const userModalAvatar = document.getElementById("userModalAvatar");
-const userModalNick = document.getElementById("userModalNick");
-const userModalStatus = document.getElementById("userModalStatus");
-const userModalMsgBtn = document.getElementById("userModalMsgBtn");
+// ============ State ============ //
+let currentUser      = null;
+let groups           = [ {id:"group1", name:"Общий чат"}, {id:"group2", name:"Фан-зона"} ];
+let selectedGroupId  = "group1"; // id группового чата
+let privateUid       = "";      // uid пользователя, с которым открыт ЛС ("" если нет)
+let unsubscribe      = null;     // текущий onSnapshot
+const profileCache   = {};       // кэш профилей
 
-let currentUser = null;
-let groups = [];
-let selectedGroup = null;
-let unsubscribe = null;
-const profilesCache = {};
-
-function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(date) {
-  const now = new Date();
-  const diff = now - date;
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  if (diff < oneDay && now.getDate() === date.getDate()) return "Сегодня";
-  if (diff < 2 * oneDay && now.getDate() - 1 === date.getDate()) return "Вчера";
-
-  return date.toLocaleDateString();
-}
-
-async function loadProfile(uid) {
-  if (profilesCache[uid]) return profilesCache[uid];
-  try {
-    const snap = await getDoc(doc(db, "profiles", uid));
-    if (snap.exists()) {
-      profilesCache[uid] = snap.data();
-      return profilesCache[uid];
-    }
-  } catch (e) {
-    console.error("Ошибка загрузки профиля:", e);
-  }
-  return {
-    nick: "Безымянный",
-    avatar: "https://i.imgur.com/4AiXzf8.png",
-    color: "#ccc",
-    status: ""
-  };
-}
-
-async function openUserModal(uid) {
-  const profile = await loadProfile(uid);
-  userModalAvatar.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-  userModalNick.textContent = profile.nick || "Безымянный";
-  userModalNick.style.color = profile.color || "#ccc";
-  userModalStatus.textContent = profile.status || "Пользователь без статуса";
-  userModalMsgBtn.disabled = true;
-  userProfileModal.style.display = "flex";
-  userProfileModal.setAttribute("aria-hidden", "false");
-}
-
-closeUserModalBtn.onclick = () => {
-  userProfileModal.style.display = "none";
-  userProfileModal.setAttribute("aria-hidden", "true");
-};
-userProfileModal.onclick = e => {
-  if (e.target === userProfileModal) {
-    userProfileModal.style.display = "none";
-    userProfileModal.setAttribute("aria-hidden", "true");
-  }
+/*******************
+ * 2.  UI Helpers  *
+ *******************/
+const fmtTime = d => d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+const fmtDate = d => {
+  const now  = new Date();
+  const diff = now - d;
+  const day  = 24*60*60*1000;
+  if(diff < day && now.getDate()===d.getDate()) return "Сегодня";
+  if(diff < 2*day && now.getDate()-1===d.getDate()) return "Вчера";
+  return d.toLocaleDateString();
 };
 
-profileStatus.addEventListener('input', () => {
-  statusCounter.textContent = 80 - profileStatus.value.length;
-});
+const getPrivateChatId = (a,b)=>[a,b].sort().join("_");
 
-googleLoginBtn.onclick = () => {
-  loginMsg.textContent = "";
-  const provider = new GoogleAuthProvider();
-  signInWithPopup(auth, provider).catch(e => loginMsg.textContent = "Ошибка входа: " + e.message);
+/*******************
+ * 3.  Auth Flow   *
+ *******************/
+googleLoginBtn.onclick = ()=>{
+  loginMsg.textContent="";
+  signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);
 };
+logoutBtn.onclick = ()=>{ if(unsubscribe)unsubscribe(); signOut(auth); };
 
-logoutBtn.onclick = () => {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
-  signOut(auth);
-};
-
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async user=>{
   currentUser = user;
-  if (user) {
-    loginForm.style.display = "none";
-    chatLayout.style.display = "flex";
-    profileBtn.style.display = "flex";
-
-    await loadUserProfile();
-
-    groups = [
-      { id: "group1", name: "Общий чат" },
-      { id: "group2", name: "Фан-зона" }
-    ];
-    if (!selectedGroup) selectedGroup = groups[0].id;
-
-    renderGroups();
-    startChat();
-
-    addSystemMessage(`${currentUser.displayName || "Пользователь"} присоединился!`);
+  if(user){
+    loginForm.style.display="none";
+    chatLayout.style.display="flex";
+    chatInput.style.display="flex";
+    profileBtn.style.display="flex";
+    await loadOwnProfile();
+    renderGroupSidebar();
+    openGroupChat(selectedGroupId);
   } else {
-    loginForm.style.display = "block";
-    chatLayout.style.display = "none";
-    profileBtn.style.display = "none";
-
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
+    loginForm.style.display="flex";
+    chatLayout.style.display="none";
+    chatInput.style.display="none";
+    profileBtn.style.display="none";
+    if(unsubscribe)unsubscribe();
   }
 });
 
-async function loadUserProfile() {
-  if (!currentUser) return;
-  const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-  if (snap.exists()) {
-    const p = snap.data();
-    profilesCache[currentUser.uid] = p;
-    profileNick.value = p.nick || "";
-    profileAvatar.value = p.avatar || "";
-    profileColor.value = p.color || "#cccccc";
-    profileStatus.value = p.status || "";
-    statusCounter.textContent = 80 - (profileStatus.value.length);
-  } else {
-    profileNick.value = "";
-    profileAvatar.value = "";
-    profileColor.value = "#cccccc";
-    profileStatus.value = "";
-    statusCounter.textContent = 80;
+async function loadOwnProfile(){
+  if(!currentUser) return;
+  const snap=await getDoc(doc(db,"profiles",currentUser.uid));
+  if(snap.exists()){
+    const p=snap.data();
+    profileCache[currentUser.uid]=p;
+    profileNick.value=p.nick||"";
+    profileAvatar.value=p.avatar||"";
+    profileColor.value=p.color||"#cccccc";
+    profileStatus.value=p.status||"";
+    statusCounter.textContent=80-profileStatus.value.length;
   }
 }
 
-profileForm.onsubmit = async (e) => {
+/*******************
+ * 4.  Profile save *
+ *******************/
+profileForm.onsubmit = async e=>{
   e.preventDefault();
-  if (!currentUser) return;
-
-  const newProfile = {
-    nick: profileNick.value.trim() || "Безымянный",
-    avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-    color: profileColor.value || "#cccccc",
-    status: profileStatus.value.trim()
-  };
-
-  await setDoc(doc(db, "profiles", currentUser.uid), newProfile);
-  profilesCache[currentUser.uid] = newProfile;
-  alert("Профиль сохранён!");
+  if(!currentUser)return;
+  const newP={nick:profileNick.value.trim()||"Безымянный", avatar:profileAvatar.value.trim()||"https://i.imgur.com/4AiXzf8.png", color:profileColor.value, status:profileStatus.value.trim()};
+  await setDoc(doc(db,"profiles",currentUser.uid),newP);
+  profileCache[currentUser.uid]=newP;
+  alert("Профиль сохранён");
 };
+profileStatus.oninput=()=>statusCounter.textContent=80-profileStatus.value.length;
+profileBtn.onclick = ()=>{ profilePanel.style.display = (profilePanel.style.display==="none"||!profilePanel.style.display)?"block":"none"; };
+document.addEventListener("click",e=>{ if(!profilePanel.contains(e.target)&&e.target!==profileBtn) profilePanel.style.display="none"; });
 
-function renderGroups() {
-  groupList.innerHTML = "";
-  groups.forEach(g => {
-    const el = document.createElement('div');
-    el.className = 'group-item' + (g.id === selectedGroup ? ' active' : '');
-    el.textContent = g.name;
-    el.onclick = () => {
-      selectedGroup = g.id;
-      startChat();
-      renderGroups();
-    };
+/*******************
+ * 5.  Sidebar      *
+ *******************/
+function renderGroupSidebar(){
+  groupList.innerHTML="";
+  // Личная секция
+  const head=document.createElement("div");
+  head.textContent="💬 Личные";
+  head.style.cssText="padding:0.3em 0;color:#888;font-size:0.85em;";
+  groupList.appendChild(head);
+  // кэш диалогов: показываем только тех, с кем уже общались (можно расширить)
+  Object.entries(profileCache).forEach(([uid,p])=>{
+    if(uid===currentUser.uid) return;
+    const el=document.createElement("div");
+    el.className="group-item"+(uid===privateUid?" active":"");
+    el.textContent=p.nick||"Безымянный";
+    el.onclick=()=>openPrivateChat(uid);
+    groupList.appendChild(el);
+  });
+  // Заголовок групп
+  const head2=document.createElement("div");
+  head2.textContent="📂 Группы";
+  head2.style.cssText="padding:0.3em 0;color:#888;font-size:0.85em;";
+  groupList.appendChild(head2);
+  // группы
+  groups.forEach(g=>{
+    const el=document.createElement("div");
+    el.className="group-item"+(g.id===selectedGroupId&&!privateUid?" active":"");
+    el.textContent=g.name;
+    el.onclick=()=>openGroupChat(g.id);
     groupList.appendChild(el);
   });
 }
 
-function unsubscribeChat() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
+/*******************
+ * 6.  Chat loaders *
+ *******************/
+function clearChat(){
+  messagesDiv.innerHTML="";
+  if(unsubscribe)unsubscribe();
 }
 
-async function startChat() {
-  if (!selectedGroup) return;
-  messagesDiv.innerHTML = "";
+function openGroupChat(id){
+  privateUid="";
+  selectedGroupId=id;
+  groupName.textContent=groups.find(g=>g.id===id)?.name||"Чат";
+  renderGroupSidebar();
+  clearChat();
+  const q=query(collection(db,"groups",id,"messages"),orderBy("createdAt"));
+  unsubscribe=onSnapshot(q,snap=>renderSnapshot(snap));
+  chatInputForm.dataset.chatType="group";
+}
 
-  const q = query(collection(db, "groups", selectedGroup, "messages"), orderBy("createdAt"));
+function openPrivateChat(uid){
+  privateUid=uid;
+  selectedGroupId="";
+  renderGroupSidebar();
+  loadProfile(uid).then(p=>{ groupName.textContent="Диалог с "+(p.nick||"Безымянный"); });
+  clearChat();
+  const chatId=getPrivateChatId(currentUser.uid,uid);
+  const q=query(collection(db,"privateChats",chatId,"messages"),orderBy("createdAt"));
+  unsubscribe=onSnapshot(q,snap=>renderSnapshot(snap));
+  chatInputForm.dataset.chatType="private";
+  chatInputForm.dataset.targetUid=uid;
+}
 
-  unsubscribeChat();
-
-  unsubscribe = onSnapshot(q, async (snap) => {
-    messagesDiv.innerHTML = "";
-    let lastDate = "";
-
-    for (const docSnap of snap.docs) {
-      const m = docSnap.data();
-      const date = m.createdAt?.toDate?.() || new Date();
-      const dateStr = date.toDateString();
-
-      if (dateStr !== lastDate) {
-        const d = document.createElement('div');
-        d.className = 'date-divider';
-        d.innerText = formatDate(date);
-        messagesDiv.appendChild(d);
-        lastDate = dateStr;
-      }
-
-      if (m.type === 'server') {
-        const serverMsg = document.createElement('div');
-        serverMsg.className = 'msg server';
-        serverMsg.textContent = m.text;
-        messagesDiv.appendChild(serverMsg);
-        continue;
-      }
-
-      const profile = await loadProfile(m.uid);
-
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'msg';
-
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'avatar';
-      avatarDiv.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-
-      if (m.type === 'user') {
-        avatarDiv.classList.add('clickable');
-        avatarDiv.onclick = () => openUserModal(m.uid);
-      }
-
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'content';
-
-      let headerHTML = "";
-      if (m.type === 'user') {
-        headerHTML = `
-          <div class="msg-header">
-            <span class="username" style="color:${profile.color}">${profile.nick}</span>
-            <span class="msg-time">${formatTime(date)}</span>
-          </div>`;
-      }
-
-      contentDiv.innerHTML = headerHTML + `<div>${m.text}</div>`;
-
-      msgDiv.appendChild(avatarDiv);
-      msgDiv.appendChild(contentDiv);
-
-      messagesDiv.appendChild(msgDiv);
+function renderSnapshot(snap){
+  messagesDiv.innerHTML="";
+  let lastDate="";
+  snap.docs.forEach(async d=>{
+    const m=d.data();
+    const date=m.createdAt?.toDate?.()||new Date();
+    const dateStr=date.toDateString();
+    if(dateStr!==lastDate){
+      const div=document.createElement("div");
+      div.className="date-divider";
+      div.textContent=fmtDate(date);
+      messagesDiv.appendChild(div);
+      lastDate=dateStr;
     }
-
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    if(m.type==="server"){ const s=document.createElement("div"); s.className="msg server"; s.textContent=m.text; messagesDiv.appendChild(s); return; }
+    const prof=await loadProfile(m.uid);
+    const msgDiv=document.createElement("div"); msgDiv.className="msg";
+    const av=document.createElement("div"); av.className="avatar"; av.style.backgroundImage=`url(${prof.avatar})`; if(m.uid!=="system") av.onclick=()=>openUserModal(m.uid);
+    const cont=document.createElement("div"); cont.className="content";
+    cont.innerHTML=`<div class='msg-header'><span class='username' style='color:${prof.color}'>${prof.nick}</span><span class='msg-time'>${fmtTime(date)}</span></div><div>${m.text}</div>`;
+    msgDiv.appendChild(av); msgDiv.appendChild(cont); messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
   });
 }
 
-async function addSystemMessage(text) {
-  if (!selectedGroup) return;
-  try {
-    await addDoc(collection(db, "groups", selectedGroup, "messages"), {
-      uid: 'system',
-      text,
-      createdAt: serverTimestamp(),
-      type: 'server'
-    });
-  } catch (e) {
-    console.error("Ошибка добавления системного сообщения:", e);
+/*******************
+ * 7.  Send message *
+ *******************/
+chatInputForm.onsubmit=async e=>{
+  e.preventDefault(); if(!currentUser)return;
+  const text=messageInput.value.trim(); if(!text)return;
+  const payload={uid:currentUser.uid,text,createdAt:serverTimestamp(),type:"user"};
+  if(chatInputForm.dataset.chatType==="private"){
+    const chatId=getPrivateChatId(currentUser.uid,chatInputForm.dataset.targetUid);
+    await addDoc(collection(db,"privateChats",chatId,"messages"),payload);
+  } else {
+    await addDoc(collection(db,"groups",selectedGroupId,"messages"),payload);
   }
+  messageInput.value="";
+};
+
+/*******************
+ * 8.  User Modal   *
+ *******************/
+async function openUserModal(uid){
+  const p=await loadProfile(uid);
+  userModalAvatar.style.backgroundImage=`url(${p.avatar})`;
+  userModalNick.textContent=p.nick;
+  userModalNick.style.color=p.color;
+  userModalStatus.textContent=p.status||"";
+  userModalMsg.disabled=(uid===currentUser.uid);
+  userModalMsg.onclick=()=>{ userModal.style.display="none"; openPrivateChat(uid); };
+  userModal.style.display="flex"; userModal.setAttribute("aria-hidden","false");
 }
+closeUserModal.onclick=()=>{ userModal.style.display="none"; userModal.setAttribute("aria-hidden","true"); };
+userModal.onclick=e=>{ if(e.target===userModal){userModal.style.display="none"; userModal.setAttribute("aria-hidden","true");} };
 
-chatInputForm.onsubmit = async (e) => {
-  e.preventDefault();
-  if (!currentUser) return;
+console.log("🔥 Абоба чат загружен");
 
-  const text = messageInput.value.trim();
-  if (!text) return;
-
-  const msgData = {
-    uid: currentUser.uid,
-    text,
-    createdAt: serverTimestamp(),
-    type: "user"
-  };
-
-  try {
-    await addDoc(collection(db, "groups", selectedGroup, "messages"), msgData);
-    messageInput.value = "";
-  } catch (e) {
-    alert("Ошибка отправки: " + e.message);
-  }
-};
-
-profileBtn.onclick = () => {
-  profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
-};
-
-document.addEventListener('click', e => {
-  if (!profilePanel.contains(e.target) && e.target !== profileBtn) {
-    profilePanel.style.display = "none";
-  }
-});
 </script>
 </body>
 </html>
