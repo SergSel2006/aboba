@@ -458,7 +458,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebas
 import {
   getFirestore, collection, query, orderBy,
   onSnapshot, addDoc, serverTimestamp, doc,
-  getDoc, setDoc
+  getDoc, setDoc,
+  getDocs  // <--- вот его не было, а надо
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 import {
   getAuth, signInWithPopup, GoogleAuthProvider,
