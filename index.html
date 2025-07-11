@@ -13,20 +13,21 @@ body,html {
   color: #eaeaea;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
+  /* overflow: hidden; */ /* Убрал чтобы не ломать прокрутку */
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 #loginForm {
-  display: none;
+  display: none; /* Оставил скрытым по умолчанию */
   flex: 1;
-  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 2rem;
   text-align: center;
+  display: flex; /* Убрал дублирование, оставил только flex */
 }
 #googleLoginBtn {
   background: #4285f4;
@@ -37,6 +38,7 @@ body,html {
   cursor: pointer;
   user-select: none;
   border: none;
+  transition: background 0.2s;
 }
 #googleLoginBtn:hover {
   background: #357ae8;
@@ -175,8 +177,9 @@ body,html {
   user-select: none;
 }
 
+/* Использую современное свойство */
 .content > div {
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #chatInput {
@@ -407,13 +410,13 @@ body,html {
 <body>
 
 <div id="app">
-  <div id="loginForm" role="main">
+  <div id="loginForm" role="region" aria-label="Форма входа">
     <h2>Войти через Google</h2>
     <button id="googleLoginBtn" aria-label="Войти через Google">🔐 Войти с Google</button>
     <p id="loginMsg" role="alert" aria-live="assertive"></p>
   </div>
 
-  <div id="chatLayout" role="main" aria-live="polite" aria-relevant="additions">
+  <div id="chatLayout" role="main" aria-live="polite" aria-relevant="additions" style="display:none;">
     <aside id="groupList" aria-label="Список групп" role="list"></aside>
 
     <section id="chatArea" role="region" aria-label="Чат">
@@ -422,7 +425,7 @@ body,html {
 
       <form id="chatInput" aria-label="Форма отправки сообщения">
         <input type="text" id="messageInput" aria-label="Введите сообщение" placeholder="Написать..." autocomplete="off" required />
-        <button type="submit" aria-disabled="false">Отправить</button>
+        <button type="submit" disabled>Отправить</button>
       </form>
     </section>
   </div>
@@ -431,7 +434,7 @@ body,html {
 
   <div id="profilePanel" role="dialog" aria-modal="true" aria-labelledby="profileFormLabel" tabindex="-1">
     <form id="profileForm">
-      <label id="profileFormLabel" hidden>Настройки профиля</label>
+      <label id="profileFormLabel" class="visually-hidden">Настройки профиля</label>
       <input id="profileNick" placeholder="Ник" autocomplete="off" aria-label="Ник" />
       <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" aria-label="Аватар URL" />
       <input type="color" id="profileColor" title="Выбрать цвет ника" aria-label="Выбрать цвет ника" />
@@ -459,7 +462,7 @@ import {
   getFirestore, collection, query, orderBy,
   onSnapshot, addDoc, serverTimestamp, doc,
   getDoc, setDoc,
-  getDocs  // <--- вот его не было, а надо
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 import {
   getAuth, signInWithPopup, GoogleAuthProvider,
@@ -534,263 +537,303 @@ async function loadProfile(uid) {
       profilesCache[uid] = snap.data();
       return profilesCache[uid];
     }
-  } catch (e) {
+  } catch(e) {
     console.error("Ошибка загрузки профиля:", e);
   }
-  return {
-    nick: "Безымянный",
-    avatar: "https://i.imgur.com/4AiXzf8.png",
-    color: "#ccc",
-    status: ""
-  };
+  return null;
 }
 
-async function openUserModal(uid) {
-  const profile = await loadProfile(uid);
-  userModalAvatar.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-  userModalNick.textContent = profile.nick || "Безымянный";
-  userModalNick.style.color = profile.color || "#ccc";
-  userModalStatus.textContent = profile.status || "Пользователь без статуса";
-  userModalMsgBtn.disabled = true;
-  userProfileModal.style.display = "flex";
-  userProfileModal.setAttribute("aria-hidden", "false");
-  userProfileModal.focus();
-}
+function createMessageElement(msg, prevMsgDate) {
+  const msgDate = msg.createdAt ? new Date(msg.createdAt.seconds * 1000) : new Date();
+  let divider = null;
 
-closeUserModalBtn.onclick = () => {
-  userProfileModal.style.display = "none";
-  userProfileModal.setAttribute("aria-hidden", "true");
-};
-
-userProfileModal.onclick = e => {
-  if (e.target === userProfileModal) {
-    userProfileModal.style.display = "none";
-    userProfileModal.setAttribute("aria-hidden", "true");
+  if (!prevMsgDate || formatDate(msgDate) !== formatDate(prevMsgDate)) {
+    divider = document.createElement("div");
+    divider.className = "date-divider";
+    divider.textContent = formatDate(msgDate);
   }
-};
 
-logoutBtn.onclick = () => {
-  signOut(auth);
-};
-
-profileStatus.addEventListener("input", () => {
-  const remaining = 80 - profileStatus.value.length;
-  statusCounter.textContent = remaining;
-});
-
-profileForm.onsubmit = async e => {
-  e.preventDefault();
-  if (!currentUser) return;
-
-  const newProfile = {
-    nick: profileNick.value.trim() || "Безымянный",
-    avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-    color: profileColor.value || "#cccccc",
-    status: profileStatus.value.trim()
-  };
-
-  try {
-    await setDoc(doc(db, "profiles", currentUser.uid), newProfile);
-    profilesCache[currentUser.uid] = newProfile;
-    alert("Профиль сохранён!");
-    profilePanel.style.display = "none";
-  } catch (e) {
-    alert("Ошибка сохранения профиля: " + e.message);
+  const msgEl = document.createElement("div");
+  msgEl.classList.add("msg");
+  if (msg.type === "server") {
+    msgEl.classList.add("server");
+    msgEl.textContent = msg.text || "Системное сообщение";
+    return [divider, msgEl].filter(Boolean);
   }
-};
 
-function renderGroups() {
-  groupList.innerHTML = "";
-  groups.forEach(g => {
-    const el = document.createElement('div');
-    el.className = 'group-item' + (g.id === selectedGroup ? ' active' : '');
-    el.textContent = g.name;
-    el.onclick = () => {
-      selectedGroup = g.id;
-      startChat();
-      renderGroups();
-    };
-    groupList.appendChild(el);
+  msgEl.setAttribute("data-id", msg.id || "");
+
+  const avatarEl = document.createElement("div");
+  avatarEl.className = "avatar clickable";
+  avatarEl.style.backgroundImage = msg.authorAvatar ? `url(${msg.authorAvatar})` : 'url(https://via.placeholder.com/36?text=?)';
+  avatarEl.setAttribute("tabindex", "0");
+  avatarEl.setAttribute("role", "button");
+  avatarEl.setAttribute("aria-label", `Профиль пользователя ${msg.authorNick || 'неизвестный'}`);
+  avatarEl.addEventListener("click", () => showUserProfile(msg.authorId));
+  avatarEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      showUserProfile(msg.authorId);
+    }
   });
+
+  const contentEl = document.createElement("div");
+  contentEl.className = "content";
+
+  const headerEl = document.createElement("div");
+  headerEl.className = "msg-header";
+
+  const nickEl = document.createElement("span");
+  nickEl.className = "username";
+  nickEl.textContent = msg.authorNick || "Аноним";
+
+  const timeEl = document.createElement("span");
+  timeEl.className = "msg-time";
+  timeEl.textContent = formatTime(msgDate);
+
+  headerEl.appendChild(nickEl);
+  headerEl.appendChild(timeEl);
+
+  const textEl = document.createElement("div");
+  textEl.textContent = msg.text || "";
+
+  contentEl.appendChild(headerEl);
+  contentEl.appendChild(textEl);
+
+  msgEl.appendChild(avatarEl);
+  msgEl.appendChild(contentEl);
+
+  return [divider, msgEl].filter(Boolean);
 }
 
-function unsubscribeChat() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
+async function renderGroups() {
+  groupList.innerHTML = "";
+  for (const g of groups) {
+    const item = document.createElement("div");
+    item.className = "group-item";
+    if (selectedGroup === g.id) item.classList.add("active");
+    item.textContent = g.name;
+    item.setAttribute("role", "listitem");
+    item.tabIndex = 0;
+    item.addEventListener("click", () => {
+      if (selectedGroup !== g.id) {
+        selectedGroup = g.id;
+        renderGroups();
+        startChat();
+      }
+    });
+    item.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        item.click();
+      }
+    });
+    groupList.appendChild(item);
   }
+}
+
+async function loadGroups() {
+  try {
+    const groupsSnap = await getDocs(collection(db, "groups"));
+    groups = [];
+    groupsSnap.forEach(docSnap => {
+      groups.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    if (groups.length > 0) {
+      selectedGroup = groups[0].id;
+    }
+    renderGroups();
+    await startChat();
+  } catch (e) {
+    console.error("Ошибка загрузки групп:", e);
+  }
+}
+
+function scrollToBottom() {
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
 async function startChat() {
-  if (!selectedGroup) return;
+  if (unsubscribe) unsubscribe();
   messagesDiv.innerHTML = "";
+  if (!selectedGroup) {
+    groupNameDisplay.textContent = "Нет групп";
+    chatInputForm.querySelector("button").disabled = true;
+    return;
+  }
+  groupNameDisplay.textContent = groups.find(g => g.id === selectedGroup)?.name || "Группа";
+  chatInputForm.querySelector("button").disabled = false;
 
-  const q = query(collection(db, "groups", selectedGroup, "messages"), orderBy("createdAt"));
+  const messagesRef = collection(db, "groups", selectedGroup, "messages");
+  const q = query(messagesRef, orderBy("createdAt", "asc"));
 
-  unsubscribeChat();
+  let lastMsgDate = null;
 
-  unsubscribe = onSnapshot(q, async snap => {
-    messagesDiv.innerHTML = "";
-    let lastDate = "";
+  unsubscribe = onSnapshot(q, async (snapshot) => {
+    messagesDiv.innerHTML = ""; // Можно оптимизировать, но для простоты оставим
 
-    for (const docSnap of snap.docs) {
-      const m = docSnap.data();
-      const date = m.createdAt?.toDate?.() || new Date();
-      const dateStr = date.toDateString();
-
-      if (dateStr !== lastDate) {
-        const d = document.createElement('div');
-        d.className = 'date-divider';
-        d.innerText = formatDate(date);
-        messagesDiv.appendChild(d);
-        lastDate = dateStr;
-      }
-
-      if (m.type === 'server') {
-        const serverMsg = document.createElement('div');
-        serverMsg.className = 'msg server';
-        serverMsg.textContent = m.text;
-        messagesDiv.appendChild(serverMsg);
-        continue;
-      }
-
-      const profile = await loadProfile(m.uid);
-
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'msg';
-
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'avatar';
-      avatarDiv.style.backgroundImage = `url(${profile.avatar || 'https://i.imgur.com/4AiXzf8.png'})`;
-
-      if (m.type === 'user') {
-        avatarDiv.classList.add('clickable');
-        avatarDiv.onclick = () => openUserModal(m.uid);
-      }
-
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'content';
-
-      let headerHTML = "";
-      if (m.type === 'user') {
-        headerHTML = `
-          <div class="msg-header">
-            <span class="username" style="color:${profile.color}">${profile.nick}</span>
-            <span class="msg-time">${formatTime(date)}</span>
-          </div>`;
-      }
-
-      contentDiv.innerHTML = headerHTML + `<div>${m.text}</div>`;
-
-      msgDiv.appendChild(avatarDiv);
-      msgDiv.appendChild(contentDiv);
-
-      messagesDiv.appendChild(msgDiv);
+    let lastDate = null;
+    for (const docChange of snapshot.docChanges()) {
+      // мы заново рендерим весь список ниже, так что пропускаем отдельные изменения
     }
 
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    for (const docSnap of snapshot.docs) {
+      const msgData = docSnap.data();
+      msgData.id = docSnap.id;
+      if (msgData.authorId) {
+        const prof = await loadProfile(msgData.authorId);
+        msgData.authorNick = prof?.nick || "Аноним";
+        msgData.authorAvatar = prof?.avatar || null;
+      }
+      const elems = createMessageElement(msgData, lastDate);
+      elems.forEach(el => messagesDiv.appendChild(el));
+      if (msgData.createdAt) lastDate = new Date(msgData.createdAt.seconds * 1000);
+    }
+    scrollToBottom();
+  }, (error) => {
+    console.error("Ошибка получения сообщений:", error);
   });
 }
 
-async function addSystemMessage(text) {
-  if (!selectedGroup) return;
+chatInputForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!messageInput.value.trim() || !selectedGroup || !currentUser) return;
+
+  const sendBtn = chatInputForm.querySelector("button");
+  sendBtn.disabled = true;
+
   try {
     await addDoc(collection(db, "groups", selectedGroup, "messages"), {
-      uid: 'system',
-      text,
+      authorId: currentUser.uid,
+      text: messageInput.value.trim(),
       createdAt: serverTimestamp(),
-      type: 'server'
+      type: "user"
     });
-  } catch (e) {
-    console.error("Ошибка добавления системного сообщения:", e);
-  }
-}
-
-chatInputForm.onsubmit = async e => {
-  e.preventDefault();
-  if (!currentUser) return;
-
-  const text = messageInput.value.trim();
-  if (!text) return;
-
-  const msgData = {
-    uid: currentUser.uid,
-    text,
-    createdAt: serverTimestamp(),
-    type: "user"
-  };
-
-  try {
-    await addDoc(collection(db, "groups", selectedGroup, "messages"), msgData);
     messageInput.value = "";
   } catch (e) {
-    alert("Ошибка отправки: " + e.message);
-  }
-};
-
-profileBtn.onclick = () => {
-  profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
-};
-
-document.addEventListener('click', e => {
-  if (!profilePanel.contains(e.target) && e.target !== profileBtn) {
-    profilePanel.style.display = "none";
+    console.error("Ошибка отправки сообщения:", e);
+  } finally {
+    sendBtn.disabled = false;
+    messageInput.focus();
   }
 });
 
-googleLoginBtn.onclick = async () => {
-  loginMsg.textContent = "";
+googleLoginBtn.addEventListener("click", () => {
   const provider = new GoogleAuthProvider();
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    loginMsg.textContent = "Ошибка входа: " + e.message;
-  }
-};
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      loginMsg.textContent = "";
+    })
+    .catch((error) => {
+      loginMsg.textContent = "Ошибка входа: " + error.message;
+    });
+});
 
-onAuthStateChanged(auth, user => {
+logoutBtn.addEventListener("click", () => {
+  signOut(auth);
+});
+
+onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (user) {
     loginForm.style.display = "none";
     chatLayout.style.display = "flex";
-    loadGroups();
-    loadProfileToForm();
+    profileBtn.style.display = "flex";
+    await loadGroups();
+
+    // Загрузка профиля юзера в панель
+    const profSnap = await getDoc(doc(db, "profiles", user.uid));
+    if (profSnap.exists()) {
+      const data = profSnap.data();
+      profileNick.value = data.nick || "";
+      profileAvatar.value = data.avatar || "";
+      profileColor.value = data.color || "#ffffff";
+      profileStatus.value = data.status || "";
+      statusCounter.textContent = (80 - (profileStatus.value.length || 0));
+    } else {
+      profileNick.value = "";
+      profileAvatar.value = "";
+      profileColor.value = "#ffffff";
+      profileStatus.value = "";
+      statusCounter.textContent = "80";
+    }
   } else {
     loginForm.style.display = "flex";
     chatLayout.style.display = "none";
+    profileBtn.style.display = "none";
+    groups = [];
+    selectedGroup = null;
+    if (unsubscribe) unsubscribe();
+    messagesDiv.innerHTML = "";
   }
 });
 
-async function loadGroups() {
-  const groupsCol = collection(db, "groups");
-  const q = query(groupsCol, orderBy("name"));
-  const snap = await getDocs(q);
-  groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if (groups.length > 0) {
-    selectedGroup = groups[0].id;
+profileBtn.addEventListener("click", () => {
+  if (profilePanel.style.display === "block") {
+    profilePanel.style.display = "none";
+  } else {
+    profilePanel.style.display = "block";
+    profilePanel.focus();
   }
-  renderGroups();
-  startChat();
+});
+
+profileStatus.addEventListener("input", () => {
+  const len = profileStatus.value.length;
+  statusCounter.textContent = 80 - len;
+});
+
+profileForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+
+  const data = {
+    nick: profileNick.value.trim(),
+    avatar: profileAvatar.value.trim(),
+    color: profileColor.value,
+    status: profileStatus.value.trim()
+  };
+  try {
+    await setDoc(doc(db, "profiles", currentUser.uid), data);
+    alert("Профиль сохранён!");
+    profilePanel.style.display = "none";
+  } catch (e) {
+    alert("Ошибка сохранения профиля");
+    console.error(e);
+  }
+});
+
+// Модальное окно профиля пользователя
+
+function showUserProfile(uid) {
+  if (!uid) return;
+  loadProfile(uid).then(prof => {
+    if (!prof) return;
+    userModalAvatar.style.backgroundImage = prof.avatar ? `url(${prof.avatar})` : 'url(https://via.placeholder.com/80?text=?)';
+    userModalNick.textContent = prof.nick || "Аноним";
+    userModalStatus.textContent = prof.status || "";
+    userProfileModal.style.display = "flex";
+    userProfileModal.setAttribute("aria-hidden", "false");
+    userProfileModal.tabIndex = -1;
+    setTimeout(() => userProfileModal.focus(), 0);
+  });
 }
 
-async function loadProfileToForm() {
-  if (!currentUser) return;
-  const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-  if (snap.exists()) {
-    const data = snap.data();
-    profileNick.value = data.nick || "";
-    profileAvatar.value = data.avatar || "";
-    profileColor.value = data.color || "#cccccc";
-    profileStatus.value = data.status || "";
-    statusCounter.textContent = 80 - profileStatus.value.length;
-  } else {
-    profileNick.value = "";
-    profileAvatar.value = "";
-    profileColor.value = "#cccccc";
-    profileStatus.value = "";
-    statusCounter.textContent = "80";
+closeUserModalBtn.addEventListener("click", () => {
+  userProfileModal.style.display = "none";
+  userProfileModal.setAttribute("aria-hidden", "true");
+});
+
+userProfileModal.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    userProfileModal.style.display = "none";
+    userProfileModal.setAttribute("aria-hidden", "true");
   }
-}
+});
+
+// Активируем кнопку отправки, когда в поле есть текст
+messageInput.addEventListener("input", () => {
+  chatInputForm.querySelector("button").disabled = messageInput.value.trim() === "";
+});
 </script>
 </body>
 </html>
