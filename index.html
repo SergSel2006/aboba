@@ -1,339 +1,397 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>абоба</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #eaeaea;
-      -webkit-overflow-scrolling: touch;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>абоба</title>
+<style>
+*{box-sizing:border-box;}
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: #eaeaea;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+button, input, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+#loginForm {
+  display: none;
+  text-align: center;
+  padding: 2em;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#googleLoginBtn {
+  background: #4285f4;
+  color: white;
+  padding: 0.6em 1.2em;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+#googleLoginBtn:hover {
+  background: #357ae8;
+}
+#loginMsg {
+  margin-top: 1em;
+  color: #f44336;
+}
+#chatLayout {
+  display: none;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  flex: 1;
+}
+#groupList {
+  width: 220px;
+  background: #1c1c1c;
+  padding: 1em;
+  overflow-y: auto;
+  border-right: 1px solid #2a2a2a;
+  display: flex;
+  flex-direction: column;
+}
+.group-item {
+  padding: 0.6em;
+  margin-bottom: 0.4em;
+  background: #2a2a2a;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+.group-item:hover {
+  background: #3a3a3a;
+}
+.group-item.active {
+  background: #505050;
+  font-weight: bold;
+}
+#chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #141414;
+}
+#groupNameDisplay {
+  padding: 1em;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-bottom: 1px solid #2a2a2a;
+}
+#messages {
+  flex: 1;
+  padding: 1em;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  scrollbar-width: thin;
+  scrollbar-color: #555 #222;
+}
+#messages::-webkit-scrollbar {
+  width: 8px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+.date-divider {
+  text-align: center;
+  font-size: 0.85em;
+  color: #888;
+  margin: 1em 0 0.5em;
+  user-select: none;
+}
+.msg {
+  display: flex;
+  gap: 0.75em;
+}
+.msg.server {
+  justify-content: center;
+  color: #aaa;
+  font-style: italic;
+  user-select: none;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  cursor: default;
+}
+.avatar.clickable {
+  cursor: pointer;
+}
+.content {
+  flex: 1;
+}
+.msg-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  margin-bottom: 2px;
+}
+.username {
+  font-weight: bold;
+  user-select: text;
+}
+.msg-time {
+  color: #999;
+  user-select: none;
+}
+.content > div {
+  word-wrap: break-word;
+}
+#chatInput {
+  display: flex;
+  border-top: 1px solid #2a2a2a;
+  padding: 0.5em;
+  background: #1b1b1b;
+}
+#messageInput {
+  flex: 1;
+  background: #2a2a2a;
+  color: white;
+  padding: 0.6em;
+  border-radius: 4px;
+  border: none;
+}
+#chatInput button {
+  margin-left: 0.5em;
+  background: #444;
+  color: white;
+  padding: 0.6em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  border: none;
+}
+#chatInput button:hover {
+  background: #555;
+}
+#profileBtn {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  background: #2a2a2a;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.3em;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+  user-select: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+#profilePanel {
+  position: fixed;
+  bottom: 70px;
+  right: 1em;
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 1em;
+  width: 260px;
+  display: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+#profilePanel input,
+#profilePanel textarea,
+#profilePanel button {
+  width: 100%;
+  margin-bottom: 0.6em;
+  padding: 0.5em;
+  border-radius: 4px;
+  background: #2d2d2d;
+  color: white;
+  border: none;
+  box-sizing: border-box;
+}
+#profilePanel textarea {
+  resize: none;
+  min-height: 50px;
+}
+#profilePanel small {
+  text-align: right;
+  display: block;
+  color: #888;
+  user-select: none;
+}
+#profilePanel button {
+  background: #3a3a3a;
+  cursor: pointer;
+  font-weight: 600;
+}
+#profilePanel button:hover {
+  background: #4a4a4a;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 12px;
+  width: 280px;
+  text-align: center;
+  position: relative;
+  color: white;
+  box-sizing: border-box;
+}
+.modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin: 0 auto 10px;
+  user-select: none;
+}
+.close {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #aaa;
+  user-select: none;
+}
+#userModalMsgBtn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  background: #333;
+  color: #aaa;
+  cursor: not-allowed;
+  border-radius: 6px;
+  user-select: none;
+}
 
-    #app {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #loginForm {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 2em;
-    }
-
-    #googleLoginBtn {
-      background: #4285f4;
-      color: white;
-      padding: 0.6em 1.2em;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    #googleLoginBtn:hover {
-      background: #357ae8;
-    }
-
-    #loginMsg {
-      margin-top: 1em;
-      color: #f44336;
-    }
-
-    #chatLayout {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    #groupList {
-      width: 220px;
-      background: #1c1c1c;
-      padding: 1em;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid #2a2a2a;
-    }
-
-    .group-item {
-      padding: 0.6em;
-      margin-bottom: 0.4em;
-      background: #2a2a2a;
-      border-radius: 5px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    #chatArea {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      background: #141414;
-    }
-
-    #groupNameDisplay {
-      padding: 1em;
-      font-size: 1.2em;
-      font-weight: 600;
-      border-bottom: 1px solid #2a2a2a;
-    }
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75em;
-      padding: 1em;
-      min-height: 0;
-    }
-
-    .msg {
-      display: flex;
-      gap: 0.75em;
-    }
-
-    .msg.server {
-      justify-content: center;
-      color: #aaa;
-      font-style: italic;
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-size: cover;
-      background-position: center;
-      flex-shrink: 0;
-    }
-
-    .content {
-      flex: 1;
-    }
-
-    .msg-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9em;
-      margin-bottom: 2px;
-    }
-
-    #chatInput {
-      display: flex;
-      padding: 0.5em;
-      border-top: 1px solid #2a2a2a;
-      background: #1b1b1b;
-    }
-
-    #messageInput {
-      flex: 1;
-      padding: 0.6em;
-      border-radius: 4px;
-      background: #2a2a2a;
-      color: white;
-      border: none;
-    }
-
-    #chatInput button {
-      margin-left: 0.5em;
-      background: #444;
-      color: white;
-      padding: 0.6em 1em;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    #profileBtn {
-      position: fixed;
-      top: 1em;
-      right: 1em;
-      background: #2a2a2a;
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      font-size: 1.3em;
-      color: white;
-      cursor: pointer;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #profilePanel {
-      position: fixed;
-      top: 60px;
-      right: 1em;
-      background: #1e1e1e;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
-      padding: 1em;
-      width: 260px;
-      display: none;
-      z-index: 10;
-    }
-
-    #profilePanel input,
-    #profilePanel textarea,
-    #profilePanel button {
-      width: 100%;
-      margin-bottom: 0.6em;
-      padding: 0.5em;
-      border-radius: 4px;
-      background: #2d2d2d;
-      color: white;
-      border: none;
-    }
-
-    #profilePanel textarea {
-      resize: none;
-      min-height: 50px;
-    }
-
-    #profilePanel small {
-      display: block;
-      text-align: right;
-      color: #888;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background: #1e1e1e;
-      padding: 20px;
-      border-radius: 12px;
-      width: 280px;
-      text-align: center;
-      color: white;
-      position: relative;
-    }
-
-    .modal-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background-size: cover;
-      background-position: center;
-      margin: 0 auto 10px;
-    }
-
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 20px;
-      cursor: pointer;
-      color: #aaa;
-    }
-
-    @media (max-width: 768px) {
-      #groupList {
-        width: 100%;
-        height: 50px;
-        display: flex;
-        overflow-x: auto;
-        padding: 0.3em 0.6em;
-        border-bottom: 1px solid #2a2a2a;
-        border-right: none;
-      }
-
-      #chatLayout {
-        flex-direction: column;
-      }
-
-      #chatArea {
-        flex: 1;
-        min-height: 0;
-      }
-
-      #messages {
-        padding: 0.5em 1em;
-      }
-
-      #chatInput {
-        padding: 0.3em 0.5em;
-      }
-
-      #profilePanel {
-        right: 5vw;
-        width: 90vw;
-      }
-    }
-  </style>
+@media (max-width: 768px) {
+  #groupList {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    overflow-x: auto;
+    padding: 0.3em 0.6em;
+    border-right: none;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .group-item {
+    flex: 0 0 auto;
+    margin: 0 0.3em;
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+  #chatLayout {
+    flex-direction: column;
+    height: 100vh;
+  }
+  #chatArea {
+    flex: 1;
+  }
+  #groupNameDisplay {
+    padding: 0.5em 1em;
+  }
+  #messages {
+    padding: 0.5em 1em;
+  }
+  #chatInput {
+    padding: 0.3em 0.5em;
+  }
+  #messageInput {
+    padding: 0.5em;
+  }
+  #profilePanel {
+    width: 90vw;
+    right: 5vw;
+    bottom: 60px;
+  }
+}
+  
+</style>
 </head>
 <body>
-  <div id="app">
-    <div id="loginForm">
-      <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
-    </div>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
-      <main id="chatArea">
-        <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
-        <form id="chatInput">
-          <input type="text" id="messageInput" placeholder="Написать..." autocomplete="off" required />
-          <button type="submit">Отправить</button>
-        </form>
-      </main>
-    </div>
+<div id="app">
+  <div id="loginForm">
+    <h2>Войти через Google</h2>
+    <button id="googleLoginBtn">🔐 Войти с Google</button>
+    <p id="loginMsg"></p>
+  </div>
 
-    <button id="profileBtn" title="Настройки профиля">⚙</button>
+  <div id="chatLayout">
+    <aside id="groupList"></aside>
 
-    <div id="profilePanel">
-      <form id="profileForm">
-        <input id="profileNick" placeholder="Ник" autocomplete="off" />
-        <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" />
-        <input type="color" id="profileColor" title="Цвет ника" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус"></textarea>
-        <small id="statusCounter">80</small>
-        <button type="submit">Сохранить</button>
-        <button type="button" id="logoutBtn">Выйти</button>
+    <main id="chatArea">
+      <div id="groupNameDisplay"></div>
+      <div id="messages"></div>
+
+      <form id="chatInput">
+        <input type="text" id="messageInput" placeholder="Написать..." autocomplete="off" required />
+        <button type="submit">Отправить</button>
       </form>
-    </div>
+    </main>
   </div>
 
-  <div id="userProfileModal" class="modal" aria-hidden="true" role="dialog">
-    <div class="modal-content">
-      <span id="closeUserModal" class="close">&times;</span>
-      <div class="modal-avatar" id="userModalAvatar"></div>
-      <h3 id="userModalNick">Имя</h3>
-      <p id="userModalStatus">Статус пользователя</p>
-      <button id="userModalMsgBtn" disabled>💬 Написать (скоро)</button>
-    </div>
+  <button id="profileBtn" title="Настройки профиля">⚙</button>
+
+  <div id="profilePanel">
+    <form id="profileForm">
+      <input id="profileNick" placeholder="Ник" autocomplete="off" />
+      <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" />
+      <input type="color" id="profileColor" title="Выбрать цвет ника" />
+      <textarea id="profileStatus" maxlength="80" placeholder="Статус"></textarea>
+      <small id="statusCounter">80</small>
+      <button type="submit">Сохранить</button>
+      <button type="button" id="logoutBtn">Выйти</button>
+    </form>
   </div>
+</div>
+
+<div id="userProfileModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userModalNick">
+  <div class="modal-content">
+    <span id="closeUserModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
+    <div class="modal-avatar" id="userModalAvatar"></div>
+    <h3 id="userModalNick">Имя</h3>
+    <p id="userModalStatus">Статус пользователя</p>
+    <button id="userModalMsgBtn" disabled>💬 Написать (позже)</button>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
