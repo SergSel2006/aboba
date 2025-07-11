@@ -594,7 +594,7 @@ function renderMessage(data){
     const avatarEl = document.createElement("div");
     avatarEl.className = "avatar";
     const profile = profileCache[data.from] || {};
-    avatarEl.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "url(https://via.placeholder.com/36?text=?)";
+    avatarEl.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "url(https://i.pinimg.com/736x/ac/03/03/ac03034365c0560c748521ac01db2dcb.jpg)";
     avatarEl.title = profile.nick || data.from;
     avatarEl.onclick = () => showUserModal(data.from);
 
@@ -711,7 +711,7 @@ profileBtn.onclick = () => {
 function showUserModal(uid){
   if(!profileCache[uid])return;
   const p = profileCache[uid];
-  userModalAvatar.style.backgroundImage = p.avatar ? `url(${p.avatar})` : "url(https://via.placeholder.com/80?text=?)";
+  userModalAvatar.style.backgroundImage = p.avatar ? `url(${p.avatar})` : "url(https://i.pinimg.com/736x/ac/03/03/ac03034365c0560c748521ac01db2dcb.jpg)";
   userModalNick.textContent = p.nick || uid;
   userModalStatus.textContent = p.status || "";
   userModalMsgBtn.disabled = uid === currentUser.uid;
