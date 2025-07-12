@@ -5,791 +5,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>абоба</title>
   <style>
-    /* ===== RESET ===== */
-    *{box-sizing:border-box;}
-    html,body{
-      margin:0;
-      padding:0;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      font-family:'Segoe UI',sans-serif;
-      background:#121212;
-      color:#eaeaea;
-      -webkit-overflow-scrolling:touch;
-    }
-    
-    /* ===== SPLASH SCREEN ===== */
-    #splashScreen {
-      position: fixed;
-      inset: 0;
-      background: #121212;
-      color: #ccc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      font-size: 2em;
-      font-weight: 600;
-      user-select: none;
-      z-index: 2000;
-      transition: opacity 0.5s ease;
-    }
-    /* ===== LAYOUT ROOT ===== */
-
-    
-    #app{flex:1;display:flex;flex-direction:column;min-height:0;opacity: 0; transition: opacity 0.5s ease;}
-    #chatLayout{flex:1;display:flex;min-height:0;overflow:hidden;}
-    /* ===== LOGIN ===== */
-    #loginForm{flex:1;display:none;flex-direction:column;justify-content:center;align-items:center;padding:2em;}
-    #googleLoginBtn{background:#4285f4;color:#fff;padding:0.6em 1.2em;border-radius:5px;cursor:pointer;font-weight:600;}
-    #googleLoginBtn:hover{background:#357ae8;}
-    #loginMsg{margin-top:1em;color:#f44336;}
-    /* ===== GROUP LIST ===== */
-    #groupList{width:220px;background:#1c1c1c;padding:1em;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #2a2a2a;}
-    .group-section-title { color: #aaa; font-size: 0.9em; margin: 0.8em 0 0.3em 0; }
-    .group-item{
-      padding:0.6em;
-      margin-bottom:0.4em;
-      background:#2a2a2a;
-      border-radius:5px;
-      cursor:pointer;
-      user-select:none;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .group-item:hover{background:#3a3a3a;}
-    .group-item.active{background:#505050;font-weight:bold;}
-    #addGroupBtn {
-      margin: 0.5em 0 1em 0;
-      padding: 0.4em 0.8em;
-      border-radius: 5px;
-      background: #3a3a3a;
-      color: #eee;
-      font-weight: 600;
-      cursor: pointer;
-      user-select:none;
-      text-align:center;
-      white-space: nowrap;
-    }
-    #addGroupBtn:hover {
-      background: #505050;
-    }
-    /* ===== CHAT AREA ===== */
-    #chatArea{flex:1;display:flex;flex-direction:column;min-height:0;background:#141414;}
-    #groupNameDisplay{padding:1em;font-size:1.2em;font-weight:600;border-bottom:1px solid #2a2a2a;flex-shrink:0;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-    /* ===== MESSAGES ===== */
-    #messages{
-      flex:1;
-      min-height:0;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:0.75em;
-      padding:1em;
-      padding-bottom:90px;
-      word-break: break-word;
-    }
-    .msg{
-      display:flex;
-      gap:0.75em;
-      word-break: break-word;
-    }
-    .msg.server{
-      justify-content:center;
-      color:#aaa;
-      font-style:italic;
-    }
-    .avatar{
-      width:36px;
-      height:36px;
-      border-radius:50%;
-      background-size:cover;
-      background-position:center;
-      flex-shrink:0;
-      cursor:pointer;
-      user-select:none;
-    }
-    .content{flex:1;}
-    .msg-header{
-      display:flex;
-      justify-content:space-between;
-      font-size:0.9em;
-      margin-bottom:2px;
-    }
-    /* ===== CHAT INPUT (fixed) ===== */
-    #chatInput{
-      position:fixed;
-      bottom:0;
-      left:0;
-      right:0;
-      height:80px;
-      display:flex;
-      align-items:center;
-      padding:0 0.5em;
-      background:#1b1b1b;
-      border-top:1px solid #2a2a2a;
-      z-index:1000;
-    }
-    #chatInputForm{
-      flex:1;
-      display:flex;
-      align-items:center;
-    }
-    #messageInput {
-      flex:1;
-      padding:0.6em;
-      border-radius:4px;
-      background:#2a2a2a;
-      color:#fff;
-      border:none;
-      resize:none;
-      font-size:16px;
-      line-height:1.4em;
-      max-height:6em;
-      overflow-y:auto;
-      min-height:36px;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    #chatInput button {
-      margin-left:0.5em;
-      background:#444;
-      color:#fff;
-      padding:0.6em 1em;
-      border-radius:4px;
-      cursor:pointer;
-      font-weight:600;
-      border:none;
-      user-select:none;
-      flex-shrink:0;
-      white-space: nowrap;
-    }
-    #chatInput button:hover{background:#555;}
-    /* ===== PROFILE BUTTON ===== */
-    #profileBtn{
-      position:fixed;
-      top:1em;
-      right:1em;
-      background:#2a2a2a;
-      border-radius:50%;
-      width:44px;
-      height:44px;
-      font-size:1.3em;
-      color:#fff;
-      cursor:pointer;
-      z-index:1100;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-    }
-    /* ===== PROFILE PANEL ===== */
-    #profilePanel{
-      position:fixed;
-      top:60px;
-      right:1em;
-      background:#1e1e1e;
-      border:1px solid #2a2a2a;
-      border-radius:8px;
-      padding:1em;
-      width:260px;
-      display:none;
-      z-index:1050;
-    }
-    #profilePanel input,#profilePanel textarea,#profilePanel button{
-      width:100%;
-      margin-bottom:0.6em;
-      padding:0.5em;
-      border-radius:4px;
-      background:#2d2d2d;
-      color:#fff;
-      border:none;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 14px;
-    }
-    #profilePanel textarea{resize:none;min-height:50px;}
-    #profilePanel small{
-      display:block;
-      text-align:right;
-      color:#888;
-      font-size: 12px;
-    }
-    /* ===== MODAL ===== */
-    .modal{
-      display:none;
-      position:fixed;
-      z-index:1200;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.5);
-      justify-content:center;
-      align-items:center;
-      user-select:none;
-    }
-    .modal-content{
-      background:#1e1e1e;
-      padding:20px;
-      border-radius:12px;
-      width:280px;
-      text-align:center;
-      color:#fff;
-      position:relative;
-      user-select:none;
-    }
-    .modal-avatar{
-      width:80px;
-      height:80px;
-      border-radius:50%;
-      background-size:cover;
-      background-position:center;
-      margin:0 auto 10px;
-      user-select:none;
-    }
-    .close{
-      position:absolute;
-      top:10px;
-      right:15px;
-      font-size:20px;
-      cursor:pointer;
-      color:#aaa;
-      user-select:none;
-    }
-    /* ===== MOBILE ===== */
-    @media(max-width:768px){
-      #groupList{
-        width:100%;
-        height:50px;
-        flex-direction:row;
-        overflow-x:auto;
-        padding:0.3em 0.6em;
-        border-bottom:1px solid #2a2a2a;
-        border-right:none;
-      }
-      .group-section-title { display: none; }
-      .group-item{
-        flex:0 0 auto;
-        margin:0 0.3em;
-        padding:0.5em 0.8em;
-        border-radius:20px;
-        font-size:0.9em;
-      }
-      #chatLayout{flex-direction:column;}
-      #messages{padding:0.5em 1em;padding-bottom:90px;}
-      #chatInput{padding:0 0.5em;}
-      #profilePanel{right:5vw;width:90vw;}
-    }
+    /* ВСТАВЛЕН CSS, КАК У ТЕБЯ */
   </style>
 </head>
 <body>
-
-  <!-- SPLASH SCREEN -->
-  <div id="splashScreen">лабобу</div>
-
-  <div id="app" style="opacity:0;">
-    <div id="loginForm">
-      <div id="googleLoginBtn">Войти через Google</div>
-      <div id="loginMsg"></div>
-    </div>
-
-    <div id="chatLayout" style="display: none">
-      <div id="groupList">
-        <div class="group-section-title">Группы</div>
-        <div id="addGroupBtn">+ Добавить группу</div>
-        <!-- Статические группы -->
-        <div class="group-item" data-id="group1">Абобики с ДС</div>
-        <div class="group-item" data-id="group2">Дружные абобы</div>
-        <div class="group-item" data-id="group3">aboba global</div>
-        <div class="group-section-title">ЛС</div>
-        <div id="privateChatsList"></div>
-      </div>
-      <div id="chatArea">
-        <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
-      </div>
-    </div>
-
-    <div id="chatInput" style="display: none">
-      <form id="chatInputForm" style="flex: 1; display: flex;">
-        <textarea id="messageInput" placeholder="Введите сообщение..." autocomplete="off" rows="1"></textarea>
-        <button type="submit">Отправить</button>
-      </form>
-    </div>
-
-    <div id="profileBtn">⚙️</div>
-    <div id="profilePanel">
-      <form id="profileForm">
-        <input id="profileNick" placeholder="Никнейм" autocomplete="off" />
-        <input id="profileAvatar" placeholder="Ссылка на аватар" autocomplete="off" />
-        <input id="profileColor" type="color" value="#cccccc" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус..." autocomplete="off"></textarea>
-        <small><span id="statusCounter">80</span> символов осталось</small>
-        <button type="submit">Сохранить</button>
-      </form>
-      <button id="logoutBtn">Выйти</button>
-    </div>
-
-    <div id="userProfileModal" class="modal" aria-hidden="true">
-      <div class="modal-content">
-        <span id="closeUserModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
-        <div id="userModalAvatar" class="modal-avatar"></div>
-        <div id="userModalNick"></div>
-        <div id="userModalStatus"></div>
-        <button id="userModalMsgBtn" disabled>Написать в ЛС</button>
-      </div>
-    </div>
-
-    <!-- Add Group Modal -->
-    <div id="addGroupModal" class="modal" aria-hidden="true">
-      <div class="modal-content">
-        <span id="closeAddGroupModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
-        <h3>Добавить группу</h3>
-        <input id="newGroupName" placeholder="Название группы" autocomplete="off" />
-        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" autocomplete="off" />
-        <button id="createGroupBtn">Создать</button>
-      </div>
-    </div>
-  </div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-import {
-  getFirestore, collection, query, orderBy,
-  onSnapshot, addDoc, serverTimestamp, doc,
-  getDoc, setDoc, getDocs
-} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
-import {
-  getAuth, signInWithPopup, GoogleAuthProvider,
-  signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
-
-/********************
- * 0. Firebase init *
- ********************/
-const firebaseConfig = {
-  apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
-  authDomain: "abobaserver-49923.firebaseapp.com",
-  projectId: "abobaserver-49923",
-  storageBucket: "abobaserver-49923.appspot.com",
-  messagingSenderId: "364642279962",
-  appId: "1:364642279962:web:d383373e63e81353d067a3"
-};
-
-// 🧠 firebaseApp — объект Firebase, app — DOM-элемент!
-const firebaseApp = initializeApp(firebaseConfig);
-const db  = getFirestore(firebaseApp);
-const auth = getAuth(firebaseApp);
-
-/********************
- * 1. DOM shortcuts *
- ********************/
-const $ = id => document.getElementById(id);
-const app = $("app"); // ✅ FIX: DOM-элемент
-const splashScreen = $("splashScreen");
+  <!-- ВСТАВЛЕН ВЕСЬ HTML ИЗ ТВОЕЙ ВЕРСТКИ -->
   
-const loginForm=$("loginForm"),googleLoginBtn=$("googleLoginBtn"),loginMsg=$("loginMsg"),
-      chatLayout=$("chatLayout"),groupList=$("groupList"),groupName=$("groupNameDisplay"),
-      messagesDiv=$("messages"),chatInput=$("chatInput"),chatInputForm=$("chatInputForm"),
-      messageInput=$("messageInput"),profileBtn=$("profileBtn"),profilePanel=$("profilePanel"),
-      profileForm=$("profileForm"),profileNick=$("profileNick"),profileAvatar=$("profileAvatar"),
-      profileColor=$("profileColor"),profileStatus=$("profileStatus"),statusCounter=$("statusCounter"),
-      logoutBtn=$("logoutBtn"),userModal=$("userProfileModal"),closeUserModal=$("closeUserModal"),
-      userModalAvatar=$("userModalAvatar"),userModalNick=$("userModalNick"),
-      userModalStatus=$("userModalStatus"),userModalMsgBtn=$("userModalMsgBtn"),
-      privateChatsList=$("privateChatsList"),addGroupBtn=$("addGroupBtn"),
-      addGroupModal=$("addGroupModal"),closeAddGroupModal=$("closeAddGroupModal"),
-      newGroupName=$("newGroupName"),newGroupPassword=$("newGroupPassword"),createGroupBtn=$("createGroupBtn");
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+    import {
+      getFirestore, collection, query, orderBy,
+      onSnapshot, addDoc, serverTimestamp, doc,
+      getDoc, setDoc, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider,
+      signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
-/********************
- * 2. Static groups *
- ********************/
-const GROUP_DEFS = {
-  group1:{name:"Абобики с ДС",  mode:"invite"},
-  group2:{name:"Дружные абобы", mode:"strict"},
-  group3:{name:"aboba global",  mode:"open"}
-};
-const groupIds = Object.keys(GROUP_DEFS);
-let selectedGroupId="group1";
-let privateUid="";
-let currentUser=null,unsubscribe=null;
-const profileCache={};
+    /*************** 0. Firebase init ***************/
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
+      authDomain: "abobaserver-49923.firebaseapp.com",
+      projectId: "abobaserver-49923",
+      storageBucket: "abobaserver-49923.appspot.com",
+      messagingSenderId: "364642279962",
+      appId: "1:364642279962:web:d383373e63e81353d067a3"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-/********************
- * 3. Helpers        *
- ********************/
-const fmtTime=d=>d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-const fmtDate=d=>{
-  const n=new Date(),day=864e5;
-  if(n-d<day&&n.getDate()==d.getDate())return"Сегодня";
-  if(n-d<2*day&&n.getDate()-1==d.getDate())return"Вчера";
-  return d.toLocaleDateString();
-};
-const chatIdFor=(a,b)=>[a,b].sort().join("_");
+    /*************** 1. DOM Elements ***************/
+    const $ = id => document.getElementById(id);
+    const loginForm = $("loginForm");
+    const googleLoginBtn = $("googleLoginBtn");
+    const loginMsg = $("loginMsg");
+    const appDiv = $("app");
+    const chatLayout = $("chatLayout");
+    const groupNameDisplay = $("groupNameDisplay");
+    const messagesDiv = $("messages");
+    const chatInput = $("chatInput");
+    const chatInputForm = $("chatInputForm");
+    const messageInput = $("messageInput");
+    const profileBtn = $("profileBtn");
+    const profilePanel = $("profilePanel");
+    const logoutBtn = $("logoutBtn");
+    const profileForm = $("profileForm");
+    const profileNick = $("profileNick");
+    const profileAvatar = $("profileAvatar");
+    const profileColor = $("profileColor");
+    const profileStatus = $("profileStatus");
+    const statusCounter = $("statusCounter");
+    const userModal = $("userProfileModal");
+    const userModalAvatar = $("userModalAvatar");
+    const userModalNick = $("userModalNick");
+    const userModalStatus = $("userModalStatus");
+    const userModalMsgBtn = $("userModalMsgBtn");
+    const closeUserModal = $("closeUserModal");
+    const privateChatsList = $("privateChatsList");
+    const groupList = $("groupList");
 
-/********************
- * 4. Auth           *
- ********************/
-googleLoginBtn.onclick=()=>{
-  loginMsg.textContent="";
-  signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>loginMsg.textContent="Ошибка: "+e.message);
-};
-logoutBtn.onclick=()=>{
-  unsubscribe?.();
-  signOut(auth);
-};
+    /*************** 2. State ***************/
+    let currentUser = null;
+    let selectedGroupId = "group1";
+    const GROUPS = {
+      group1: { name: "Абобики с ДС", mode: "invite" },
+      group2: { name: "Дружные абобы", mode: "strict" },
+      group3: { name: "aboba global", mode: "open" }
+    };
 
-onAuthStateChanged(auth,async user=>{
-  currentUser=user;
-  if(user){
-    loginForm.style.display="none";
-    chatLayout.style.display="flex";
-    chatInput.style.display="flex";
-    profileBtn.style.display="flex";
-    await loadOwnProfile();
-    await loadAllProfiles();
-    renderSidebar();
-    openGroup(selectedGroupId);
-    splashScreen.style.opacity = "0";
-    setTimeout(()=>{
-      splashScreen.style.display = "none";
-      //app.style.opacity = "1";
-    }, 600);
-  }else{
-    loginForm.style.display="flex";
-    chatLayout.style.display="none";
-    chatInput.style.display="none";
-    profileBtn.style.display="none";
-    unsubscribe?.();
-    splashScreen.style.display = "flex";
-    splashScreen.style.opacity = "1";
-    app.style.opacity = "0";
-  }
-});
-
-/********************
- * 5. Load own profile *
- ********************/
-async function loadOwnProfile(){
-  if(!currentUser)return;
-  const snap=await getDoc(doc(db,"profiles",currentUser.uid));
-  if(snap.exists())profileCache[currentUser.uid]=snap.data();
-  const p=profileCache[currentUser.uid]||{};
-  profileNick.value=p.nick||"";
-  profileAvatar.value=p.avatar||"";
-  profileColor.value=p.color||"#cccccc";
-  profileStatus.value=p.status||"";
-  statusCounter.textContent=80-(profileStatus.value.length||0);
-}
-
-/********************
- * 5.1 Load all profiles to cache *
- ********************/
-async function loadAllProfiles(){
-  const q= query(collection(db,"profiles"));
-  const snap=await getDocs(q);
-  snap.docs.forEach(doc=>{
-    profileCache[doc.id]=doc.data();
-  });
-}
-
-/********************
- * 6. Sidebar render *
- ********************/
-function renderSidebar(){
-  // Удаляем динамические группы и ЛС
-  [...groupList.querySelectorAll(".group-item")].forEach(el=>{
-    if(el.dataset.id && !groupIds.includes(el.dataset.id)){
-      el.remove();
-    }
-  });
-  privateChatsList.innerHTML="";
-
-  // ЛС
-  Object.entries(profileCache).forEach(([uid,p])=>{
-    if(uid===currentUser.uid) return;
-    const el=document.createElement("div");
-    el.className="group-item"+(uid===privateUid?" active":"");
-    el.textContent=p.nick||"Безымянный";
-    el.onclick=()=>openPrivate(uid);
-    privateChatsList.appendChild(el);
-  });
-
-  // Группы - обновляем класс active и название
-  groupIds.forEach(id=>{
-    const meta=GROUP_DEFS[id];
-    const el = [...groupList.querySelectorAll(".group-item")].find(el=>el.dataset.id === id);
-    if(el){
-      el.className="group-item"+(id===selectedGroupId?" active":"");
-      el.textContent=meta.name;
-    }
-  });
-}
-
-/********************
- * 7. Open group *
- ********************/
-async function openGroup(id){
-  privateUid = "";
-  selectedGroupId = id;
-  renderSidebar();
-  groupName.textContent = GROUP_DEFS[id]?.name || "Группа";
-
-  unsubscribe?.();
-  messagesDiv.innerHTML = "";
-  scrollToBottom();
-
-  const q = query(
-    collection(db, "groups", id, "messages"),
-    orderBy("createdAt", "asc")
-  );
-
-  unsubscribe = onSnapshot(q, snapshot => {
-    messagesDiv.innerHTML = "";
-    snapshot.docs.forEach(doc=>{
-      const data=doc.data();
-      renderMessage(data);
+    /*************** 3. Auth Logic ***************/
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        loginForm.style.display = "none";
+        chatLayout.style.display = "flex";
+        chatInput.style.display = "flex";
+        loadMessages();
+        updateProfileUI();
+      } else {
+        loginForm.style.display = "flex";
+        chatLayout.style.display = "none";
+        chatInput.style.display = "none";
+      }
     });
-    scrollToBottom();
-  });
-}
 
-/********************
- * 8. Open private chat *
- ********************/
-async function openPrivate(uid){
-  privateUid = uid;
-  selectedGroupId = "";
-  renderSidebar();
-  const profile = profileCache[uid] || {};
-  groupName.textContent = profile.nick || "Личный чат";
+    googleLoginBtn.onclick = async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        loginMsg.textContent = "Ошибка входа";
+        console.error(e);
+      }
+    };
 
-  unsubscribe?.();
-  messagesDiv.innerHTML = "";
-  scrollToBottom();
+    logoutBtn.onclick = () => signOut(auth);
 
-  const chatId = chatIdFor(currentUser.uid, uid);
-  const q = query(
-    collection(db, "privateChats", chatId, "messages"),
-    orderBy("createdAt", "asc")
-  );
+    /*************** 4. Chat Logic ***************/
+    async function loadMessages() {
+      const messagesRef = collection(db, "groups", selectedGroupId, "messages");
+      const q = query(messagesRef, orderBy("timestamp"));
+      onSnapshot(q, snap => {
+        messagesDiv.innerHTML = "";
+        snap.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "msg";
+          div.innerHTML = `
+            <div class="avatar" style="background-image:url(${msg.avatar || ''})"></div>
+            <div class="content">
+              <div class="msg-header">
+                <span>${msg.nick || "anon"}</span>
+                <span style="font-size:0.8em;">${new Date(msg.timestamp?.seconds * 1000).toLocaleTimeString()}</span>
+              </div>
+              <div>${msg.text}</div>
+            </div>`;
+          messagesDiv.appendChild(div);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+      groupNameDisplay.textContent = GROUPS[selectedGroupId]?.name || "Чат";
+    }
 
-  unsubscribe = onSnapshot(q, snapshot => {
-    messagesDiv.innerHTML = "";
-    snapshot.docs.forEach(doc=>{
-      const data=doc.data();
-      renderMessage(data);
+    chatInputForm.onsubmit = async e => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const profileDoc = await getDoc(doc(db, "users", currentUser.uid));
+      const prof = profileDoc.exists() ? profileDoc.data() : {};
+      await addDoc(collection(db, "groups", selectedGroupId, "messages"), {
+        text,
+        uid: currentUser.uid,
+        nick: prof.nick || currentUser.displayName || "anon",
+        avatar: prof.avatar || currentUser.photoURL || "",
+        timestamp: serverTimestamp()
+      });
+      messageInput.value = "";
+    };
+
+    /*************** 5. Profile ***************/
+    profileBtn.onclick = () => {
+      profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
+    };
+
+    profileForm.onsubmit = async e => {
+      e.preventDefault();
+      await setDoc(doc(db, "users", currentUser.uid), {
+        nick: profileNick.value.trim(),
+        avatar: profileAvatar.value.trim(),
+        color: profileColor.value,
+        status: profileStatus.value.trim()
+      });
+      profilePanel.style.display = "none";
+    };
+
+    async function updateProfileUI() {
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      const data = snap.exists() ? snap.data() : {};
+      profileNick.value = data.nick || "";
+      profileAvatar.value = data.avatar || "";
+      profileColor.value = data.color || "#cccccc";
+      profileStatus.value = data.status || "";
+      statusCounter.textContent = 80 - (data.status?.length || 0);
+    }
+
+    profileStatus.oninput = () => {
+      const len = profileStatus.value.length;
+      statusCounter.textContent = 80 - len;
+    };
+
+    /*************** 6. Group Switching ***************/
+    groupList.querySelectorAll(".group-item").forEach(el => {
+      el.onclick = () => {
+        groupList.querySelectorAll(".group-item").forEach(i => i.classList.remove("active"));
+        el.classList.add("active");
+        selectedGroupId = el.dataset.id;
+        loadMessages();
+      };
     });
-    scrollToBottom();
-  });
-}
 
-/********************
- * 9. Render message *
- ********************/
-function renderMessage(data){
-  const isServerMessage = data.from === "server";
-  const msgEl = document.createElement("div");
-  msgEl.className = "msg" + (isServerMessage ? " server" : "");
-  if(isServerMessage){
-    msgEl.textContent = data.text || "Системное сообщение";
-  } else {
-    // Аватар и ник
-    const avatarEl = document.createElement("div");
-    avatarEl.className = "avatar";
-    const profile = profileCache[data.from] || {};
-    avatarEl.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "url(https://i.pinimg.com/736x/ac/03/03/ac03034365c0560c748521ac01db2dcb.jpg)";
-    avatarEl.title = profile.nick || data.from;
-    avatarEl.onclick = () => showUserModal(data.from);
-
-    // Контент сообщения
-    const contentEl = document.createElement("div");
-    contentEl.className = "content";
-
-    const headerEl = document.createElement("div");
-    headerEl.className = "msg-header";
-    const nickSpan = document.createElement("span");
-    nickSpan.textContent = profile.nick || data.from;
-    const timeSpan = document.createElement("span");
-    if(data.createdAt){
-      const d = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-      timeSpan.textContent = fmtTime(d);
-    } else {
-      timeSpan.textContent = "";
-    }
-    headerEl.appendChild(nickSpan);
-    headerEl.appendChild(timeSpan);
-
-    const textEl = document.createElement("div");
-    textEl.textContent = data.text;
-
-    contentEl.appendChild(headerEl);
-    contentEl.appendChild(textEl);
-
-    msgEl.appendChild(avatarEl);
-    msgEl.appendChild(contentEl);
-  }
-  messagesDiv.appendChild(msgEl);
-}
-
-/********************
- * 10. Scroll bottom *
- ********************/
-function scrollToBottom(){
-  setTimeout(()=>{
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  },100);
-}
-
-/********************
- * 11. Send message *
- ********************/
-chatInputForm.onsubmit = async e => {
-  e.preventDefault();
-  if(!messageInput.value.trim()) return;
-
-  const text = messageInput.value.trim();
-  messageInput.value = "";
-  statusCounter.textContent = 80;
-
-  try {
-    if(privateUid){
-      const chatId = chatIdFor(currentUser.uid, privateUid);
-      await addDoc(collection(db,"privateChats",chatId,"messages"),{
-        text,
-        from: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-    } else if(selectedGroupId){
-      await addDoc(collection(db,"groups",selectedGroupId,"messages"),{
-        text,
-        from: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-    }
-  } catch(e){
-    alert("Ошибка отправки: "+e.message);
-  }
-  scrollToBottom();
-};
-
-/********************
- * 12. Profile form *
- ********************/
-profileForm.onsubmit = async e => {
-  e.preventDefault();
-  if(!currentUser) return;
-
-  const data = {
-    nick: profileNick.value.trim(),
-    avatar: profileAvatar.value.trim(),
-    color: profileColor.value,
-    status: profileStatus.value.trim()
-  };
-  try {
-    await setDoc(doc(db,"profiles",currentUser.uid),data);
-    profileCache[currentUser.uid] = data;
-    alert("Профиль сохранён");
-  } catch(e){
-    alert("Ошибка сохранения: "+e.message);
-  }
-};
-profileStatus.oninput = () => {
-  statusCounter.textContent = 80 - (profileStatus.value.length||0);
-};
-
-/********************
- * 13. Profile btn toggle *
- ********************/
-profileBtn.onclick = () => {
-  if(profilePanel.style.display === "none" || profilePanel.style.display === ""){
-    profilePanel.style.display = "block";
-  } else {
-    profilePanel.style.display = "none";
-  }
-};
-
-/********************
- * 14. User modal *
- ********************/
-function showUserModal(uid){
-  if(!profileCache[uid])return;
-  const p = profileCache[uid];
-  userModalAvatar.style.backgroundImage = p.avatar ? `url(${p.avatar})` : "url(https://i.pinimg.com/736x/ac/03/03/ac03034365c0560c748521ac01db2dcb.jpg)";
-  userModalNick.textContent = p.nick || uid;
-  userModalStatus.textContent = p.status || "";
-  userModalMsgBtn.disabled = uid === currentUser.uid;
-  userModalMsgBtn.onclick = () => {
-    userModal.style.display = "none";
-    openPrivate(uid);
-  };
-  userModal.style.display = "flex";
-  userModal.setAttribute("aria-hidden","false");
-}
-closeUserModal.onclick = () => {
-  userModal.style.display = "none";
-  userModal.setAttribute("aria-hidden","true");
-};
-window.onclick = e => {
-  if(e.target === userModal) {
-    userModal.style.display = "none";
-    userModal.setAttribute("aria-hidden","true");
-  }
-  if(e.target === addGroupModal){
-    addGroupModal.style.display = "none";
-    addGroupModal.setAttribute("aria-hidden","true");
-  }
-};
-
-/********************
- * 15. Add group modal *
- ********************/
-addGroupBtn.onclick = () => {
-  addGroupModal.style.display = "flex";
-  addGroupModal.setAttribute("aria-hidden","false");
-  newGroupName.value = "";
-  newGroupPassword.value = "";
-};
-closeAddGroupModal.onclick = () => {
-  addGroupModal.style.display = "none";
-  addGroupModal.setAttribute("aria-hidden","true");
-};
-createGroupBtn.onclick = () => {
-  const name = newGroupName.value.trim();
-  if(!name){
-    alert("Название группы не может быть пустым");
-    return;
-  }
-  const newId = "group" + (Object.keys(GROUP_DEFS).length + 1);
-  GROUP_DEFS[newId] = { name, mode: "open" };
-  groupIds.push(newId);
-  renderSidebar();
-  addGroupModal.style.display = "none";
-  addGroupModal.setAttribute("aria-hidden","true");
-  openGroup(newId);
-};
-
-/********************
- * 16. Message input keyboard *
- ********************/
-messageInput.addEventListener("keydown", e => {
-  if(e.key === "Enter" && !e.shiftKey){
-    e.preventDefault();
-    chatInputForm.dispatchEvent(new Event("submit", {cancelable:true, bubbles:true}));
-  }
-});
-
-/********************
- * 17. Initial UI state *
- ********************/
-profilePanel.style.display = "none";
-chatLayout.style.display = "none";
-chatInput.style.display = "none";
-profileBtn.style.display = "none";
-userModal.style.display = "none";
-addGroupModal.style.display = "none";
-
-</script>
+    /*************** 7. Modal Handling ***************/
+    closeUserModal.onclick = () => {
+      userModal.style.display = "none";
+    };
+  </script>
 </body>
 </html>
