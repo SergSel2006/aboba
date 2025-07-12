@@ -2,23 +2,23 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <!-- Убрал user-scalable=no для лучшей мобильной доступности -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>абоба</title>
   <style>
     /* ===== RESET ===== */
-    *{box-sizing:border-box;}
-    html,body{
-      margin:0;
-      padding:0;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      font-family:'Segoe UI',sans-serif;
-      background:#121212;
-      color:#eaeaea;
-      -webkit-overflow-scrolling:touch;
+    * {
+      box-sizing: border-box;
     }
-    
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #eaeaea;
+      -webkit-overflow-scrolling: touch;
+    }
     /* ===== SPLASH SCREEN ===== */
     #splashScreen {
       position: fixed;
@@ -36,31 +36,85 @@
       transition: opacity 0.5s ease;
     }
     /* ===== LAYOUT ROOT ===== */
-
-    
-    #app{flex:1;display:flex;flex-direction:column;min-height:0;opacity: 0; transition: opacity 0.5s ease;}
-    #chatLayout{flex:1;display:flex;min-height:0;overflow:hidden;}
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #chatLayout {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
     /* ===== LOGIN ===== */
-    #loginForm{flex:1;display:none;flex-direction:column;justify-content:center;align-items:center;padding:2em;}
-    #googleLoginBtn{background:#4285f4;color:#fff;padding:0.6em 1.2em;border-radius:5px;cursor:pointer;font-weight:600;}
-    #googleLoginBtn:hover{background:#357ae8;}
-    #loginMsg{margin-top:1em;color:#f44336;}
+    #loginForm {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2em;
+    }
+    #googleLoginBtn {
+      background: #4285f4;
+      color: #fff;
+      padding: 0.6em 1.2em;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background 0.3s ease;
+    }
+    #googleLoginBtn:hover, #googleLoginBtn:focus {
+      background: #357ae8;
+      outline: none;
+    }
+    #loginMsg {
+      margin-top: 1em;
+      color: #f44336;
+    }
     /* ===== GROUP LIST ===== */
-    #groupList{width:220px;background:#1c1c1c;padding:1em;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #2a2a2a;}
-    .group-section-title { color: #aaa; font-size: 0.9em; margin: 0.8em 0 0.3em 0; }
-    .group-item{
-      padding:0.6em;
-      margin-bottom:0.4em;
-      background:#2a2a2a;
-      border-radius:5px;
-      cursor:pointer;
-      user-select:none;
+    #groupList {
+      width: 220px;
+      background: #1c1c1c;
+      padding: 1em;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #2a2a2a;
+      -webkit-overflow-scrolling: touch;
+    }
+    .group-section-title {
+      color: #aaa;
+      font-size: 0.9em;
+      margin: 0.8em 0 0.3em 0;
+    }
+    .group-item {
+      padding: 0.6em;
+      margin-bottom: 0.4em;
+      background: #2a2a2a;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      touch-action: manipulation;
+      transition: background 0.3s ease;
     }
-    .group-item:hover{background:#3a3a3a;}
-    .group-item.active{background:#505050;font-weight:bold;}
+    .group-item:hover, .group-item:focus {
+      background: #3a3a3a;
+      outline: none;
+    }
+    .group-item.active {
+      background: #505050;
+      font-weight: bold;
+    }
     #addGroupBtn {
       margin: 0.5em 0 1em 0;
       padding: 0.4em 0.8em;
@@ -69,217 +123,281 @@
       color: #eee;
       font-weight: 600;
       cursor: pointer;
-      user-select:none;
-      text-align:center;
+      user-select: none;
+      text-align: center;
       white-space: nowrap;
+      touch-action: manipulation;
+      transition: background 0.3s ease;
     }
-    #addGroupBtn:hover {
+    #addGroupBtn:hover, #addGroupBtn:focus {
       background: #505050;
+      outline: none;
     }
     /* ===== CHAT AREA ===== */
-    #chatArea{flex:1;display:flex;flex-direction:column;min-height:0;background:#141414;}
-    #groupNameDisplay{padding:1em;font-size:1.2em;font-weight:600;border-bottom:1px solid #2a2a2a;flex-shrink:0;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-    /* ===== MESSAGES ===== */
-    #messages{
-      flex:1;
-      min-height:0;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:0.75em;
-      padding:1em;
-      padding-bottom:90px;
-      word-break: break-word;
+    #chatArea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #141414;
     }
-    .msg{
-      display:flex;
-      gap:0.75em;
-      word-break: break-word;
-    }
-    .msg.server{
-      justify-content:center;
-      color:#aaa;
-      font-style:italic;
-    }
-    .avatar{
-      width:36px;
-      height:36px;
-      border-radius:50%;
-      background-size:cover;
-      background-position:center;
-      flex-shrink:0;
-      cursor:pointer;
-      user-select:none;
-    }
-    .content{flex:1;}
-    .msg-header{
-      display:flex;
-      justify-content:space-between;
-      font-size:0.9em;
-      margin-bottom:2px;
-    }
-    /* ===== CHAT INPUT (fixed) ===== */
-    #chatInput{
-      position:fixed;
-      bottom:0;
-      left:0;
-      right:0;
-      height:80px;
-      display:flex;
-      align-items:center;
-      padding:0 0.5em;
-      background:#1b1b1b;
-      border-top:1px solid #2a2a2a;
-      z-index:1000;
-    }
-    #chatInputForm{
-      flex:1;
-      display:flex;
-      align-items:center;
-    }
-    #messageInput {
-      flex:1;
-      padding:0.6em;
-      border-radius:4px;
-      background:#2a2a2a;
-      color:#fff;
-      border:none;
-      resize:none;
-      font-size:16px;
-      line-height:1.4em;
-      max-height:6em;
-      overflow-y:auto;
-      min-height:36px;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    #chatInput button {
-      margin-left:0.5em;
-      background:#444;
-      color:#fff;
-      padding:0.6em 1em;
-      border-radius:4px;
-      cursor:pointer;
-      font-weight:600;
-      border:none;
-      user-select:none;
-      flex-shrink:0;
+    #groupNameDisplay {
+      padding: 1em;
+      font-size: 1.2em;
+      font-weight: 600;
+      border-bottom: 1px solid #2a2a2a;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
-    #chatInput button:hover{background:#555;}
+    /* ===== MESSAGES ===== */
+    #messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75em;
+      padding: 1em;
+      padding-bottom: 90px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      -webkit-overflow-scrolling: touch;
+    }
+    .msg {
+      display: flex;
+      gap: 0.75em;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .msg.server {
+      justify-content: center;
+      color: #aaa;
+      font-style: italic;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .content {
+      flex: 1;
+    }
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      margin-bottom: 2px;
+    }
+    /* ===== CHAT INPUT (fixed) ===== */
+    #chatInput {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5em;
+      background: #1b1b1b;
+      border-top: 1px solid #2a2a2a;
+      z-index: 1000;
+    }
+    #chatInputForm {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    #messageInput {
+      flex: 1;
+      padding: 0.6em;
+      border-radius: 4px;
+      background: #2a2a2a;
+      color: #fff;
+      border: none;
+      resize: none;
+      font-size: 16px;
+      line-height: 1.4em;
+      max-height: 6em;
+      overflow-y: auto;
+      min-height: 36px;
+      font-family: 'Segoe UI', sans-serif;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      outline-offset: 2px;
+    }
+    #chatInput button {
+      margin-left: 0.5em;
+      background: #444;
+      color: #fff;
+      padding: 0.6em 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      user-select: none;
+      flex-shrink: 0;
+      white-space: nowrap;
+      touch-action: manipulation;
+      transition: background 0.3s ease;
+    }
+    #chatInput button:hover, #chatInput button:focus {
+      background: #555;
+      outline: none;
+    }
     /* ===== PROFILE BUTTON ===== */
-    #profileBtn{
-      position:fixed;
-      top:1em;
-      right:1em;
-      background:#2a2a2a;
-      border-radius:50%;
-      width:44px;
-      height:44px;
-      font-size:1.3em;
-      color:#fff;
-      cursor:pointer;
-      z-index:1100;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
+    #profileBtn {
+      position: fixed;
+      top: 1em;
+      right: 1em;
+      background: #2a2a2a;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 1.3em;
+      color: #fff;
+      cursor: pointer;
+      z-index: 1100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background 0.3s ease;
+    }
+    #profileBtn:hover, #profileBtn:focus {
+      background: #3a3a3a;
+      outline: none;
     }
     /* ===== PROFILE PANEL ===== */
-    #profilePanel{
-      position:fixed;
-      top:60px;
-      right:1em;
-      background:#1e1e1e;
-      border:1px solid #2a2a2a;
-      border-radius:8px;
-      padding:1em;
-      width:260px;
-      display:none;
-      z-index:1050;
+    #profilePanel {
+      position: fixed;
+      top: 60px;
+      right: 1em;
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 1em;
+      width: 260px;
+      display: none;
+      z-index: 1050;
     }
-    #profilePanel input,#profilePanel textarea,#profilePanel button{
-      width:100%;
-      margin-bottom:0.6em;
-      padding:0.5em;
-      border-radius:4px;
-      background:#2d2d2d;
-      color:#fff;
-      border:none;
+    #profilePanel input, #profilePanel textarea, #profilePanel button {
+      width: 100%;
+      margin-bottom: 0.6em;
+      padding: 0.5em;
+      border-radius: 4px;
+      background: #2d2d2d;
+      color: #fff;
+      border: none;
       font-family: 'Segoe UI', sans-serif;
       font-size: 14px;
+      outline-offset: 2px;
     }
-    #profilePanel textarea{resize:none;min-height:50px;}
-    #profilePanel small{
-      display:block;
-      text-align:right;
-      color:#888;
+    #profilePanel textarea {
+      resize: none;
+      min-height: 50px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    #profilePanel small {
+      display: block;
+      text-align: right;
+      color: #888;
       font-size: 12px;
     }
     /* ===== MODAL ===== */
-    .modal{
-      display:none;
-      position:fixed;
-      z-index:1200;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.5);
-      justify-content:center;
-      align-items:center;
-      user-select:none;
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1200;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-overflow-scrolling: touch;
     }
-    .modal-content{
-      background:#1e1e1e;
-      padding:20px;
-      border-radius:12px;
-      width:280px;
-      text-align:center;
-      color:#fff;
-      position:relative;
-      user-select:none;
+    .modal-content {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      width: 280px;
+      text-align: center;
+      color: #fff;
+      position: relative;
+      user-select: none;
     }
-    .modal-avatar{
-      width:80px;
-      height:80px;
-      border-radius:50%;
-      background-size:cover;
-      background-position:center;
-      margin:0 auto 10px;
-      user-select:none;
+    .modal-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      margin: 0 auto 10px;
+      user-select: none;
     }
-    .close{
-      position:absolute;
-      top:10px;
-      right:15px;
-      font-size:20px;
-      cursor:pointer;
-      color:#aaa;
-      user-select:none;
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #aaa;
+      user-select: none;
+      touch-action: manipulation;
+      transition: color 0.3s ease;
+    }
+    .close:hover, .close:focus {
+      color: #fff;
+      outline: none;
     }
     /* ===== MOBILE ===== */
-    @media(max-width:768px){
-      #groupList{
-        width:100%;
-        height:50px;
-        flex-direction:row;
-        overflow-x:auto;
-        padding:0.3em 0.6em;
-        border-bottom:1px solid #2a2a2a;
-        border-right:none;
+    @media (max-width: 768px) {
+      #groupList {
+        width: 100%;
+        height: 50px;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.3em 0.6em;
+        border-bottom: 1px solid #2a2a2a;
+        border-right: none;
+        -webkit-overflow-scrolling: touch;
       }
-      .group-section-title { display: none; }
-      .group-item{
-        flex:0 0 auto;
-        margin:0 0.3em;
-        padding:0.5em 0.8em;
-        border-radius:20px;
-        font-size:0.9em;
+      .group-section-title {
+        display: none;
       }
-      #chatLayout{flex-direction:column;}
-      #messages{padding:0.5em 1em;padding-bottom:90px;}
-      #chatInput{padding:0 0.5em;}
-      #profilePanel{right:5vw;width:90vw;}
+      .group-item {
+        flex: 0 0 auto;
+        margin: 0 0.3em;
+        padding: 0.5em 0.8em;
+        border-radius: 20px;
+        font-size: 0.9em;
+      }
+      #chatLayout {
+        flex-direction: column;
+      }
+      #messages {
+        padding: 0.5em 1em;
+        padding-bottom: 90px;
+      }
+      #chatInput {
+        padding: 0 0.5em;
+      }
+      #profilePanel {
+        right: 5vw;
+        width: 90vw;
+      }
     }
   </style>
 </head>
@@ -288,50 +406,50 @@
   <!-- SPLASH SCREEN -->
   <div id="splashScreen">лабобу</div>
 
-  <div id="app" style="opacity:0;">
+  <div id="app">
     <div id="loginForm">
-      <div id="googleLoginBtn">Войти через Google</div>
+      <div id="googleLoginBtn" tabindex="0">Войти через Google</div>
       <div id="loginMsg"></div>
     </div>
 
-    <div id="chatLayout" style="display: none">
-      <div id="groupList">
+    <div id="chatLayout" style="display: none;">
+      <div id="groupList" tabindex="0" aria-label="Список групп">
         <div class="group-section-title">Группы</div>
-        <div id="addGroupBtn">+ Добавить группу</div>
+        <div id="addGroupBtn" tabindex="0">+ Добавить группу</div>
         <!-- Статические группы -->
-        <div class="group-item" data-id="group1">Абобики с ДС</div>
-        <div class="group-item" data-id="group2">Дружные абобы</div>
-        <div class="group-item" data-id="group3">aboba global</div>
+        <div class="group-item" data-id="group1" tabindex="0">Абобики с ДС</div>
+        <div class="group-item" data-id="group2" tabindex="0">Дружные абобы</div>
+        <div class="group-item" data-id="group3" tabindex="0">aboba global</div>
         <div class="group-section-title">ЛС</div>
         <div id="privateChatsList"></div>
       </div>
       <div id="chatArea">
         <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
+        <div id="messages" aria-live="polite" aria-relevant="additions"></div>
       </div>
     </div>
 
-    <div id="chatInput" style="display: none">
+    <div id="chatInput" style="display: none;">
       <form id="chatInputForm" style="flex: 1; display: flex;">
-        <textarea id="messageInput" placeholder="Введите сообщение..." autocomplete="off" rows="1"></textarea>
+        <textarea id="messageInput" placeholder="Введите сообщение..." autocomplete="off" rows="1" spellcheck="false" aria-label="Поле ввода сообщения"></textarea>
         <button type="submit">Отправить</button>
       </form>
     </div>
 
-    <div id="profileBtn">⚙️</div>
-    <div id="profilePanel">
+    <div id="profileBtn" tabindex="0" aria-label="Настройки профиля">⚙️</div>
+    <div id="profilePanel" role="dialog" aria-modal="true" aria-hidden="true">
       <form id="profileForm">
-        <input id="profileNick" placeholder="Никнейм" autocomplete="off" />
-        <input id="profileAvatar" placeholder="Ссылка на аватар" autocomplete="off" />
-        <input id="profileColor" type="color" value="#cccccc" />
-        <textarea id="profileStatus" maxlength="80" placeholder="Статус..." autocomplete="off"></textarea>
+        <input id="profileNick" placeholder="Никнейм" autocomplete="off" aria-label="Никнейм" />
+        <input id="profileAvatar" placeholder="Ссылка на аватар" autocomplete="off" aria-label="Ссылка на аватар" />
+        <input id="profileColor" type="color" value="#cccccc" aria-label="Цвет профиля" />
+        <textarea id="profileStatus" maxlength="80" placeholder="Статус..." autocomplete="off" aria-label="Статус" spellcheck="false"></textarea>
         <small><span id="statusCounter">80</span> символов осталось</small>
         <button type="submit">Сохранить</button>
       </form>
-      <button id="logoutBtn">Выйти</button>
+      <button id="logoutBtn" type="button">Выйти</button>
     </div>
 
-    <div id="userProfileModal" class="modal" aria-hidden="true">
+    <div id="userProfileModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="modal-content">
         <span id="closeUserModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
         <div id="userModalAvatar" class="modal-avatar"></div>
@@ -342,13 +460,13 @@
     </div>
 
     <!-- Add Group Modal -->
-    <div id="addGroupModal" class="modal" aria-hidden="true">
+    <div id="addGroupModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="modal-content">
         <span id="closeAddGroupModal" class="close" tabindex="0" role="button" aria-label="Закрыть">×</span>
         <h3>Добавить группу</h3>
-        <input id="newGroupName" placeholder="Название группы" autocomplete="off" />
-        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" autocomplete="off" />
-        <button id="createGroupBtn">Создать</button>
+        <input id="newGroupName" placeholder="Название группы" autocomplete="off" aria-label="Название группы" />
+        <input id="newGroupPassword" type="password" placeholder="Пароль (опционально)" autocomplete="off" aria-label="Пароль группы" />
+        <button id="createGroupBtn" type="button">Создать</button>
       </div>
     </div>
   </div>
