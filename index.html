@@ -71,20 +71,15 @@
       display: flex;
       flex-direction: column;
       border-right: 1px solid #2a2a2a;
-      gap: 0.4em;
     }
     .group-item {
       padding: 0.6em;
+      margin-bottom: 0.4em;
       background: #2a2a2a;
       border-radius: 5px;
       cursor: pointer;
       user-select: none;
       outline-offset: 2px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 500;
-      transition: background 0.2s ease;
     }
     .group-item:hover,
     .group-item:focus {
@@ -94,19 +89,6 @@
     .group-item.active {
       background: #505050;
       font-weight: bold;
-    }
-    .group-item .delete-btn {
-      background: transparent;
-      border: none;
-      color: #888;
-      cursor: pointer;
-      font-size: 1.1em;
-      padding: 0;
-      user-select: none;
-      transition: color 0.2s ease;
-    }
-    .group-item .delete-btn:hover {
-      color: #f44336;
     }
     #chatArea {
       flex: 1;
@@ -123,9 +105,6 @@
       border-bottom: 1px solid #2a2a2a;
       flex-shrink: 0;
       user-select: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     #messages {
       flex: 1;
@@ -192,8 +171,6 @@
     .content {
       flex: 1;
       user-select: text;
-      word-break: break-word;
-      white-space: pre-wrap;
     }
     .msg-header {
       display: flex;
@@ -403,15 +380,13 @@
         padding: 0.3em 0.6em;
         border-bottom: 1px solid #2a2a2a;
         border-right: none;
-        gap: 0.6em;
       }
       .group-item {
         flex: 0 0 auto;
-        margin: 0;
-        padding: 0.4em 0.8em;
+        margin: 0 0.3em;
+        padding: 0.5em 0.8em;
         border-radius: 20px;
         font-size: 0.9em;
-        gap: 0.3em;
       }
       #chatLayout {
         flex-direction: column;
@@ -451,7 +426,7 @@
     </div>
 
     <div id="chatLayout" role="main" aria-live="polite" aria-atomic="false">
-      <aside id="groupList" role="list" aria-label="Список групп чата" tabindex="0" aria-live="polite" aria-relevant="additions"></aside>
+      <aside id="groupList" role="list" aria-label="Список групп чата"></aside>
       <main id="chatArea">
         <div id="groupNameDisplay" aria-live="polite" aria-atomic="true"></div>
         <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
@@ -516,7 +491,7 @@
       <div class="modal-avatar" id="userModalAvatar" aria-hidden="true"></div>
       <h3 id="userModalNick"></h3>
       <p id="userModalStatus"></p>
-      <button id="userModalMsgBtn" disabled>💬 Написать</button>
+      <button id="userModalMsgBtn" disabled>💬 Написать (скоро)</button>
     </div>
   </div>
 
@@ -526,9 +501,9 @@
       <span id="closeJoinModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
       <h3>Присоединиться к группе</h3>
       <form id="joinGroupForm">
-        <input type="text" id="joinGroupName" placeholder="Название группы или ник" required autocomplete="off" spellcheck="false" aria-label="Название группы или ник" />
-        <input type="text" id="joinGroupCode" placeholder="Код (если есть)" autocomplete="off" spellcheck="false" aria-label="Код группы (если есть)" />
-        <input type="password" id="joinGroupPassword" placeholder="Пароль (если есть)" autocomplete="off" spellcheck="false" aria-label="Пароль группы (если есть)" />
+        <input type="text" id="joinGroupName" placeholder="Название группы" required />
+        <input type="text" id="joinGroupCode" placeholder="Код (если есть)" />
+        <input type="password" id="joinGroupPassword" placeholder="Пароль (если есть)" />
         <p id="joinGroupError" style="color:#f44336; display:none;"></p>
         <button type="submit">Войти</button>
       </form>
@@ -546,7 +521,6 @@
   </button>
 </body>
 </html>
-
 
  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
@@ -859,67 +833,6 @@
     }
   }
 
-   // Кнопка "Написать" в профиле юзера — открываем или создаём ЛС с ним
-  userModalMsgBtn.onclick = async () => {
-    if (!currentUser) return alert("Сначала войдите в аккаунт.");
-    const targetUid = userModalMsgBtn.dataset.uid;
-    if (!targetUid || targetUid === currentUser.uid) return;
-
-    // Формируем id приватного чата — сортируем uid по алфавиту чтобы одинаково
-    const uids = [currentUser.uid, targetUid].sort();
-    const privateChatId = `private_${uids[0]}_${uids[1]}`;
-
-    // Проверяем, есть ли такая группа
-    const groupRef = doc(db, "groups", privateChatId);
-    const groupSnap = await getDoc(groupRef);
-
-    if (!groupSnap.exists()) {
-      // Создаём приватный чат
-      await setDoc(groupRef, {
-        name: `ЛС с ${userModalNick.textContent}`,
-        type: "private",
-        allowed: [currentUser.uid, targetUid],
-      });
-      groups.push({ id: privateChatId, name: `ЛС с ${userModalNick.textContent}` });
-    } else if (!groups.some((g) => g.id === privateChatId)) {
-      // Если есть в базе, но в локальном списке нет — добавляем
-      const gData = groupSnap.data();
-      groups.push({ id: privateChatId, name: gData.name || `ЛС с ${userModalNick.textContent}` });
-    }
-
-    selectedGroup = privateChatId;
-    localStorage.setItem("selectedGroup", selectedGroup);
-
-    renderGroups();
-    startChat();
-
-    userProfileModal.style.display = "none";
-    userProfileModal.setAttribute("aria-hidden", "true");
-  };
-
-  // Открытие модалки профиля — прокидываем uid в кнопку "Написать"
-  async function openUserModal(uid) {
-    if (!uid) return;
-    const prof = await loadProfile(uid);
-    if (!prof) return;
-
-    userModalAvatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
-    userModalNick.textContent = prof.nick || "Безымянный";
-    userModalNick.style.color = prof.color || "#cccccc";
-    userModalStatus.textContent = prof.status || "Нет статуса";
-
-    if (uid === currentUser?.uid) {
-      userModalMsgBtn.style.display = "none"; // Нельзя писать самому себе
-    } else {
-      userModalMsgBtn.style.display = "inline-block";
-      userModalMsgBtn.disabled = false;
-      userModalMsgBtn.dataset.uid = uid;
-    }
-
-    userProfileModal.style.display = "flex";
-    userProfileModal.setAttribute("aria-hidden", "false");
-  }
-   
   // Запускаем подписку на сообщения выбранной группы
   async function startChat() {
     if (unsubscribe) unsubscribe();
