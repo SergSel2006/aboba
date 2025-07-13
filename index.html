@@ -487,7 +487,6 @@
     getDoc,
     setDoc,
     getDocs,
-    where,
   } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
   import {
     getAuth,
@@ -682,55 +681,27 @@
     profilePanel.style.display = open ? "none" : "block";
     profileBtn.setAttribute("aria-expanded", String(!open));
     if (!open) profilePanel.focus();
-  });
-
-  // --- Проверка уникальности ника ---
-  async function isNickUnique(nick) {
-    const profilesRef = collection(db, "profiles");
-    const q = query(profilesRef, where("nick", "==", nick));
-    const snap = await getDocs(q);
-    if (snap.empty) return true;
-    // Если ник принадлежит текущему юзеру, тоже ок
-    if (snap.docs.length === 1 && snap.docs[0].id === currentUser.uid) return true;
-    return false;
-  }
+  };
 
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) return;
 
-    const newNick = profileNick.value.trim() || currentUser.displayName || "Безымянный";
-
-    if (!(await isNickUnique(newNick))) {
-      alert("Ник занят, выбери другой");
-      return;
-    }
-
-    // Обновляем профиль
     await setDoc(doc(db, "profiles", currentUser.uid), {
-      nick: newNick,
+      nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
       avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
       color: profileColor.value,
       status: profileStatus.value.trim(),
-    }, { merge: true });
-
-    // Обновляем название личной группы (если есть)
-    const groupsRef = collection(db, "groups");
-    const q = query(groupsRef, where("ownerUid", "==", currentUser.uid));
-    const snap = await getDocs(q);
-
-    for (const docSnap of snap.docs) {
-      await setDoc(doc(db, "groups", docSnap.id), { name: newNick }, { merge: true });
-    }
+    });
 
     profilePanel.style.display = "none";
     profilesCache[currentUser.uid] = {
-      nick: newNick,
+      nick: profileNick.value.trim(),
       avatar: profileAvatar.value.trim(),
       color: profileColor.value,
       status: profileStatus.value.trim(),
     };
-    addSystemMessage("Профиль и никнейм обновлены");
+    addSystemMessage("Профиль сохранён");
   });
 
   async function loadUserProfile() {
@@ -741,72 +712,6 @@
     profileColor.value = d.color || "#cccccc";
     profileStatus.value = d.status || "";
     statusCounter.textContent = 80 - profileStatus.value.length;
-  }
-
-  // --- Обновлённый loadUserGroups: подтягиваем и личные чаты ---
-  async function loadUserGroups() {
-    groups = [];
-
-    const groupsRef = collection(db, "groups");
-    const q1 = query(groupsRef, where("allowed", "array-contains", currentUser.uid));
-    const snap1 = await getDocs(q1);
-
-    snap1.forEach((docSnap) => {
-      const data = docSnap.data();
-      groups.push({ id: docSnap.id, name: data.name || docSnap.id });
-    });
-
-    // Добавим личные чаты - группы, где ownerUid === currentUser.uid
-    const q2 = query(groupsRef, where("ownerUid", "==", currentUser.uid));
-    const snap2 = await getDocs(q2);
-    snap2.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (!groups.find((g) => g.id === docSnap.id)) {
-        groups.push({ id: docSnap.id, name: data.name || docSnap.id });
-      }
-    });
-
-    renderGroups();
-  }
-
-  // --- Функция открытия ЛС с пользователем по uid ---
-  // Создаёт или возвращает личную группу с этим юзером
-  async function openPrivateChatWithUser(otherUid) {
-    if (!currentUser) return;
-    if (otherUid === currentUser.uid) return alert("Нельзя открыть ЛС с самим собой");
-
-    // Для личных чатов id групп — составим отсортированно из двух uid
-    const uids = [currentUser.uid, otherUid].sort();
-    const groupId = `private_${uids[0]}_${uids[1]}`;
-
-    const groupRef = doc(db, "groups", groupId);
-    const groupSnap = await getDoc(groupRef);
-
-    if (!groupSnap.exists()) {
-      // Создаем группу с ownerUid другого пользователя (у кого ник в названии)
-      const otherProfileSnap = await getDoc(doc(db, "profiles", otherUid));
-      const otherProfile = otherProfileSnap.exists() ? otherProfileSnap.data() : null;
-      const nick = otherProfile?.nick || "Безымянный";
-
-      await setDoc(groupRef, {
-        name: nick,
-        type: "private_chat",
-        allowed: [currentUser.uid, otherUid],
-        ownerUid: otherUid,
-      });
-    }
-
-    // Добавляем в groups и выбираем
-    if (!groups.find((g) => g.id === groupId)) {
-      const snap = await getDoc(doc(db, "groups", groupId));
-      const data = snap.data();
-      groups.push({ id: groupId, name: data.name || groupId });
-    }
-
-    selectedGroup = groupId;
-    localStorage.setItem('selectedGroup', selectedGroup);
-    renderGroups();
-    startChat();
   }
 
   function renderGroups() {
@@ -994,12 +899,53 @@
 
   updateCharCount();
 
-  // ============================
-  // Вот так вызываешь открытие ЛС:
-  // openPrivateChatWithUser('uid_какого-то_чела');
-  // ============================
+  async function loadUserGroups() {
+    groups = [];
 
-  // Твой старый код loadUserGroups и остальное — остался, только с поддержкой личных чатов.
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef);
+    const snap = await getDocs(q);
+
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.allowed && data.allowed.includes(currentUser.uid)) {
+        groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+      }
+    });
+
+    renderGroups();
+  }
+
+  // Optional: function to create example groups
+  /*async function createGroups() {
+    try {
+      await setDoc(doc(db, "groups", "aboba_global"), {
+        name: "Aboba Global",
+        type: "public",
+        allowed: [],
+      });
+
+      await setDoc(doc(db, "groups", "abobiki_ds"), {
+        name: "Абобики с ДС",
+        type: "invite",
+        inviteCode: "abobads2025",
+        allowed: [],
+      });
+
+      await setDoc(doc(db, "groups", "druzhnyye_aboby"), {
+        name: "Дружные абобы",
+        type: "private",
+        inviteCode: "friendsonly",
+        password: "secret123",
+        allowed: [],
+      });
+
+      console.log("Группы созданы");
+    } catch (e) {
+      console.error("Ошибка при создании групп:", e);
+    }
+  }
+  createGroups();*/
 </script>
 
 
