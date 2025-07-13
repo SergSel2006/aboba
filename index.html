@@ -641,6 +641,7 @@
       chatLayout.style.display = "flex";
       profileBtn.style.display = "flex";
       await loadUserProfile();
+      await loadUserGroups();
       groups = [];
       selectedGroup = null;
       renderGroups();
@@ -886,6 +887,24 @@
   });
 
   updateCharCount();
+
+    async function loadUserGroups() {
+  groups = [];
+
+  const groupsRef = collection(db, "groups");
+  const q = query(groupsRef);
+  const snap = await getDocs(q);
+
+  snap.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.allowed && data.allowed.includes(currentUser.uid)) {
+      groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+    }
+  });
+
+  renderGroups();
+}
+
     
 //ГРУППЫ
     
