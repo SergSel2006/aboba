@@ -916,7 +916,38 @@
     renderGroups();
   }
 
-  // Optional: function to create example groups
+  // Модалка пользователя: открытие с заполнением данных
+  async function openUserModal(uid) {
+    if (!uid) return;
+    const prof = await loadProfile(uid);
+    if (!prof) return;
+
+    userModalAvatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+    userModalNick.textContent = prof.nick || "Безымянный";
+    userModalNick.style.color = prof.color || "#cccccc";
+    userModalStatus.textContent = prof.status || "Нет статуса";
+
+    userModalMsgBtn.textContent = "Написать (позже)";
+    userModalMsgBtn.disabled = true; // можно потом сделать активацию, если хочешь
+
+    userProfileModal.style.display = "flex";
+    userProfileModal.setAttribute("aria-hidden", "false");
+  }
+
+  closeUserModalBtn.onclick = () => {
+    userProfileModal.style.display = "none";
+    userProfileModal.setAttribute("aria-hidden", "true");
+  };
+
+  userProfileModal.onclick = (e) => {
+    if (e.target === userProfileModal) closeUserModalBtn.onclick();
+  };
+
+  userProfileModal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeUserModalBtn.onclick();
+  });
+
+  // Optional: функция для примера групп (закомментирована)
   /*async function createGroups() {
     try {
       await setDoc(doc(db, "groups", "aboba_global"), {
@@ -945,7 +976,8 @@
       console.error("Ошибка при создании групп:", e);
     }
   }
-  createGroups();*/
+  // createGroups();*/
+
 </script>
 
 
