@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <link rel="manifest" href="manifest.json" />
-<link rel="icon" href="favicon.ico" />
+  <link rel="icon" href="favicon.ico" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>абоба</title>
@@ -22,7 +22,7 @@
       color: #eaeaea;
       -webkit-overflow-scrolling: touch;
       overflow-x: hidden;
-      touch-action: manipulation;
+      touch-action: pan-y;
       overscroll-behavior: contain;
     }
     #app {
@@ -54,6 +54,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-weight: 600;
+      user-select: none;
     }
     #googleLoginBtn:hover {
       background: #357ae8;
@@ -78,9 +79,12 @@
       border-radius: 5px;
       cursor: pointer;
       user-select: none;
+      outline-offset: 2px;
     }
-    .group-item:hover {
+    .group-item:hover,
+    .group-item:focus {
       background: #3a3a3a;
+      outline: 2px solid #4a90e2;
     }
     .group-item.active {
       background: #505050;
@@ -115,6 +119,17 @@
       -webkit-overflow-scrolling: touch;
       word-break: break-word;
       white-space: pre-wrap;
+      overflow-wrap: break-word;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #555 transparent;
+    }
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background-color: #555;
+      border-radius: 4px;
     }
     .date-divider {
       text-align: center;
@@ -145,9 +160,13 @@
       background-position: center;
       flex-shrink: 0;
       user-select: none;
+      outline-offset: 2px;
     }
     .avatar.clickable {
       cursor: pointer;
+    }
+    .avatar.clickable:focus {
+      outline: 2px solid #4a90e2;
     }
     .content {
       flex: 1;
@@ -188,10 +207,11 @@
     }
     #chatInput {
       position: fixed;
-      bottom: 0;
+      bottom: env(safe-area-inset-bottom, 0);
       left: 0;
       right: 0;
-      height: 60px;
+      height: auto;
+      max-height: 100px;
       display: flex;
       align-items: center;
       padding: 0 0.5em;
@@ -213,10 +233,18 @@
       caret-color: #fff;
       resize: none;
       max-height: 100px;
-      overflow-y: auto;
+      overflow-y: hidden;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      font-family: inherit;
+      line-height: 1.4;
+      -webkit-text-size-adjust: 100%;
+      min-height: 30px;
     }
     #messageInput::placeholder {
       color: #888;
+      opacity: 1;
     }
     #charCount {
       margin-left: 8px;
@@ -244,6 +272,7 @@
     #chatInput button:disabled {
       background: #333;
       cursor: default;
+      color: #888;
     }
     #profileBtn {
       position: fixed;
@@ -367,12 +396,24 @@
         padding-bottom: 90px;
       }
       #chatInput {
+        position: fixed;
+        bottom: env(safe-area-inset-bottom, 0);
+        left: 0;
+        right: 0;
         padding: 0 0.5em;
       }
       #profilePanel {
         right: 5vw;
         width: 90vw;
       }
+    }
+
+    /* Общее для интерактивных элементов */
+    input, textarea, button, select {
+      -webkit-user-select: text;
+      -webkit-touch-callout: default;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
   </style>
 </head>
@@ -403,6 +444,7 @@
         maxlength="1000"
         aria-describedby="charCount"
         aria-label="Поле ввода сообщения"
+        aria-multiline="true"
       ></textarea>
       <div id="charCount" aria-live="polite">1000</div>
       <button type="submit" disabled>Отправить</button>
@@ -454,24 +496,31 @@
   </div>
 
   <!-- ===== МОДАЛКА ПОДКЛЮЧЕНИЯ К ГРУППЕ ===== -->
-<div id="joinGroupModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-  <div class="modal-content">
-    <span id="closeJoinModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
-    <h3>Присоединиться к группе</h3>
-    <form id="joinGroupForm">
-      <input type="text" id="joinGroupName" placeholder="Название группы" required />
-      <input type="text" id="joinGroupCode" placeholder="Код (если есть)" />
-      <input type="password" id="joinGroupPassword" placeholder="Пароль (если есть)" />
-      <p id="joinGroupError" style="color:#f44336; display:none;"></p>
-      <button type="submit">Войти</button>
-    </form>
+  <div id="joinGroupModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <span id="closeJoinModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
+      <h3>Присоединиться к группе</h3>
+      <form id="joinGroupForm">
+        <input type="text" id="joinGroupName" placeholder="Название группы" required />
+        <input type="text" id="joinGroupCode" placeholder="Код (если есть)" />
+        <input type="password" id="joinGroupPassword" placeholder="Пароль (если есть)" />
+        <p id="joinGroupError" style="color:#f44336; display:none;"></p>
+        <button type="submit">Войти</button>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- ДОБАВЬ кнопку ➕ на панель групп -->
-<button id="openJoinModalBtn" title="Добавить группу" aria-label="Добавить группу" style="margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;">
-  ➕ Добавить группу
-</button>
+  <!-- ДОБАВЬ кнопку ➕ на панель групп -->
+  <button
+    id="openJoinModalBtn"
+    title="Добавить группу"
+    aria-label="Добавить группу"
+    style="margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
+  >
+    ➕ Добавить группу
+  </button>
+</body>
+</html>
 
  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
@@ -552,6 +601,7 @@
   const profilesCache = {};
   const drafts = {};
 
+  // Вспомогательные функции для даты и времени
   const formatTime = (d) =>
     d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const formatDate = (d) => {
@@ -563,6 +613,7 @@
     return d.toLocaleDateString();
   };
 
+  // Открытие и закрытие модалки добавления группы
   openJoinModalBtn.onclick = () => {
     joinModal.style.display = "flex";
     joinModal.setAttribute("aria-hidden", "false");
@@ -581,6 +632,7 @@
     if (e.key === "Escape") closeJoinModal.onclick();
   });
 
+  // Отправка формы добавления группы
   joinGroupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     joinGroupError.style.display = "none";
@@ -624,12 +676,15 @@
     }
   });
 
+  // Вход через Google
   googleLoginBtn.onclick = () => {
     loginMsg.textContent = "";
     signInWithPopup(auth, new GoogleAuthProvider()).catch(
       (e) => (loginMsg.textContent = "Ошибка входа: " + e.message)
     );
   };
+
+  // Выход
   logoutBtn.onclick = () => {
     if (unsubscribe) {
       unsubscribe();
@@ -638,6 +693,7 @@
     signOut(auth);
   };
 
+  // Отслеживаем изменение авторизации
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
@@ -672,10 +728,12 @@
     }
   });
 
+  // Обновляем счетчик символов статуса
   profileStatus.addEventListener("input", () => {
     statusCounter.textContent = 80 - profileStatus.value.length;
   });
 
+  // Открыть/закрыть панель профиля
   profileBtn.onclick = () => {
     const open = profilePanel.style.display === "block";
     profilePanel.style.display = open ? "none" : "block";
@@ -683,6 +741,7 @@
     if (!open) profilePanel.focus();
   };
 
+  // Сохраняем профиль
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -704,6 +763,7 @@
     addSystemMessage("Профиль сохранён");
   });
 
+  // Загружаем профиль пользователя
   async function loadUserProfile() {
     const snap = await getDoc(doc(db, "profiles", currentUser.uid));
     const d = snap.exists() ? snap.data() : {};
@@ -714,6 +774,7 @@
     statusCounter.textContent = 80 - profileStatus.value.length;
   }
 
+  // Рендерим список групп
   function renderGroups() {
     groupList.innerHTML = "";
     groups.forEach((g) => {
@@ -743,6 +804,7 @@
       groups.find((g) => g.id === selectedGroup)?.name || "—";
   }
 
+  // Добавляем системное сообщение (типа "Профиль сохранён")
   function addSystemMessage(txt) {
     const div = document.createElement("div");
     div.className = "msg server";
@@ -751,10 +813,12 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
+  // Очищаем чат
   function clearMessages() {
     messagesDiv.innerHTML = "";
   }
 
+  // Загружаем профиль по uid с кешированием
   async function loadProfile(uid) {
     if (!uid) return {};
     if (profilesCache[uid]) return profilesCache[uid];
@@ -769,6 +833,7 @@
     }
   }
 
+  // Запускаем подписку на сообщения выбранной группы
   async function startChat() {
     if (unsubscribe) unsubscribe();
     clearMessages();
@@ -846,6 +911,7 @@
     });
   }
 
+  // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
   chatInputForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser || !selectedGroup) return;
@@ -874,6 +940,28 @@
     }
   });
 
+  // Поддержка Shift+Enter для переноса строк в textarea
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!chatInputForm.querySelector("button[type=submit]").disabled) {
+        chatInputForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      }
+    }
+  });
+
+  // Автоматический ресайз textarea по содержимому
+  function autoResizeTextarea() {
+    messageInput.style.height = "auto";
+    messageInput.style.height = messageInput.scrollHeight + "px";
+  }
+  messageInput.addEventListener("input", () => {
+    autoResizeTextarea();
+    updateCharCount();
+    if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+  });
+
+  // Обновляем счетчик символов и кнопку отправки
   const updateCharCount = () => {
     const len = messageInput.value.length;
     const left = 1000 - len;
@@ -882,13 +970,9 @@
       !len || len > 1000;
   };
 
-  messageInput.addEventListener("input", () => {
-    updateCharCount();
-    if (selectedGroup) drafts[selectedGroup] = messageInput.value;
-  });
-
   function renderDraft() {
     messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
+    autoResizeTextarea();
     updateCharCount();
   }
 
@@ -899,6 +983,7 @@
 
   updateCharCount();
 
+  // Загружаем группы пользователя из Firestore
   async function loadUserGroups() {
     groups = [];
 
@@ -927,8 +1012,8 @@
     userModalNick.style.color = prof.color || "#cccccc";
     userModalStatus.textContent = prof.status || "Нет статуса";
 
-    userModalMsgBtn.textContent = "Написать (позже)";
-    userModalMsgBtn.disabled = true; // можно потом сделать активацию, если хочешь
+    userModalMsgBtn.textContent = "Написать";
+    userModalMsgBtn.disabled = true;
 
     userProfileModal.style.display = "flex";
     userProfileModal.setAttribute("aria-hidden", "false");
@@ -946,38 +1031,6 @@
   userProfileModal.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeUserModalBtn.onclick();
   });
-
-  // Optional: функция для примера групп (закомментирована)
-  /*async function createGroups() {
-    try {
-      await setDoc(doc(db, "groups", "aboba_global"), {
-        name: "Aboba Global",
-        type: "public",
-        allowed: [],
-      });
-
-      await setDoc(doc(db, "groups", "abobiki_ds"), {
-        name: "Абобики с ДС",
-        type: "invite",
-        inviteCode: "abobads2025",
-        allowed: [],
-      });
-
-      await setDoc(doc(db, "groups", "druzhnyye_aboby"), {
-        name: "Дружные абобы",
-        type: "private",
-        inviteCode: "friendsonly",
-        password: "secret123",
-        allowed: [],
-      });
-
-      console.log("Группы созданы");
-    } catch (e) {
-      console.error("Ошибка при создании групп:", e);
-    }
-  }
-  // createGroups();*/
-
 </script>
 
 
