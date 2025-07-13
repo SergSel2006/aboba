@@ -734,7 +734,7 @@
       if (!selectedGroup) return;
 
       const messagesQuery = query(
-        collection(db, "messages", selectedGroup, "msgs"),
+   collection(db, "groups", selectedGroup, "messages"),
         orderBy("createdAt", "asc")
       );
 
@@ -857,7 +857,7 @@ if (
 }
 
 try {
-  await addDoc(collection(db, "messages", selectedGroup, "msgs"), messageData);
+  await addDoc(collection(db, "groups", selectedGroup, "messages"), messageData);
   messageInput.value = "";
   updateCharCount();
   drafts[selectedGroup] = "";
