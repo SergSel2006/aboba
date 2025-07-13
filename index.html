@@ -940,97 +940,119 @@
     }
   });
 
-  // Поддержка Shift+Enter для переноса строк в textarea
-  messageInput.addEventListener("keydown", (e) => {
+ const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+// Обработка нажатия клавиш Enter и Shift+Enter с учётом мобильных и ПК
+messageInput.addEventListener("keydown", (e) => {
+  if (isMobile) {
+    // На мобилах: Enter без Shift — вставляем перенос строки
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const start = messageInput.selectionStart;
+      const end = messageInput.selectionEnd;
+      messageInput.value =
+        messageInput.value.substring(0, start) + "\n" + messageInput.value.substring(end);
+      messageInput.selectionStart = messageInput.selectionEnd = start + 1;
+      autoResizeTextarea();
+      updateCharCount();
+    }
+  } else {
+    // На десктопах: Enter без Shift — отправляем сообщение
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (!chatInputForm.querySelector("button[type=submit]").disabled) {
         chatInputForm.dispatchEvent(new Event("submit", { cancelable: true }));
       }
     }
-  });
-
-  // Автоматический ресайз textarea по содержимому
-  function autoResizeTextarea() {
-    messageInput.style.height = "auto";
-    messageInput.style.height = messageInput.scrollHeight + "px";
   }
-  messageInput.addEventListener("input", () => {
-    autoResizeTextarea();
-    updateCharCount();
-    if (selectedGroup) drafts[selectedGroup] = messageInput.value;
-  });
+});
 
-  // Обновляем счетчик символов и кнопку отправки
-  const updateCharCount = () => {
-    const len = messageInput.value.length;
-    const left = 1000 - len;
-    charCount.textContent = left;
-    chatInputForm.querySelector("button[type=submit]").disabled =
-      !len || len > 1000;
-  };
+// Автоматический ресайз textarea по содержимому
+function autoResizeTextarea() {
+  messageInput.style.height = "auto";
+  messageInput.style.height = messageInput.scrollHeight + "px";
+}
 
-  function renderDraft() {
-    messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
-    autoResizeTextarea();
-    updateCharCount();
-  }
-
-  window.addEventListener("beforeunload", () => {
-    if (selectedGroup && messageInput.value.trim())
-      drafts[selectedGroup] = messageInput.value;
-  });
-
+// Вешаем обработчик на ввод для ресайза, обновления счётчика и сохранения черновика
+messageInput.addEventListener("input", () => {
+  autoResizeTextarea();
   updateCharCount();
+  if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+});
 
-  // Загружаем группы пользователя из Firestore
-  async function loadUserGroups() {
-    groups = [];
+// Обновляем счетчик символов и кнопку отправки
+const updateCharCount = () => {
+  const len = messageInput.value.length;
+  const left = 1000 - len;
+  charCount.textContent = left;
+  chatInputForm.querySelector("button[type=submit]").disabled =
+    !len || len > 1000;
+};
 
-    const groupsRef = collection(db, "groups");
-    const q = query(groupsRef);
-    const snap = await getDocs(q);
+// Рендерим черновик и обновляем интерфейс
+function renderDraft() {
+  messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
+  autoResizeTextarea();
+  updateCharCount();
+}
 
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data.allowed && data.allowed.includes(currentUser.uid)) {
-        groups.push({ id: docSnap.id, name: data.name || docSnap.id });
-      }
-    });
+// Сохраняем черновик перед уходом со страницы
+window.addEventListener("beforeunload", () => {
+  if (selectedGroup && messageInput.value.trim())
+    drafts[selectedGroup] = messageInput.value;
+});
 
-    renderGroups();
-  }
+updateCharCount();
 
-  // Модалка пользователя: открытие с заполнением данных
-  async function openUserModal(uid) {
-    if (!uid) return;
-    const prof = await loadProfile(uid);
-    if (!prof) return;
+// Загружаем группы пользователя из Firestore
+async function loadUserGroups() {
+  groups = [];
 
-    userModalAvatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
-    userModalNick.textContent = prof.nick || "Безымянный";
-    userModalNick.style.color = prof.color || "#cccccc";
-    userModalStatus.textContent = prof.status || "Нет статуса";
+  const groupsRef = collection(db, "groups");
+  const q = query(groupsRef);
+  const snap = await getDocs(q);
 
-    userModalMsgBtn.textContent = "Написать";
-    userModalMsgBtn.disabled = true;
-
-    userProfileModal.style.display = "flex";
-    userProfileModal.setAttribute("aria-hidden", "false");
-  }
-
-  closeUserModalBtn.onclick = () => {
-    userProfileModal.style.display = "none";
-    userProfileModal.setAttribute("aria-hidden", "true");
-  };
-
-  userProfileModal.onclick = (e) => {
-    if (e.target === userProfileModal) closeUserModalBtn.onclick();
-  };
-
-  userProfileModal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeUserModalBtn.onclick();
+  snap.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.allowed && data.allowed.includes(currentUser.uid)) {
+      groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+    }
   });
+
+  renderGroups();
+}
+
+// Модалка пользователя: открытие с заполнением данных
+async function openUserModal(uid) {
+  if (!uid) return;
+  const prof = await loadProfile(uid);
+  if (!prof) return;
+
+  userModalAvatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+  userModalNick.textContent = prof.nick || "Безымянный";
+  userModalNick.style.color = prof.color || "#cccccc";
+  userModalStatus.textContent = prof.status || "Нет статуса";
+
+  userModalMsgBtn.textContent = "Написать";
+  userModalMsgBtn.disabled = true;
+
+  userProfileModal.style.display = "flex";
+  userProfileModal.setAttribute("aria-hidden", "false");
+}
+
+closeUserModalBtn.onclick = () => {
+  userProfileModal.style.display = "none";
+  userProfileModal.setAttribute("aria-hidden", "true");
+};
+
+userProfileModal.onclick = (e) => {
+  if (e.target === userProfileModal) closeUserModalBtn.onclick();
+};
+
+userProfileModal.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeUserModalBtn.onclick();
+});
+
 </script>
 
 
