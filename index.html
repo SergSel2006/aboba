@@ -471,407 +471,213 @@
   ➕ Добавить группу
 </button>
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    serverTimestamp,
-    doc,
-    getDoc,
-    setDoc,
-  } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
-  import {
-    getAuth,
-    signInWithPopup,
-    GoogleAuthProvider,
-    signOut,
-    onAuthStateChanged,
-  } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy, onSnapshot, addDoc,
+  serverTimestamp, doc, getDoc, getDocs, setDoc
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import {
+  getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
-    authDomain: "abobaserver-49923.firebaseapp.com",
-    projectId: "abobaserver-49923",
-    storageBucket: "abobaserver-49923.appspot.com",
-    messagingSenderId: "364642279962",
-    appId: "1:364642279962:web:d383373e63e81353d067a3",
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyC-en4T_Vozvrz7o5dyuYRpZ_4j_ACX3pA",
+  authDomain: "abobaserver-49923.firebaseapp.com",
+  projectId: "abobaserver-49923",
+  storageBucket: "abobaserver-49923.appspot.com",
+  messagingSenderId: "364642279962",
+  appId: "1:364642279962:web:d383373e63e81353d067a3",
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-  const loginForm = document.getElementById("loginForm");
-  const googleLoginBtn = document.getElementById("googleLoginBtn");
-  const loginMsg = document.getElementById("loginMsg");
-  const chatLayout = document.getElementById("chatLayout");
-  const groupList = document.getElementById("groupList");
-  const groupNameDisplay = document.getElementById("groupNameDisplay");
-  const messagesDiv = document.getElementById("messages");
-  const chatInputForm = document.getElementById("chatInput");
-  const messageInput = document.getElementById("messageInput");
-  const charCount = document.getElementById("charCount");
-  const profileBtn = document.getElementById("profileBtn");
-  const profilePanel = document.getElementById("profilePanel");
-  const profileForm = document.getElementById("profileForm");
-  const profileNick = document.getElementById("profileNick");
-  const profileAvatar = document.getElementById("profileAvatar");
-  const profileColor = document.getElementById("profileColor");
-  const profileStatus = document.getElementById("profileStatus");
-  const statusCounter = document.getElementById("statusCounter");
-  const logoutBtn = document.getElementById("logoutBtn");
+const loginForm = document.getElementById("loginForm");
+const chatLayout = document.getElementById("chatLayout");
+const groupList = document.getElementById("groupList");
+const groupNameDisplay = document.getElementById("groupNameDisplay");
+const messagesDiv = document.getElementById("messages");
+const chatInputForm = document.getElementById("chatInput");
+const messageInput = document.getElementById("messageInput");
+const charCount = document.getElementById("charCount");
+const googleLoginBtn = document.getElementById("googleLoginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-  const userProfileModal = document.getElementById("userProfileModal");
-  const closeUserModalBtn = document.getElementById("closeUserModal");
-  const userModalAvatar = document.getElementById("userModalAvatar");
-  const userModalNick = document.getElementById("userModalNick");
-  const userModalStatus = document.getElementById("userModalStatus");
-  const userModalMsgBtn = document.getElementById("userModalMsgBtn");
+let currentUser = null;
+let groups = [];
+let selectedGroup = null;
+let unsubscribe = null;
+const drafts = {};
+const profilesCache = {};
 
-  const joinModal = document.getElementById("joinGroupModal");
-  const closeJoinModal = document.getElementById("closeJoinModal");
-  const openJoinModalBtn = document.getElementById("openJoinModalBtn");
-  const joinGroupForm = document.getElementById("joinGroupForm");
-  const joinGroupName = document.getElementById("joinGroupName");
-  const joinGroupCode = document.getElementById("joinGroupCode");
-  const joinGroupPassword = document.getElementById("joinGroupPassword");
-  const joinGroupError = document.getElementById("joinGroupError");
+const formatTime = (d) =>
+  d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const formatDate = (d) => {
+  const now = new Date();
+  const diff = now - d;
+  const day = 86400000;
+  if (diff < day && now.getDate() === d.getDate()) return "Сегодня";
+  if (diff < 2 * day && now.getDate() - 1 === d.getDate()) return "Вчера";
+  return d.toLocaleDateString();
+};
 
-  let currentUser = null;
-  let groups = [];
-  let selectedGroup = null;
-  let unsubscribe = null;
-  const profilesCache = {};
-  const drafts = {};
+async function loadProfile(uid) {
+  if (profilesCache[uid]) return profilesCache[uid];
+  const snap = await getDoc(doc(db, "profiles", uid));
+  const data = snap.exists() ? snap.data() : {};
+  profilesCache[uid] = data;
+  return data;
+}
 
-  const formatTime = (d) =>
-    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const formatDate = (d) => {
-    const now = new Date();
-    const diff = now - d;
-    const day = 86400000;
-    if (diff < day && now.getDate() === d.getDate()) return "Сегодня";
-    if (diff < 2 * day && now.getDate() - 1 === d.getDate()) return "Вчера";
-    return d.toLocaleDateString();
-  };
+async function fetchMyGroups() {
+  const snap = await getDocs(collection(db, "groups"));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((g) => !g.allowed || g.allowed.includes(currentUser.uid));
+}
 
-  openJoinModalBtn.onclick = () => {
-    joinModal.style.display = "flex";
-    joinModal.setAttribute("aria-hidden", "false");
-    joinGroupError.style.display = "none";
-    joinGroupName.value = joinGroupCode.value = joinGroupPassword.value = "";
-    joinGroupName.focus();
-  };
-  closeJoinModal.onclick = () => {
-    joinModal.style.display = "none";
-    joinModal.setAttribute("aria-hidden", "true");
-  };
-  joinModal.onclick = (e) => {
-    if (e.target === joinModal) closeJoinModal.onclick();
-  };
-  joinModal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeJoinModal.onclick();
-  });
-
-  joinGroupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    joinGroupError.style.display = "none";
-
-    const name = joinGroupName.value.trim();
-    const code = joinGroupCode.value.trim();
-    const pass = joinGroupPassword.value.trim();
-    if (!currentUser || !name) return;
-
-    try {
-      const snap = await getDoc(doc(db, "groups", name));
-      if (!snap.exists()) return showErr("Группа не найдена.");
-      const g = snap.data();
-
-      if (g.type === "invite" && g.inviteCode !== code)
-        return showErr("Неверный код.");
-      if (g.type === "private" && g.password !== pass)
-        return showErr("Неверный пароль.");
-
-      const allowed = g.allowed || [];
-      if (!allowed.includes(currentUser.uid)) {
-        allowed.push(currentUser.uid);
-        await setDoc(doc(db, "groups", name), { allowed }, { merge: true });
-      }
-
-      if (!groups.some((gr) => gr.id === name))
-        groups.push({ id: name, name: g.name });
-
-      selectedGroup = name;
-      renderGroups();
-      startChat();
-      closeJoinModal.onclick();
-    } catch (err) {
-      showErr("Ошибка: " + err.message);
-    }
-
-    function showErr(msg) {
-      joinGroupError.textContent = msg;
-      joinGroupError.style.display = "block";
-    }
-  });
-
-  googleLoginBtn.onclick = () => {
-    loginMsg.textContent = "";
-    signInWithPopup(auth, new GoogleAuthProvider()).catch(
-      (e) => (loginMsg.textContent = "Ошибка входа: " + e.message)
-    );
-  };
-  logoutBtn.onclick = () => {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-    signOut(auth);
-  };
-
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (user) {
-      loginForm.style.display = "none";
-      chatLayout.style.display = "flex";
-      profileBtn.style.display = "flex";
-      await loadUserProfile();
-      groups = [];
-      selectedGroup = null;
-      renderGroups();
-      clearMessages();
-    } else {
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
-      }
-      loginForm.style.display = "flex";
-      chatLayout.style.display = "none";
-      profileBtn.style.display = "none";
-      groups = [];
-      selectedGroup = null;
-      groupList.innerHTML = "";
-      clearMessages();
-    }
-  });
-
-  profileStatus.addEventListener("input", () => {
-    statusCounter.textContent = 80 - profileStatus.value.length;
-  });
-
-  profileBtn.onclick = () => {
-    const open = profilePanel.style.display === "block";
-    profilePanel.style.display = open ? "none" : "block";
-    profileBtn.setAttribute("aria-expanded", String(!open));
-    if (!open) profilePanel.focus();
-  };
-
-  profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    await setDoc(doc(db, "profiles", currentUser.uid), {
-      nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
-      avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-      color: profileColor.value,
-      status: profileStatus.value.trim(),
-    });
-
-    profilePanel.style.display = "none";
-    profilesCache[currentUser.uid] = {
-      nick: profileNick.value.trim(),
-      avatar: profileAvatar.value.trim(),
-      color: profileColor.value,
-      status: profileStatus.value.trim(),
-    };
-    addSystemMessage("Профиль сохранён");
-  });
-
-  async function loadUserProfile() {
-    const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const d = snap.exists() ? snap.data() : {};
-    profileNick.value = d.nick || "";
-    profileAvatar.value = d.avatar || "";
-    profileColor.value = d.color || "#cccccc";
-    profileStatus.value = d.status || "";
-    statusCounter.textContent = 80 - profileStatus.value.length;
-  }
-
-  function renderGroups() {
-    groupList.innerHTML = "";
-    groups.forEach((g) => {
-      const div = document.createElement("div");
-      div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
-      div.textContent = g.name;
-      div.tabIndex = 0;
-      div.setAttribute("role", "listitem");
-      div.onclick = () => {
-        if (g.id !== selectedGroup) {
-          selectedGroup = g.id;
-          renderGroups();
-          startChat();
-        }
-      };
-      div.onkeydown = (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          div.onclick();
-        }
-      };
-      groupList.appendChild(div);
-    });
-    groupList.appendChild(openJoinModalBtn);
-    groupNameDisplay.textContent =
-      groups.find((g) => g.id === selectedGroup)?.name || "—";
-  }
-
-  function addSystemMessage(txt) {
+function renderGroups() {
+  groupList.innerHTML = "";
+  groups.forEach((g) => {
     const div = document.createElement("div");
-    div.className = "msg server";
-    div.textContent = txt;
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-
-  function clearMessages() {
-    messagesDiv.innerHTML = "";
-  }
-
-  async function startChat() {
-    if (unsubscribe) unsubscribe();
-    clearMessages();
-    renderDraft();
-    if (!selectedGroup) return;
-
-    const q = query(
-      collection(db, "groups", selectedGroup, "messages"),
-      orderBy("createdAt", "asc")
-    );
-    let lastDate = "";
-
-    unsubscribe = onSnapshot(q, async (snap) => {
-      clearMessages();
-      lastDate = "";
-      for (const docSnap of snap.docs) {
-        const d = docSnap.data();
-        if (!d.createdAt) continue;
-
-        const createdAt = d.createdAt.toDate();
-        const dateStr = formatDate(createdAt);
-
-        if (dateStr !== lastDate) {
-          lastDate = dateStr;
-          const div = document.createElement("div");
-          div.className = "date-divider";
-          div.textContent = dateStr;
-          messagesDiv.appendChild(div);
-        }
-
-        const msgDiv = document.createElement("div");
-        msgDiv.className = "msg";
-
-        const avatar = document.createElement("div");
-        avatar.className = "avatar clickable";
-        const prof = await loadProfile(d.uid || "");
-        avatar.style.backgroundImage = `url(${
-          prof.avatar || "https://i.imgur.com/4AiXzf8.png"
-        })`;
-        avatar.title = prof.nick || "Безымянный";
-        avatar.onclick = () => openUserModal(d.uid);
-        avatar.tabIndex = 0;
-
-        const cont = document.createElement("div");
-        cont.className = "content";
-
-        const head = document.createElement("div");
-        head.className = "msg-header";
-
-        const nick = document.createElement("span");
-        nick.textContent = prof.nick || "Безымянный";
-        nick.style.color = prof.color || "#ccc";
-
-        const time = document.createElement("span");
-        time.textContent = formatTime(createdAt);
-        time.title = createdAt.toLocaleString();
-
-        head.append(nick, time);
-
-        if (d.edited) {
-          const ed = document.createElement("span");
-          ed.className = "msg-edited";
-          ed.textContent = "(ред.)";
-          head.appendChild(ed);
-        }
-
-        const body = document.createElement("div");
-        body.textContent = d.text || "";
-
-        cont.append(head, body);
-        msgDiv.append(avatar, cont);
-        messagesDiv.appendChild(msgDiv);
+    div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
+    div.textContent = g.name;
+    div.onclick = () => {
+      if (g.id !== selectedGroup) {
+        selectedGroup = g.id;
+        renderGroups();
+        startChat();
       }
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-
-  chatInputForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!currentUser || !selectedGroup) return;
-
-    const text = messageInput.value.trim();
-    if (!text) return;
-
-    const data = {
-      text,
-      uid: currentUser.uid,
-      createdAt: serverTimestamp(),
-      edited: false,
-      type: "user",
     };
+    groupList.appendChild(div);
+  });
+  groupNameDisplay.textContent = groups.find(g => g.id === selectedGroup)?.name || "—";
+}
 
-    try {
-      await addDoc(
-        collection(db, "groups", selectedGroup, "messages"),
-        data
-      );
-      messageInput.value = "";
-      updateCharCount();
-      drafts[selectedGroup] = "";
-    } catch (err) {
-      alert("Ошибка отправки: " + err.message);
+function clearMessages() {
+  messagesDiv.innerHTML = "";
+}
+
+async function startChat() {
+  if (!selectedGroup) return;
+  if (unsubscribe) unsubscribe();
+  clearMessages();
+
+  const q = query(collection(db, "groups", selectedGroup, "messages"), orderBy("createdAt", "asc"));
+  unsubscribe = onSnapshot(q, async (snap) => {
+    clearMessages();
+    let lastDate = "";
+    for (const docSnap of snap.docs) {
+      const d = docSnap.data();
+      if (!d.createdAt) continue;
+      const createdAt = d.createdAt.toDate();
+      const dateStr = formatDate(createdAt);
+
+      if (dateStr !== lastDate) {
+        lastDate = dateStr;
+        const divider = document.createElement("div");
+        divider.className = "date-divider";
+        divider.textContent = dateStr;
+        messagesDiv.appendChild(divider);
+      }
+
+      const msg = document.createElement("div");
+      msg.className = "msg";
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      const prof = await loadProfile(d.uid || "");
+      avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+
+      const content = document.createElement("div");
+      content.className = "content";
+
+      const header = document.createElement("div");
+      header.className = "msg-header";
+
+      const nick = document.createElement("span");
+      nick.textContent = prof.nick || "Безымянный";
+      nick.style.color = prof.color || "#ccc";
+
+      const time = document.createElement("span");
+      time.textContent = formatTime(createdAt);
+
+      header.append(nick, time);
+      content.append(header, document.createTextNode(d.text || ""));
+      msg.append(avatar, content);
+      messagesDiv.appendChild(msg);
     }
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
+}
 
-  const updateCharCount = () => {
-    const len = messageInput.value.length;
-    const left = 1000 - len;
-    charCount.textContent = left;
-    chatInputForm.querySelector("button[type=submit]").disabled =
-      !len || len > 1000;
-  };
+chatInputForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = messageInput.value.trim();
+  if (!text || !currentUser || !selectedGroup) return;
 
-  messageInput.addEventListener("input", () => {
-    updateCharCount();
-    if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+  await addDoc(collection(db, "groups", selectedGroup, "messages"), {
+    text,
+    uid: currentUser.uid,
+    createdAt: serverTimestamp(),
+    edited: false,
+    type: "user",
   });
-
-  function renderDraft() {
-    messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
-    updateCharCount();
-  }
-
-  window.addEventListener("beforeunload", () => {
-    if (selectedGroup && messageInput.value.trim())
-      drafts[selectedGroup] = messageInput.value;
-  });
-
+  drafts[selectedGroup] = "";
+  messageInput.value = "";
   updateCharCount();
-    
+});
+
+function updateCharCount() {
+  const len = messageInput.value.length;
+  charCount.textContent = 1000 - len;
+  chatInputForm.querySelector("button[type=submit]").disabled = !len || len > 1000;
+}
+
+messageInput.addEventListener("input", () => {
+  updateCharCount();
+  if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+});
+
+window.addEventListener("beforeunload", () => {
+  if (selectedGroup && messageInput.value.trim()) {
+    drafts[selectedGroup] = messageInput.value;
+  }
+});
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (user) {
+    loginForm.style.display = "none";
+    chatLayout.style.display = "flex";
+    groups = await fetchMyGroups();
+    selectedGroup = groups.length ? groups[0].id : null;
+    renderGroups();
+    if (selectedGroup) startChat();
+  } else {
+    loginForm.style.display = "flex";
+    chatLayout.style.display = "none";
+    groups = [];
+    selectedGroup = null;
+    clearMessages();
+    groupList.innerHTML = "";
+  }
+});
+
+googleLoginBtn.onclick = () => {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch((e) => {
+    alert("Ошибка входа: " + e.message);
+  });
+};
+
+logoutBtn.onclick = () => {
+  if (unsubscribe) unsubscribe();
+  signOut(auth);
+};
+
+updateCharCount();
 //ГРУППЫ
     
     /*async function createGroups() {
