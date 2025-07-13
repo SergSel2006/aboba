@@ -472,7 +472,6 @@
 </button>
 
   <script type="module">
-  /* ---------- Firebase SDK ---------- */
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
   import {
     getFirestore,
@@ -503,263 +502,376 @@
     appId: "1:364642279962:web:d383373e63e81353d067a3",
   };
 
-  const app   = initializeApp(firebaseConfig);
-  const db    = getFirestore(app);
-  const auth  = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  /* ---------- DOM-кеш ---------- */
-  const loginForm        = document.getElementById("loginForm");
-  const googleLoginBtn   = document.getElementById("googleLoginBtn");
-  const loginMsg         = document.getElementById("loginMsg");
-  const chatLayout       = document.getElementById("chatLayout");
-  const groupList        = document.getElementById("groupList");
+  const loginForm = document.getElementById("loginForm");
+  const googleLoginBtn = document.getElementById("googleLoginBtn");
+  const loginMsg = document.getElementById("loginMsg");
+  const chatLayout = document.getElementById("chatLayout");
+  const groupList = document.getElementById("groupList");
   const groupNameDisplay = document.getElementById("groupNameDisplay");
-  const messagesDiv      = document.getElementById("messages");
-  const chatInputForm    = document.getElementById("chatInput");
-  const messageInput     = document.getElementById("messageInput");
-  const charCount        = document.getElementById("charCount");
-  const profileBtn       = document.getElementById("profileBtn");
-  const profilePanel     = document.getElementById("profilePanel");
-  const profileForm      = document.getElementById("profileForm");
-  const profileNick      = document.getElementById("profileNick");
-  const profileAvatar    = document.getElementById("profileAvatar");
-  const profileColor     = document.getElementById("profileColor");
-  const profileStatus    = document.getElementById("profileStatus");
-  const statusCounter    = document.getElementById("statusCounter");
-  const logoutBtn        = document.getElementById("logoutBtn");
+  const messagesDiv = document.getElementById("messages");
+  const chatInputForm = document.getElementById("chatInput");
+  const messageInput = document.getElementById("messageInput");
+  const charCount = document.getElementById("charCount");
+  const profileBtn = document.getElementById("profileBtn");
+  const profilePanel = document.getElementById("profilePanel");
+  const profileForm = document.getElementById("profileForm");
+  const profileNick = document.getElementById("profileNick");
+  const profileAvatar = document.getElementById("profileAvatar");
+  const profileColor = document.getElementById("profileColor");
+  const profileStatus = document.getElementById("profileStatus");
+  const statusCounter = document.getElementById("statusCounter");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   const userProfileModal = document.getElementById("userProfileModal");
-  const closeUserModalBtn= document.getElementById("closeUserModal");
-  const userModalAvatar  = document.getElementById("userModalAvatar");
-  const userModalNick    = document.getElementById("userModalNick");
-  const userModalStatus  = document.getElementById("userModalStatus");
-  const userModalMsgBtn  = document.getElementById("userModalMsgBtn");
+  const closeUserModalBtn = document.getElementById("closeUserModal");
+  const userModalAvatar = document.getElementById("userModalAvatar");
+  const userModalNick = document.getElementById("userModalNick");
+  const userModalStatus = document.getElementById("userModalStatus");
+  const userModalMsgBtn = document.getElementById("userModalMsgBtn");
 
-  /* --- модалка «Присоединиться к группе» --- */
-  const joinModal        = document.getElementById("joinGroupModal");
-  const closeJoinModal   = document.getElementById("closeJoinModal");
+  const joinModal = document.getElementById("joinGroupModal");
+  const closeJoinModal = document.getElementById("closeJoinModal");
   const openJoinModalBtn = document.getElementById("openJoinModalBtn");
-  const joinGroupForm    = document.getElementById("joinGroupForm");
-  const joinGroupName    = document.getElementById("joinGroupName");
-  const joinGroupCode    = document.getElementById("joinGroupCode");
-  const joinGroupPassword= document.getElementById("joinGroupPassword");
-  const joinGroupError   = document.getElementById("joinGroupError");
+  const joinGroupForm = document.getElementById("joinGroupForm");
+  const joinGroupName = document.getElementById("joinGroupName");
+  const joinGroupCode = document.getElementById("joinGroupCode");
+  const joinGroupPassword = document.getElementById("joinGroupPassword");
+  const joinGroupError = document.getElementById("joinGroupError");
 
-  /* ---------- Состояние ---------- */
-  let currentUser   = null;
-  let groups        = [];      // список подключённых групп
+  let currentUser = null;
+  let groups = [];
   let selectedGroup = null;
-  let unsubscribe   = null;
+  let unsubscribe = null;
   const profilesCache = {};
-  const drafts        = {};    // черновики по группам
+  const drafts = {};
 
-  /* ---------- Утилы времени ---------- */
-  const formatTime = (d)=> d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-  const formatDate = (d)=>{
-    const now = new Date(), diff = now-d, day = 86_400_000;
-    if(diff<day && now.getDate()===d.getDate())        return "Сегодня";
-    if(diff<2*day && now.getDate()-1===d.getDate())    return "Вчера";
+  const formatTime = (d) =>
+    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const formatDate = (d) => {
+    const now = new Date();
+    const diff = now - d;
+    const day = 86400000;
+    if (diff < day && now.getDate() === d.getDate()) return "Сегодня";
+    if (diff < 2 * day && now.getDate() - 1 === d.getDate()) return "Вчера";
     return d.toLocaleDateString();
   };
 
-  /* ---------- Присоединиться к группе ---------- */
-  openJoinModalBtn.onclick = ()=>{
+  openJoinModalBtn.onclick = () => {
     joinModal.style.display = "flex";
-    joinModal.setAttribute("aria-hidden","false");
-    joinGroupError.style.display="none";
+    joinModal.setAttribute("aria-hidden", "false");
+    joinGroupError.style.display = "none";
     joinGroupName.value = joinGroupCode.value = joinGroupPassword.value = "";
     joinGroupName.focus();
   };
-  closeJoinModal.onclick = ()=>{ joinModal.style.display="none"; joinModal.setAttribute("aria-hidden","true"); };
-  joinModal.onclick = (e)=>{ if(e.target===joinModal) closeJoinModal.onclick(); };
-  joinModal.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeJoinModal.onclick(); });
+  closeJoinModal.onclick = () => {
+    joinModal.style.display = "none";
+    joinModal.setAttribute("aria-hidden", "true");
+  };
+  joinModal.onclick = (e) => {
+    if (e.target === joinModal) closeJoinModal.onclick();
+  };
+  joinModal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeJoinModal.onclick();
+  });
 
-  joinGroupForm.addEventListener("submit", async (e)=>{
+  joinGroupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    joinGroupError.style.display="none";
+    joinGroupError.style.display = "none";
 
     const name = joinGroupName.value.trim();
     const code = joinGroupCode.value.trim();
     const pass = joinGroupPassword.value.trim();
-    if(!currentUser || !name) return;
+    if (!currentUser || !name) return;
 
-    try{
-      const snap = await getDoc(doc(db,"groups",name));
-      if(!snap.exists()){ showErr("Группа не найдена."); return; }
+    try {
+      const snap = await getDoc(doc(db, "groups", name));
+      if (!snap.exists()) return showErr("Группа не найдена.");
       const g = snap.data();
 
-      if(g.type==="invite"  && g.inviteCode !== code){  showErr("Неверный код."); return; }
-      if(g.type==="private" && g.password   !== pass){ showErr("Неверный пароль."); return; }
+      if (g.type === "invite" && g.inviteCode !== code)
+        return showErr("Неверный код.");
+      if (g.type === "private" && g.password !== pass)
+        return showErr("Неверный пароль.");
 
-      // запишем в allowed
       const allowed = g.allowed || [];
-      if(!allowed.includes(currentUser.uid)){
+      if (!allowed.includes(currentUser.uid)) {
         allowed.push(currentUser.uid);
-        await setDoc(doc(db,"groups",name),{allowed},{merge:true});
+        await setDoc(doc(db, "groups", name), { allowed }, { merge: true });
       }
 
-      if(!groups.some(gr=>gr.id===name)) groups.push({id:name,name:g.name});
+      if (!groups.some((gr) => gr.id === name))
+        groups.push({ id: name, name: g.name });
+
       selectedGroup = name;
       renderGroups();
       startChat();
       closeJoinModal.onclick();
-    }catch(err){ showErr("Ошибка: "+err.message); }
+    } catch (err) {
+      showErr("Ошибка: " + err.message);
+    }
 
-    function showErr(txt){
-      joinGroupError.textContent = txt;
-      joinGroupError.style.display="block";
+    function showErr(msg) {
+      joinGroupError.textContent = msg;
+      joinGroupError.style.display = "block";
     }
   });
 
-  /* ---------- Firebase Auth ---------- */
-  googleLoginBtn.onclick = ()=>{
-    loginMsg.textContent="";
-    signInWithPopup(auth,new GoogleAuthProvider())
-      .catch(e=>loginMsg.textContent="Ошибка входа: "+e.message);
+  googleLoginBtn.onclick = () => {
+    loginMsg.textContent = "";
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(
+      (e) => (loginMsg.textContent = "Ошибка входа: " + e.message)
+    );
   };
-  logoutBtn.onclick = ()=>{
-    if(unsubscribe){ unsubscribe(); unsubscribe=null; }
+  logoutBtn.onclick = () => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
     signOut(auth);
   };
 
-  onAuthStateChanged(auth, async(user)=>{
-    currentUser=user;
-    if(user){
-      loginForm.style.display="none";
-      chatLayout.style.display="flex";
-      profileBtn.style.display="flex";
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+      loginForm.style.display = "none";
+      chatLayout.style.display = "flex";
+      profileBtn.style.display = "flex";
       await loadUserProfile();
-
-      // стартуем без групп — юзер подключает сам
-      groups=[]; selectedGroup=null;
-      renderGroups(); clearMessages();
-    }else{
-      if(unsubscribe){ unsubscribe(); unsubscribe=null; }
-      loginForm.style.display="flex";
-      chatLayout.style.display="none";
-      profileBtn.style.display="none";
-      groups=[]; selectedGroup=null;
-      groupList.innerHTML=""; clearMessages();
+      groups = [];
+      selectedGroup = null;
+      renderGroups();
+      clearMessages();
+    } else {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+      loginForm.style.display = "flex";
+      chatLayout.style.display = "none";
+      profileBtn.style.display = "none";
+      groups = [];
+      selectedGroup = null;
+      groupList.innerHTML = "";
+      clearMessages();
     }
   });
 
-  /* ---------- Профиль ---------- */
-  profileStatus.addEventListener("input",()=>statusCounter.textContent=80-profileStatus.value.length);
-  profileBtn.onclick = ()=>{
-    const open = profilePanel.style.display==="block";
-    profilePanel.style.display = open? "none" : "block";
-    profileBtn.setAttribute("aria-expanded",String(!open));
-    if(!open) profilePanel.focus();
+  profileStatus.addEventListener("input", () => {
+    statusCounter.textContent = 80 - profileStatus.value.length;
+  });
+
+  profileBtn.onclick = () => {
+    const open = profilePanel.style.display === "block";
+    profilePanel.style.display = open ? "none" : "block";
+    profileBtn.setAttribute("aria-expanded", String(!open));
+    if (!open) profilePanel.focus();
   };
-  profileForm.addEventListener("submit", async(e)=>{
+
+  profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if(!currentUser) return;
-    await setDoc(doc(db,"profiles",currentUser.uid),{
-      nick  : profileNick.value.trim() || currentUser.displayName || "Безымянный",
-      avatar: profileAvatar.value.trim()||"https://i.imgur.com/4AiXzf8.png",
-      color : profileColor.value,
+    if (!currentUser) return;
+
+    await setDoc(doc(db, "profiles", currentUser.uid), {
+      nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
+      avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
+      color: profileColor.value,
       status: profileStatus.value.trim(),
     });
-    profilePanel.style.display="none";
-    profilesCache[currentUser.uid]={nick:profileNick.value.trim(),avatar:profileAvatar.value.trim(),color:profileColor.value,status:profileStatus.value.trim()};
+
+    profilePanel.style.display = "none";
+    profilesCache[currentUser.uid] = {
+      nick: profileNick.value.trim(),
+      avatar: profileAvatar.value.trim(),
+      color: profileColor.value,
+      status: profileStatus.value.trim(),
+    };
     addSystemMessage("Профиль сохранён");
   });
 
-  async function loadUserProfile(){
-    const snap = await getDoc(doc(db,"profiles",currentUser.uid));
-    const d = snap.exists()? snap.data() : {nick:"",avatar:"",color:"#cccccc",status:""};
-    profileNick.value=d.nick||""; profileAvatar.value=d.avatar||""; profileColor.value=d.color||"#cccccc";
-    profileStatus.value=d.status||""; statusCounter.textContent=80-profileStatus.value.length;
+  async function loadUserProfile() {
+    const snap = await getDoc(doc(db, "profiles", currentUser.uid));
+    const d = snap.exists() ? snap.data() : {};
+    profileNick.value = d.nick || "";
+    profileAvatar.value = d.avatar || "";
+    profileColor.value = d.color || "#cccccc";
+    profileStatus.value = d.status || "";
+    statusCounter.textContent = 80 - profileStatus.value.length;
   }
 
-  /* ---------- Группы / рендер ---------- */
-  function renderGroups(){
-    groupList.innerHTML="";
-    groups.forEach(g=>{
+  function renderGroups() {
+    groupList.innerHTML = "";
+    groups.forEach((g) => {
       const div = document.createElement("div");
-      div.className="group-item"+(g.id===selectedGroup?" active":"");
-      div.textContent=g.name; div.tabIndex=0; div.setAttribute("role","listitem");
-      div.onclick=()=>{ if(g.id!==selectedGroup){ selectedGroup=g.id; renderGroups(); startChat(); } };
-      div.onkeydown=(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); div.onclick(); } };
+      div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
+      div.textContent = g.name;
+      div.tabIndex = 0;
+      div.setAttribute("role", "listitem");
+      div.onclick = () => {
+        if (g.id !== selectedGroup) {
+          selectedGroup = g.id;
+          renderGroups();
+          startChat();
+        }
+      };
+      div.onkeydown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          div.onclick();
+        }
+      };
       groupList.appendChild(div);
     });
-    // всегда в конце кнопка ➕
     groupList.appendChild(openJoinModalBtn);
-    groupNameDisplay.textContent = groups.find(g=>g.id===selectedGroup)?.name || "—";
+    groupNameDisplay.textContent =
+      groups.find((g) => g.id === selectedGroup)?.name || "—";
   }
 
-  function addSystemMessage(txt){
-    const div = document.createElement("div"); div.className="msg server"; div.textContent=txt;
-    messagesDiv.appendChild(div); messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  function addSystemMessage(txt) {
+    const div = document.createElement("div");
+    div.className = "msg server";
+    div.textContent = txt;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
-  function clearMessages(){ messagesDiv.innerHTML=""; }
 
-  /* ---------- Чат ---------- */
-  async function startChat(){
-    if(unsubscribe){ unsubscribe(); }
-    clearMessages(); renderDraft();
-    if(!selectedGroup) return;
+  function clearMessages() {
+    messagesDiv.innerHTML = "";
+  }
 
-    const q = query(collection(db,"groups",selectedGroup,"messages"), orderBy("createdAt","asc"));
-    let lastDate="";
+  async function startChat() {
+    if (unsubscribe) unsubscribe();
+    clearMessages();
+    renderDraft();
+    if (!selectedGroup) return;
 
-    unsubscribe = onSnapshot(q, async snap=>{
-      clearMessages(); lastDate="";
-      for(const docSnap of snap.docs){
-        const d = docSnap.data(); if(!d.createdAt) continue;
-        const createdAt = d.createdAt.toDate(), dateStr = formatDate(createdAt);
-        if(dateStr!==lastDate){ lastDate=dateStr; const div=document.createElement("div"); div.className="date-divider"; div.textContent=dateStr; messagesDiv.appendChild(div); }
+    const q = query(
+      collection(db, "groups", selectedGroup, "messages"),
+      orderBy("createdAt", "asc")
+    );
+    let lastDate = "";
 
-        const msgDiv=document.createElement("div"); msgDiv.className="msg";
-        const avatar=document.createElement("div"); avatar.className="avatar clickable";
-        const prof = await loadProfile(d.uid||"");
-        avatar.style.backgroundImage=`url(${prof.avatar||"https://i.imgur.com/4AiXzf8.png"})`;
-        avatar.title=prof.nick||"Безымянный"; avatar.onclick=()=>openUserModal(d.uid); avatar.tabIndex=0;
+    unsubscribe = onSnapshot(q, async (snap) => {
+      clearMessages();
+      lastDate = "";
+      for (const docSnap of snap.docs) {
+        const d = docSnap.data();
+        if (!d.createdAt) continue;
 
-        const cont=document.createElement("div"); cont.className="content";
-        const head=document.createElement("div"); head.className="msg-header";
-        const nick=document.createElement("span"); nick.textContent=prof.nick||"Безымянный"; nick.style.color=prof.color||"#ccc";
-        const time=document.createElement("span"); time.textContent=formatTime(createdAt); time.title=createdAt.toLocaleString();
-        head.append(nick,time); if(d.edited){ const ed=document.createElement("span"); ed.className="msg-edited"; ed.textContent=\"(ред.)\"; head.appendChild(ed); }
-        const body=document.createElement("div"); body.textContent=d.text||\"\";
+        const createdAt = d.createdAt.toDate();
+        const dateStr = formatDate(createdAt);
 
-        cont.append(head,body); msgDiv.append(avatar,cont); messagesDiv.appendChild(msgDiv);
+        if (dateStr !== lastDate) {
+          lastDate = dateStr;
+          const div = document.createElement("div");
+          div.className = "date-divider";
+          div.textContent = dateStr;
+          messagesDiv.appendChild(div);
+        }
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "msg";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar clickable";
+        const prof = await loadProfile(d.uid || "");
+        avatar.style.backgroundImage = `url(${
+          prof.avatar || "https://i.imgur.com/4AiXzf8.png"
+        })`;
+        avatar.title = prof.nick || "Безымянный";
+        avatar.onclick = () => openUserModal(d.uid);
+        avatar.tabIndex = 0;
+
+        const cont = document.createElement("div");
+        cont.className = "content";
+
+        const head = document.createElement("div");
+        head.className = "msg-header";
+
+        const nick = document.createElement("span");
+        nick.textContent = prof.nick || "Безымянный";
+        nick.style.color = prof.color || "#ccc";
+
+        const time = document.createElement("span");
+        time.textContent = formatTime(createdAt);
+        time.title = createdAt.toLocaleString();
+
+        head.append(nick, time);
+
+        if (d.edited) {
+          const ed = document.createElement("span");
+          ed.className = "msg-edited";
+          ed.textContent = "(ред.)";
+          head.appendChild(ed);
+        }
+
+        const body = document.createElement("div");
+        body.textContent = d.text || "";
+
+        cont.append(head, body);
+        msgDiv.append(avatar, cont);
+        messagesDiv.appendChild(msgDiv);
       }
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
   }
 
-  /* ---------- Отправка сообщения ---------- */
-  chatInputForm.addEventListener("submit", async e=>{
+  chatInputForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if(!currentUser||!selectedGroup) return;
-    const text = messageInput.value.trim(); if(!text) return;
+    if (!currentUser || !selectedGroup) return;
 
-    const data = { text, uid: currentUser.uid, createdAt: serverTimestamp(), edited:false, type:\"user\" };
-    try{
-      await addDoc(collection(db,\"groups\",selectedGroup,\"messages\"), data);
-      messageInput.value=\"\"; updateCharCount(); drafts[selectedGroup]=\"\";
-    }catch(err){ alert(\"Ошибка отправки: \"+err.message); }
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    const data = {
+      text,
+      uid: currentUser.uid,
+      createdAt: serverTimestamp(),
+      edited: false,
+      type: "user",
+    };
+
+    try {
+      await addDoc(
+        collection(db, "groups", selectedGroup, "messages"),
+        data
+      );
+      messageInput.value = "";
+      updateCharCount();
+      drafts[selectedGroup] = "";
+    } catch (err) {
+      alert("Ошибка отправки: " + err.message);
+    }
   });
 
-  /* ---------- Черновик + счётчик ---------- */
-  const updateCharCount = ()=>{
-    const len = messageInput.value.length, left = 1000-len;
-    charCount.textContent=left; chatInputForm.querySelector(\"button[type=submit]\").disabled=!len||len>1000;
+  const updateCharCount = () => {
+    const len = messageInput.value.length;
+    const left = 1000 - len;
+    charCount.textContent = left;
+    chatInputForm.querySelector("button[type=submit]").disabled =
+      !len || len > 1000;
   };
-  messageInput.addEventListener(\"input\",()=>{
+
+  messageInput.addEventListener("input", () => {
     updateCharCount();
-    if(selectedGroup) drafts[selectedGroup]=messageInput.value;
-  });
-  function renderDraft(){
-    messageInput.value = (selectedGroup&&drafts[selectedGroup])||\"\"; updateCharCount();
-  }
-  window.addEventListener(\"beforeunload\",()=>{
-    if(selectedGroup&&messageInput.value.trim()) drafts[selectedGroup]=messageInput.value;
+    if (selectedGroup) drafts[selectedGroup] = messageInput.value;
   });
 
-  /* ---------- Init ---------- */
+  function renderDraft() {
+    messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
+    updateCharCount();
+  }
+
+  window.addEventListener("beforeunload", () => {
+    if (selectedGroup && messageInput.value.trim())
+      drafts[selectedGroup] = messageInput.value;
+  });
+
   updateCharCount();
 </script>
+
 </body>
 </html>
