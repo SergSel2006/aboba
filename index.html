@@ -871,24 +871,6 @@
   });
 
   updateCharCount();
-
-//УДАЛИТЬ АДМИНКУ
-
-async function showAllGroupsWithPasswords() {
-  const snap = await getDocs(collection(db, "groups"));
-  snap.forEach(docSnap => {
-    const d = docSnap.data();
-    console.log(`🔐 ${docSnap.id}:`, {
-      name: d.name,
-      type: d.type,
-      password: d.password || "нет",
-      inviteCode: d.inviteCode || "нет",
-      allowed: d.allowed || []
-    });
-  });
-}
-showAllGroupsWithPasswords();
-
 </script>
 
 </body>
