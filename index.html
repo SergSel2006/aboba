@@ -832,24 +832,38 @@
     }
 
     chatInputForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!currentUser || !selectedGroup) return;
-      const text = messageInput.value.trim();
-      if (!text) return;
+     e.preventDefault();
 
-      try {
-        await addDoc(collection(db, "messages", selectedGroup, "msgs"), {
-          text,
-          uid: currentUser.uid,
-          createdAt: serverTimestamp(),
-          edited: false,
-        });
-        messageInput.value = "";
-        updateCharCount();
-        drafts[selectedGroup] = "";
-      } catch (e) {
-        alert("Ошибка отправки: " + e.message);
-      }
+if (!currentUser || !selectedGroup) return;
+
+const text = messageInput.value.trim();
+if (!text) return;
+
+const messageData = {
+  text,
+  uid: currentUser.uid,
+  createdAt: serverTimestamp(),
+  edited: false,
+  type: "user", // добавь, если есть в правилах
+};
+
+if (
+  typeof messageData.uid !== "string" ||
+  typeof messageData.text !== "string" ||
+  messageData.text.length > 1000
+) {
+  console.error("Невалидные данные для сообщения", messageData);
+  return;
+}
+
+try {
+  await addDoc(collection(db, "messages", selectedGroup, "msgs"), messageData);
+  messageInput.value = "";
+  updateCharCount();
+  drafts[selectedGroup] = "";
+} catch (e) {
+  alert("Ошибка отправки: " + e.message);
+}
     });
 
     function updateCharCount() {
