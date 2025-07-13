@@ -742,6 +742,21 @@
     messagesDiv.innerHTML = "";
   }
 
+    async function loadProfile(uid) {
+  if (!uid) return {};
+  if (profilesCache[uid]) return profilesCache[uid];
+  try {
+    const snap = await getDoc(doc(db, "profiles", uid));
+    const data = snap.exists() ? snap.data() : {};
+    profilesCache[uid] = data;
+    return data;
+  } catch (e) {
+    console.warn("Ошибка загрузки профиля", e);
+    return {};
+  }
+}
+
+    
   async function startChat() {
     if (unsubscribe) unsubscribe();
     clearMessages();
