@@ -471,7 +471,7 @@
   ➕ Добавить группу
 </button>
 
-  <script type="module">
+ <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
   import {
     getFirestore,
@@ -608,6 +608,7 @@
         groups.push({ id: name, name: g.name });
 
       selectedGroup = name;
+      localStorage.setItem('selectedGroup', selectedGroup);
       renderGroups();
       startChat();
       closeJoinModal.onclick();
@@ -643,10 +644,16 @@
       profileBtn.style.display = "flex";
       await loadUserProfile();
       await loadUserGroups();
-      groups = [];
-      selectedGroup = null;
+
+      const savedGroup = localStorage.getItem('selectedGroup');
+      if (savedGroup && groups.some(g => g.id === savedGroup)) {
+        selectedGroup = savedGroup;
+      } else {
+        selectedGroup = groups.length ? groups[0].id : null;
+      }
+
       renderGroups();
-      clearMessages();
+      startChat();
     } else {
       if (unsubscribe) {
         unsubscribe();
@@ -659,6 +666,7 @@
       selectedGroup = null;
       groupList.innerHTML = "";
       clearMessages();
+      localStorage.removeItem('selectedGroup');
     }
   });
 
@@ -715,6 +723,7 @@
       div.onclick = () => {
         if (g.id !== selectedGroup) {
           selectedGroup = g.id;
+          localStorage.setItem('selectedGroup', selectedGroup);
           renderGroups();
           startChat();
         }
@@ -744,21 +753,20 @@
     messagesDiv.innerHTML = "";
   }
 
-    async function loadProfile(uid) {
-  if (!uid) return {};
-  if (profilesCache[uid]) return profilesCache[uid];
-  try {
-    const snap = await getDoc(doc(db, "profiles", uid));
-    const data = snap.exists() ? snap.data() : {};
-    profilesCache[uid] = data;
-    return data;
-  } catch (e) {
-    console.warn("Ошибка загрузки профиля", e);
-    return {};
+  async function loadProfile(uid) {
+    if (!uid) return {};
+    if (profilesCache[uid]) return profilesCache[uid];
+    try {
+      const snap = await getDoc(doc(db, "profiles", uid));
+      const data = snap.exists() ? snap.data() : {};
+      profilesCache[uid] = data;
+      return data;
+    } catch (e) {
+      console.warn("Ошибка загрузки профиля", e);
+      return {};
+    }
   }
-}
 
-    
   async function startChat() {
     if (unsubscribe) unsubscribe();
     clearMessages();
@@ -889,56 +897,55 @@
 
   updateCharCount();
 
-    async function loadUserGroups() {
-  groups = [];
+  async function loadUserGroups() {
+    groups = [];
 
-  const groupsRef = collection(db, "groups");
-  const q = query(groupsRef);
-  const snap = await getDocs(q);
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef);
+    const snap = await getDocs(q);
 
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (data.allowed && data.allowed.includes(currentUser.uid)) {
-      groups.push({ id: docSnap.id, name: data.name || docSnap.id });
-    }
-  });
-
-  renderGroups();
-}
-
-    
-//ГРУППЫ
-    
-    /*async function createGroups() {
-  try {
-    await setDoc(doc(db, "groups", "aboba_global"), {
-      name: "Aboba Global",
-      type: "public",
-      allowed: [],
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.allowed && data.allowed.includes(currentUser.uid)) {
+        groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+      }
     });
 
-    await setDoc(doc(db, "groups", "abobiki_ds"), {
-      name: "Абобики с ДС",
-      type: "invite",
-      inviteCode: "abobads2025",
-      allowed: [],
-    });
-
-    await setDoc(doc(db, "groups", "druzhnyye_aboby"), {
-      name: "Дружные абобы",
-      type: "private",
-      inviteCode: "friendsonly",
-      password: "secret123",
-      allowed: [],
-    });
-
-    console.log("Группы созданы");
-  } catch (e) {
-    console.error("Ошибка при создании групп:", e);
+    renderGroups();
   }
-}
-createGroups();*/
+
+  // Optional: function to create example groups
+  /*async function createGroups() {
+    try {
+      await setDoc(doc(db, "groups", "aboba_global"), {
+        name: "Aboba Global",
+        type: "public",
+        allowed: [],
+      });
+
+      await setDoc(doc(db, "groups", "abobiki_ds"), {
+        name: "Абобики с ДС",
+        type: "invite",
+        inviteCode: "abobads2025",
+        allowed: [],
+      });
+
+      await setDoc(doc(db, "groups", "druzhnyye_aboby"), {
+        name: "Дружные абобы",
+        type: "private",
+        inviteCode: "friendsonly",
+        password: "secret123",
+        allowed: [],
+      });
+
+      console.log("Группы созданы");
+    } catch (e) {
+      console.error("Ошибка при создании групп:", e);
+    }
+  }
+  createGroups();*/
 </script>
+
 
 </body>
 </html>
