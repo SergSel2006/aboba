@@ -871,6 +871,25 @@
   });
 
   updateCharCount();
+
+//УДАЛИТЬ АДМИНКУ
+    import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+
+async function showAllGroupsWithPasswords() {
+  const snap = await getDocs(collection(db, "groups"));
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+    console.log(`🔐 ${docSnap.id}:`, {
+      name: d.name,
+      type: d.type,
+      password: d.password || "нет",
+      inviteCode: d.inviteCode || "нет",
+      allowed: d.allowed || []
+    });
+  });
+}
+showAllGroupsWithPasswords();
+
 </script>
 
 </body>
