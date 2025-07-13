@@ -871,6 +871,36 @@
   });
 
   updateCharCount();
+
+    async function createGroups() {
+  try {
+    await setDoc(doc(db, "groups", "aboba_global"), {
+      name: "Aboba Global",
+      type: "public",
+      allowed: [],
+    });
+
+    await setDoc(doc(db, "groups", "abobiki_ds"), {
+      name: "Абобики с ДС",
+      type: "invite",
+      inviteCode: "abobads2025",
+      allowed: [],
+    });
+
+    await setDoc(doc(db, "groups", "druzhnyye_aboby"), {
+      name: "Дружные абобы",
+      type: "private",
+      inviteCode: "friendsonly",
+      password: "secret123",
+      allowed: [],
+    });
+
+    console.log("Группы созданы");
+  } catch (e) {
+    console.error("Ошибка при создании групп:", e);
+  }
+}
+createGroups();
 </script>
 
 </body>
