@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <!-- Добавил запрет масштабирования и зума -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>абоба</title>
   <style>
@@ -10,8 +9,6 @@
     * {
       box-sizing: border-box;
     }
-
-    /* Запрет горизонтального скролла, чтобы не дергало вбок */
     html, body {
       margin: 0;
       padding: 0;
@@ -22,34 +19,24 @@
       background: #121212;
       color: #eaeaea;
       -webkit-overflow-scrolling: touch;
-
-      /* Вот тут запрет сдвигов по горизонтали */
       overflow-x: hidden;
-
-      /* Немного для плавности и предотвращения дерганий */
       touch-action: manipulation;
       overscroll-behavior: contain;
     }
-
-    /* ===== LAYOUT ROOT ===== */
     #app {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 0;
     }
-
     #chatLayout {
       flex: 1;
       display: flex;
       min-height: 0;
       overflow: hidden;
-      /* Для фикса на мобилках в JS */
       position: relative;
       width: 100%;
     }
-
-    /* ===== LOGIN ===== */
     #loginForm {
       flex: 1;
       display: none;
@@ -58,7 +45,6 @@
       align-items: center;
       padding: 2em;
     }
-
     #googleLoginBtn {
       background: #4285f4;
       color: #fff;
@@ -67,17 +53,13 @@
       cursor: pointer;
       font-weight: 600;
     }
-
     #googleLoginBtn:hover {
       background: #357ae8;
     }
-
     #loginMsg {
       margin-top: 1em;
       color: #f44336;
     }
-
-    /* ===== GROUP LIST ===== */
     #groupList {
       width: 220px;
       background: #1c1c1c;
@@ -87,7 +69,6 @@
       flex-direction: column;
       border-right: 1px solid #2a2a2a;
     }
-
     .group-item {
       padding: 0.6em;
       margin-bottom: 0.4em;
@@ -96,17 +77,13 @@
       cursor: pointer;
       user-select: none;
     }
-
     .group-item:hover {
       background: #3a3a3a;
     }
-
     .group-item.active {
       background: #505050;
       font-weight: bold;
     }
-
-    /* ===== CHAT AREA ===== */
     #chatArea {
       flex: 1;
       display: flex;
@@ -115,16 +92,14 @@
       background: #141414;
       width: 100%;
     }
-
     #groupNameDisplay {
       padding: 1em;
       font-size: 1.2em;
       font-weight: 600;
       border-bottom: 1px solid #2a2a2a;
       flex-shrink: 0;
+      user-select: none;
     }
-
-    /* ===== MESSAGES ===== */
     #messages {
       flex: 1;
       min-height: 0;
@@ -133,22 +108,33 @@
       flex-direction: column;
       gap: 0.75em;
       padding: 1em;
-      padding-bottom: 90px; /* место под поле ввода */
-      scroll-behavior: smooth; /* плавный скролл */
+      padding-bottom: 90px;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+      word-break: break-word;
+      white-space: pre-wrap;
     }
-
+    .date-divider {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      font-size: 0.9em;
+      margin: 1em 0 0.5em;
+      user-select: none;
+    }
     .msg {
       display: flex;
       gap: 0.75em;
+      align-items: flex-start;
+      word-break: break-word;
+      white-space: pre-wrap;
     }
-
     .msg.server {
       justify-content: center;
       color: #aaa;
       font-style: italic;
+      user-select: none;
     }
-
     .avatar {
       width: 36px;
       height: 36px;
@@ -156,24 +142,48 @@
       background-size: cover;
       background-position: center;
       flex-shrink: 0;
+      user-select: none;
     }
-
     .avatar.clickable {
       cursor: pointer;
     }
-
     .content {
       flex: 1;
+      user-select: text;
     }
-
     .msg-header {
       display: flex;
       justify-content: space-between;
       font-size: 0.9em;
       margin-bottom: 2px;
+      user-select: none;
     }
-
-    /* ===== CHAT INPUT (fixed) ===== */
+    .msg-actions {
+      display: flex;
+      gap: 0.5em;
+      align-items: center;
+      margin-left: 0.3em;
+      user-select: none;
+    }
+    .msg-actions button {
+      background: transparent;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 1em;
+      padding: 0;
+      transition: color 0.2s ease;
+    }
+    .msg-actions button:hover {
+      color: #fff;
+    }
+    .msg-edited {
+      font-style: italic;
+      font-size: 0.8em;
+      color: #aaa;
+      margin-left: 6px;
+      user-select: none;
+    }
     #chatInput {
       position: fixed;
       bottom: 0;
@@ -186,10 +196,8 @@
       background: #1b1b1b;
       border-top: 1px solid #2a2a2a;
       z-index: 1000;
-      /* Чтобы не вылазил за экран */
       box-sizing: border-box;
     }
-
     #messageInput {
       flex: 1;
       padding: 0.6em;
@@ -197,16 +205,25 @@
       background: #2a2a2a;
       color: #fff;
       border: none;
-      font-size: 16px; /* Крайне важно! Чтобы не зумило при фокусе на мобилках */
+      font-size: 16px;
       outline-offset: 0;
       outline: none;
       caret-color: #fff;
+      resize: none;
+      max-height: 100px;
+      overflow-y: auto;
     }
-
     #messageInput::placeholder {
       color: #888;
     }
-
+    #charCount {
+      margin-left: 8px;
+      font-size: 0.8em;
+      color: #888;
+      user-select: none;
+      min-width: 50px;
+      text-align: right;
+    }
     #chatInput button {
       margin-left: 0.5em;
       background: #444;
@@ -219,12 +236,13 @@
       user-select: none;
       transition: background-color 0.2s ease;
     }
-
-    #chatInput button:hover {
+    #chatInput button:hover:enabled {
       background: #555;
     }
-
-    /* ===== PROFILE BUTTON ===== */
+    #chatInput button:disabled {
+      background: #333;
+      cursor: default;
+    }
     #profileBtn {
       position: fixed;
       top: 1em;
@@ -243,12 +261,9 @@
       user-select: none;
       transition: background-color 0.2s ease;
     }
-
     #profileBtn:hover {
       background: #3a3a3a;
     }
-
-    /* ===== PROFILE PANEL ===== */
     #profilePanel {
       position: fixed;
       top: 60px;
@@ -262,7 +277,6 @@
       z-index: 1050;
       box-sizing: border-box;
     }
-
     #profilePanel input,
     #profilePanel textarea,
     #profilePanel button {
@@ -276,19 +290,17 @@
       font-size: 1em;
       box-sizing: border-box;
     }
-
     #profilePanel textarea {
       resize: none;
       min-height: 50px;
+      max-height: 100px;
+      overflow-y: auto;
     }
-
     #profilePanel small {
       display: block;
       text-align: right;
       color: #888;
     }
-
-    /* ===== MODAL ===== */
     .modal {
       display: none;
       position: fixed;
@@ -301,7 +313,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .modal-content {
       background: #1e1e1e;
       padding: 20px;
@@ -312,7 +323,6 @@
       position: relative;
       box-sizing: border-box;
     }
-
     .modal-avatar {
       width: 80px;
       height: 80px;
@@ -321,7 +331,6 @@
       background-position: center;
       margin: 0 auto 10px;
     }
-
     .close {
       position: absolute;
       top: 10px;
@@ -331,8 +340,6 @@
       color: #aaa;
       user-select: none;
     }
-
-    /* ===== MOBILE ===== */
     @media (max-width: 768px) {
       #groupList {
         width: 100%;
@@ -343,7 +350,6 @@
         border-bottom: 1px solid #2a2a2a;
         border-right: none;
       }
-
       .group-item {
         flex: 0 0 auto;
         margin: 0 0.3em;
@@ -351,20 +357,16 @@
         border-radius: 20px;
         font-size: 0.9em;
       }
-
       #chatLayout {
         flex-direction: column;
       }
-
       #messages {
         padding: 0.5em 1em;
         padding-bottom: 90px;
       }
-
       #chatInput {
         padding: 0 0.5em;
       }
-
       #profilePanel {
         right: 5vw;
         width: 90vw;
@@ -374,46 +376,51 @@
 </head>
 <body>
   <div id="app">
-    <div id="loginForm">
+    <div id="loginForm" role="region" aria-label="Форма входа">
       <h2>Войти через Google</h2>
-      <button id="googleLoginBtn">🔐 Войти с Google</button>
-      <p id="loginMsg"></p>
+      <button id="googleLoginBtn" aria-label="Войти через Google">🔐 Войти с Google</button>
+      <p id="loginMsg" role="alert" aria-live="assertive"></p>
     </div>
 
-    <div id="chatLayout">
-      <aside id="groupList"></aside>
+    <div id="chatLayout" role="main" aria-live="polite" aria-atomic="false">
+      <aside id="groupList" role="list" aria-label="Список групп чата"></aside>
       <main id="chatArea">
-        <div id="groupNameDisplay"></div>
-        <div id="messages"></div>
+        <div id="groupNameDisplay" aria-live="polite" aria-atomic="true"></div>
+        <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
       </main>
     </div>
 
-    <form id="chatInput">
-      <input
-        type="text"
+    <form id="chatInput" aria-label="Форма отправки сообщений">
+      <textarea
         id="messageInput"
         placeholder="Написать..."
         autocomplete="off"
         required
         spellcheck="false"
-      />
-      <button type="submit">Отправить</button>
+        rows="1"
+        maxlength="1000"
+        aria-describedby="charCount"
+        aria-label="Поле ввода сообщения"
+      ></textarea>
+      <div id="charCount" aria-live="polite">1000</div>
+      <button type="submit" disabled>Отправить</button>
     </form>
 
-    <button id="profileBtn" title="Настройки профиля">⚙</button>
+    <button id="profileBtn" title="Настройки профиля" aria-haspopup="true" aria-expanded="false">⚙</button>
 
-    <div id="profilePanel">
-      <form id="profileForm">
-        <input id="profileNick" placeholder="Ник" autocomplete="off" spellcheck="false" />
-        <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" spellcheck="false" />
-        <input type="color" id="profileColor" title="Цвет ника" />
+    <div id="profilePanel" role="region" aria-label="Панель настроек профиля" tabindex="-1">
+      <form id="profileForm" novalidate>
+        <input id="profileNick" placeholder="Ник" autocomplete="off" spellcheck="false" aria-label="Ник" />
+        <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" spellcheck="false" aria-label="URL аватара" />
+        <input type="color" id="profileColor" title="Цвет ника" aria-label="Цвет ника" />
         <textarea
           id="profileStatus"
           maxlength="80"
           placeholder="Статус"
           spellcheck="false"
+          aria-label="Статус"
         ></textarea>
-        <small id="statusCounter">80</small>
+        <small id="statusCounter" aria-live="polite">80</small>
         <button type="submit">Сохранить</button>
         <button type="button" id="logoutBtn">Выйти</button>
       </form>
@@ -425,6 +432,8 @@
     class="modal"
     aria-hidden="true"
     role="dialog"
+    aria-modal="true"
+    aria-labelledby="userModalNick"
   >
     <div class="modal-content">
       <span
@@ -435,12 +444,9 @@
         aria-label="Закрыть"
         >&times;</span
       >
-      <div
-        class="modal-avatar"
-        id="userModalAvatar"
-      ></div>
-      <h3 id="userModalNick">Имя</h3>
-      <p id="userModalStatus">Статус пользователя</p>
+      <div class="modal-avatar" id="userModalAvatar" aria-hidden="true"></div>
+      <h3 id="userModalNick"></h3>
+      <p id="userModalStatus"></p>
       <button id="userModalMsgBtn" disabled>💬 Написать (скоро)</button>
     </div>
   </div>
@@ -489,6 +495,7 @@
     const messagesDiv = document.getElementById("messages");
     const chatInputForm = document.getElementById("chatInput");
     const messageInput = document.getElementById("messageInput");
+    const charCount = document.getElementById("charCount");
     const profileBtn = document.getElementById("profileBtn");
     const profilePanel = document.getElementById("profilePanel");
     const profileForm = document.getElementById("profileForm");
@@ -511,11 +518,11 @@
     let selectedGroup = null;
     let unsubscribe = null;
     const profilesCache = {};
+    const drafts = {}; // Черновики сообщений по группам
 
     function formatTime(date) {
       return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
-
     function formatDate(date) {
       const now = new Date();
       const diff = now - date;
@@ -555,18 +562,24 @@
       userModalMsgBtn.disabled = true;
       userProfileModal.style.display = "flex";
       userProfileModal.setAttribute("aria-hidden", "false");
+      userProfileModal.focus();
     }
 
     closeUserModalBtn.onclick = () => {
       userProfileModal.style.display = "none";
       userProfileModal.setAttribute("aria-hidden", "true");
+      profileBtn.focus();
     };
     userProfileModal.onclick = (e) => {
       if (e.target === userProfileModal) {
-        userProfileModal.style.display = "none";
-        userProfileModal.setAttribute("aria-hidden", "true");
+        closeUserModalBtn.onclick();
       }
     };
+    userProfileModal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeUserModalBtn.onclick();
+      }
+    });
 
     profileStatus.addEventListener("input", () => {
       statusCounter.textContent = 80 - profileStatus.value.length;
@@ -606,29 +619,31 @@
         renderGroups();
         startChat();
 
-        addSystemMessage(`${currentUser.displayName || "Пользователь"} присоединился!`);
-      } else {
-        loginForm.style.display = "block";
-        chatLayout.style.display = "none";
-        profileBtn.style.display = "none";
+        addSystemMessage(`${currentUser.displayName || "Пользователь"} присоединился`);
 
+      } else {
         if (unsubscribe) {
           unsubscribe();
           unsubscribe = null;
         }
+        loginForm.style.display = "flex";
+        chatLayout.style.display = "none";
+        profileBtn.style.display = "none";
+        selectedGroup = null;
+        groups = [];
+        messagesDiv.innerHTML = "";
+        groupList.innerHTML = "";
       }
     });
 
     async function loadUserProfile() {
-      if (!currentUser) return;
-      const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-      if (snap.exists()) {
-        const p = snap.data();
-        profilesCache[currentUser.uid] = p;
-        profileNick.value = p.nick || "";
-        profileAvatar.value = p.avatar || "";
-        profileColor.value = p.color || "#cccccc";
-        profileStatus.value = p.status || "";
+      const profileSnap = await getDoc(doc(db, "profiles", currentUser.uid));
+      if (profileSnap.exists()) {
+        const data = profileSnap.data();
+        profileNick.value = data.nick || "";
+        profileAvatar.value = data.avatar || "";
+        profileColor.value = data.color || "#cccccc";
+        profileStatus.value = data.status || "";
         statusCounter.textContent = 80 - profileStatus.value.length;
       } else {
         profileNick.value = "";
@@ -639,106 +654,174 @@
       }
     }
 
-    profileForm.onsubmit = async (e) => {
+    profileBtn.onclick = () => {
+      if (profilePanel.style.display === "block") {
+        profilePanel.style.display = "none";
+        profileBtn.setAttribute("aria-expanded", "false");
+      } else {
+        profilePanel.style.display = "block";
+        profilePanel.focus();
+        profileBtn.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    profileForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!currentUser) return;
 
-      const newProfile = {
-        nick: profileNick.value.trim() || "Безымянный",
+      await setDoc(doc(db, "profiles", currentUser.uid), {
+        nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
         avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-        color: profileColor.value || "#cccccc",
+        color: profileColor.value,
+        status: profileStatus.value.trim(),
+      });
+      profilePanel.style.display = "none";
+      profileBtn.setAttribute("aria-expanded", "false");
+      profilesCache[currentUser.uid] = {
+        nick: profileNick.value.trim(),
+        avatar: profileAvatar.value.trim(),
+        color: profileColor.value,
         status: profileStatus.value.trim(),
       };
-
-      await setDoc(doc(db, "profiles", currentUser.uid), newProfile);
-      profilesCache[currentUser.uid] = newProfile;
-      alert("Профиль сохранён!");
-    };
+      addSystemMessage("Профиль сохранён");
+    });
 
     function renderGroups() {
       groupList.innerHTML = "";
       groups.forEach((g) => {
-        const el = document.createElement("div");
-        el.className = "group-item" + (g.id === selectedGroup ? " active" : "");
-        el.textContent = g.name;
-        el.onclick = () => {
-          selectedGroup = g.id;
-          startChat();
-          renderGroups();
+        const div = document.createElement("div");
+        div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
+        div.textContent = g.name;
+        div.setAttribute("role", "listitem");
+        div.tabIndex = 0;
+        div.onclick = () => {
+          if (g.id !== selectedGroup) {
+            selectedGroup = g.id;
+            renderGroups();
+            startChat();
+          }
         };
-        groupList.appendChild(el);
+        div.onkeydown = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            div.onclick();
+          }
+        };
+        groupList.appendChild(div);
       });
+      groupNameDisplay.textContent =
+        groups.find((g) => g.id === selectedGroup)?.name || "Чат";
     }
 
-    function unsubscribeChat() {
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
-      }
+    function addSystemMessage(text) {
+      const div = document.createElement("div");
+      div.className = "msg server";
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function clearMessages() {
+      messagesDiv.innerHTML = "";
     }
 
     async function startChat() {
+      if (unsubscribe) unsubscribe();
+
+      clearMessages();
+      renderDraft();
+
       if (!selectedGroup) return;
-      messagesDiv.innerHTML = "";
 
-      const q = query(collection(db, "groups", selectedGroup, "messages"), orderBy("createdAt"));
+      const messagesQuery = query(
+        collection(db, "messages", selectedGroup, "msgs"),
+        orderBy("createdAt", "asc")
+      );
 
-      unsubscribeChat();
+      let lastDateStr = "";
 
-      unsubscribe = onSnapshot(q, async (snap) => {
+      unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
         messagesDiv.innerHTML = "";
-        let lastDate = "";
+        lastDateStr = "";
 
-        for (const docSnap of snap.docs) {
-          const m = docSnap.data();
-          const date = m.createdAt?.toDate?.() || new Date();
-          const dateStr = date.toDateString();
+        for (const docChange of snapshot.docChanges()) {
+          // Для лучшей производительности все обновляем разом
+        }
 
-          if (dateStr !== lastDate) {
-            const d = document.createElement("div");
-            d.className = "date-divider";
-            d.innerText = formatDate(date);
-            messagesDiv.appendChild(d);
-            lastDate = dateStr;
+        for (const docSnap of snapshot.docs) {
+          const data = docSnap.data();
+
+          if (!data.createdAt) continue;
+
+          const createdAt = data.createdAt.toDate();
+          const dateStr = formatDate(createdAt);
+
+          if (dateStr !== lastDateStr) {
+            lastDateStr = dateStr;
+            const dateDivider = document.createElement("div");
+            dateDivider.className = "date-divider";
+            dateDivider.textContent = dateStr;
+            messagesDiv.appendChild(dateDivider);
           }
-
-          if (m.type === "server") {
-            const serverMsg = document.createElement("div");
-            serverMsg.className = "msg server";
-            serverMsg.textContent = m.text;
-            messagesDiv.appendChild(serverMsg);
-            continue;
-          }
-
-          const profile = await loadProfile(m.uid);
 
           const msgDiv = document.createElement("div");
           msgDiv.className = "msg";
+          msgDiv.tabIndex = -1;
 
-          const avatarDiv = document.createElement("div");
-          avatarDiv.className = "avatar";
-          avatarDiv.style.backgroundImage = `url(${profile.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+          // Автор
+          const authorAvatar = document.createElement("div");
+          authorAvatar.className = "avatar clickable";
+          authorAvatar.tabIndex = 0;
+          authorAvatar.setAttribute("aria-label", "Профиль автора сообщения");
+          authorAvatar.style.backgroundImage = "url('https://i.imgur.com/4AiXzf8.png')";
 
-          if (m.type === "user") {
-            avatarDiv.classList.add("clickable");
-            avatarDiv.onclick = () => openUserModal(m.uid);
-          }
+          const author = data.uid || "";
+          const profile = await loadProfile(author);
+          authorAvatar.style.backgroundImage = `url(${profile.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+          authorAvatar.title = profile.nick || "Безымянный";
+
+          authorAvatar.onclick = () => {
+            openUserModal(author);
+          };
+          authorAvatar.onkeydown = (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openUserModal(author);
+            }
+          };
 
           const contentDiv = document.createElement("div");
           contentDiv.className = "content";
 
-          let headerHTML = "";
-          if (m.type === "user") {
-            headerHTML = `
-          <div class="msg-header">
-            <span class="username" style="color:${profile.color}">${profile.nick}</span>
-            <span class="msg-time">${formatTime(date)}</span>
-          </div>`;
+          const headerDiv = document.createElement("div");
+          headerDiv.className = "msg-header";
+
+          const nickSpan = document.createElement("span");
+          nickSpan.textContent = profile.nick || "Безымянный";
+          nickSpan.style.color = profile.color || "#ccc";
+          nickSpan.title = profile.status || "";
+
+          const timeSpan = document.createElement("span");
+          timeSpan.textContent = formatTime(createdAt);
+          timeSpan.title = createdAt.toLocaleString();
+
+          headerDiv.appendChild(nickSpan);
+          headerDiv.appendChild(timeSpan);
+
+          contentDiv.appendChild(headerDiv);
+
+          const textDiv = document.createElement("div");
+          textDiv.textContent = data.text || "";
+          contentDiv.appendChild(textDiv);
+
+          if (data.edited) {
+            const editedSpan = document.createElement("span");
+            editedSpan.className = "msg-edited";
+            editedSpan.textContent = "(ред.)";
+            headerDiv.appendChild(editedSpan);
           }
 
-          contentDiv.innerHTML = headerHTML + `<div>${m.text}</div>`;
-
-          msgDiv.appendChild(avatarDiv);
+          msgDiv.appendChild(authorAvatar);
           msgDiv.appendChild(contentDiv);
 
           messagesDiv.appendChild(msgDiv);
@@ -748,84 +831,56 @@
       });
     }
 
-    async function addSystemMessage(text) {
-      if (!selectedGroup) return;
-      try {
-        await addDoc(collection(db, "groups", selectedGroup, "messages"), {
-          uid: "system",
-          text,
-          createdAt: serverTimestamp(),
-          type: "server",
-        });
-      } catch (e) {
-        console.error("Ошибка добавления системного сообщения:", e);
-      }
-    }
-
-    chatInputForm.onsubmit = async (e) => {
+    chatInputForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!currentUser) return;
-
+      if (!currentUser || !selectedGroup) return;
       const text = messageInput.value.trim();
       if (!text) return;
 
-      const msgData = {
-        uid: currentUser.uid,
-        text,
-        createdAt: serverTimestamp(),
-        type: "user",
-      };
-
       try {
-        await addDoc(collection(db, "groups", selectedGroup, "messages"), msgData);
+        await addDoc(collection(db, "messages", selectedGroup, "msgs"), {
+          text,
+          uid: currentUser.uid,
+          createdAt: serverTimestamp(),
+          edited: false,
+        });
         messageInput.value = "";
+        updateCharCount();
+        drafts[selectedGroup] = "";
       } catch (e) {
         alert("Ошибка отправки: " + e.message);
       }
-    };
+    });
 
-    profileBtn.onclick = () => {
-      profilePanel.style.display = profilePanel.style.display === "block" ? "none" : "block";
-    };
+    function updateCharCount() {
+      const len = messageInput.value.length;
+      const left = 1000 - len;
+      charCount.textContent = left;
+      chatInputForm.querySelector("button[type=submit]").disabled = !len || len > 1000;
+    }
 
-    document.addEventListener("click", (e) => {
-      if (!profilePanel.contains(e.target) && e.target !== profileBtn) {
-        profilePanel.style.display = "none";
+    messageInput.addEventListener("input", () => {
+      updateCharCount();
+      if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+    });
+
+    function renderDraft() {
+      if (selectedGroup && drafts[selectedGroup]) {
+        messageInput.value = drafts[selectedGroup];
+      } else {
+        messageInput.value = "";
+      }
+      updateCharCount();
+    }
+
+    window.addEventListener("beforeunload", () => {
+      if (selectedGroup && messageInput.value.trim()) {
+        drafts[selectedGroup] = messageInput.value;
       }
     });
 
-    /* ====== FIX MOBILE KEYBOARD JANK ====== */
-    let scrollYBeforeFocus = 0;
-    messageInput.addEventListener("focus", () => {
-      // Запоминаем скролл, фиксируем позицию chatLayout, чтобы не дергалось
-      scrollYBeforeFocus = window.scrollY || window.pageYOffset;
-
-      chatLayout.style.position = "fixed";
-      chatLayout.style.top = `-${scrollYBeforeFocus}px`;
-      chatLayout.style.left = "0";
-      chatLayout.style.right = "0";
-      chatLayout.style.width = "100%";
-      chatLayout.style.height = "calc(100vh - 60px)"; // Высота минус высота инпута
-
-      // Обязательно задержка, чтобы все применилось корректно
-      setTimeout(() => {
-        window.scrollTo(0, scrollYBeforeFocus);
-      }, 100);
-    });
-
-    messageInput.addEventListener("blur", () => {
-      chatLayout.style.position = "";
-      chatLayout.style.top = "";
-      chatLayout.style.left = "";
-      chatLayout.style.right = "";
-      chatLayout.style.width = "";
-      chatLayout.style.height = "";
-      window.scrollTo(0, scrollYBeforeFocus);
-    });
-
-    // Базовый хак для iOS чтобы избежать дерганий
-    // Можно потом доработать, если захочешь
-
+    // Инициализация
+    updateCharCount();
   </script>
 </body>
 </html>
