@@ -406,6 +406,31 @@
         right: 5vw;
         width: 90vw;
       }
+
+      .sidebar-divider {
+  padding: 6px 10px;
+  font-size: 0.85em;
+  color: #999;
+  border-top: 1px solid #333;
+}
+
+.group-item .avatar {
+  width: 28px;
+  height: 28px;
+  background-size: cover;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
     }
 
     /* Общее для интерактивных элементов */
@@ -664,7 +689,7 @@
 
       selectedGroup = name;
       localStorage.setItem('selectedGroup', selectedGroup);
-      renderGroups();
+      renderSidebar();
       startChat();
       closeJoinModal.onclick();
     } catch (err) {
@@ -711,7 +736,7 @@
         selectedGroup = groups.length ? groups[0].id : null;
       }
 
-      renderGroups();
+      renderSidebar();
       startChat();
     } else {
       if (unsubscribe) {
@@ -775,35 +800,100 @@
     statusCounter.textContent = 80 - profileStatus.value.length;
   }
 
-  // Рендерим список групп
-  function renderGroups() {
-    groupList.innerHTML = "";
+  // Рендерим сайдбар
+  async function renderSidebar() {
+  groupList.innerHTML = "";
+
+  // Загружаем ДМ-чаты
+  const dms = await loadDMChats();
+
+  if (dms.length) {
+    const dmHeader = document.createElement("div");
+    dmHeader.className = "sidebar-divider";
+    dmHeader.textContent = "ЛС";
+    groupList.appendChild(dmHeader);
+
+    for (const dm of dms) {
+      const prof = await loadProfile(dm.otherUid);
+      const item = document.createElement("div");
+      item.className =
+        "group-item" +
+        (currentDM?.chatId === dm.chatId ? " active" : "");
+      item.tabIndex = 0;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+
+      const nick = document.createElement("span");
+      nick.textContent = prof.nick || "Безымянный";
+      nick.style.color = prof.color || "#ccc";
+      nick.className = "nick";
+
+      item.append(avatar, nick);
+
+      item.onclick = () => {
+        selectedGroup = null;
+        currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
+        localStorage.setItem("selectedGroup", ""); // очистим
+        startChat();
+        renderSidebar();
+      };
+
+      item.onkeydown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          item.onclick();
+        }
+      };
+
+      groupList.appendChild(item);
+    }
+  }
+
+  if (groups.length) {
+    const groupHeader = document.createElement("div");
+    groupHeader.className = "sidebar-divider";
+    groupHeader.textContent = "Группы";
+    groupList.appendChild(groupHeader);
+
     groups.forEach((g) => {
       const div = document.createElement("div");
-      div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
+      div.className =
+        "group-item" + (g.id === selectedGroup ? " active" : "");
       div.textContent = g.name;
       div.tabIndex = 0;
-      div.setAttribute("role", "listitem");
+
       div.onclick = () => {
         if (g.id !== selectedGroup) {
           selectedGroup = g.id;
-          localStorage.setItem('selectedGroup', selectedGroup);
-          renderGroups();
+          currentDM = null;
+          localStorage.setItem("selectedGroup", selectedGroup);
+          renderSidebar();
           startChat();
         }
       };
+
       div.onkeydown = (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           div.onclick();
         }
       };
+
       groupList.appendChild(div);
     });
-    groupList.appendChild(openJoinModalBtn);
-    groupNameDisplay.textContent =
-      groups.find((g) => g.id === selectedGroup)?.name || "—";
   }
+
+  groupList.appendChild(openJoinModalBtn);
+
+  groupNameDisplay.textContent =
+    selectedGroup
+      ? groups.find((g) => g.id === selectedGroup)?.name || "—"
+      : currentDM
+      ? "ЛС с " + (await loadProfile(currentDM.otherUid)).nick || "Безымянный"
+      : "—";
+}
 
   // Добавляем системное сообщение (типа "Профиль сохранён")
   function addSystemMessage(txt) {
@@ -1046,7 +1136,27 @@ async function loadUserGroups() {
     }
   });
 
-  renderGroups();
+  async function loadDMChats() {
+  const q = query(collection(db, "dmChats"));
+  const snap = await getDocs(q);
+  const dmChats = [];
+
+  snap.forEach((docSnap) => {
+    const chatId = docSnap.id;
+    if (!chatId.includes(currentUser.uid)) return;
+
+    const parts = chatId.split("_");
+    const otherUid = parts.find((uid) => uid !== currentUser.uid);
+    if (!otherUid) return;
+
+    dmChats.push({ chatId, otherUid });
+  });
+
+  return dmChats;
+}
+
+
+  renderSidebar();
 }
 
 // Модалка пользователя: открытие с заполнением данных
