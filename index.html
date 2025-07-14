@@ -665,13 +665,14 @@ joinGroupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   joinGroupError.style.display = "none";
 
-  const name = joinGroupName.value.trim();
+  const name = joinGroupName.value.trim(); // может быть id группы или ник
   const code = joinGroupCode.value.trim();
   const pass = joinGroupPassword.value.trim();
 
   if (!currentUser || !name) return;
 
   try {
+    // 1. Сначала пробуем как группу
     const snap = await getDoc(doc(db, "groups", name));
     if (snap.exists()) {
       const g = snap.data();
@@ -687,10 +688,10 @@ joinGroupForm.addEventListener("submit", async (e) => {
         await setDoc(doc(db, "groups", name), { allowed }, { merge: true });
       }
 
-      if (!groups.some((gr) => gr.id === name))
-        groups.push({ id: name, name: g.name });
-
+      // Перезагрузка групп и обновление интерфейса — вот тут добавляем:
+      await loadUserGroups();
       selectedGroup = name;
+      currentDM = null;
       localStorage.setItem("selectedGroup", selectedGroup);
       renderSidebar();
       startChat();
@@ -698,11 +699,12 @@ joinGroupForm.addEventListener("submit", async (e) => {
       return;
     }
 
+    // 2. Если не группа — ищем пользователя по нику
     const q = query(collection(db, "profiles"), where("nick", "==", name));
     const res = await getDocs(q);
     if (res.empty) return showErr("Ни группа, ни пользователь с таким ником не найдены");
-
-    const userDoc = res.docs[0];
+    
+    const userDoc = res.docs[0]; // берём первого найденного
     const otherUid = userDoc.id;
     if (otherUid === currentUser.uid) return showErr("Это ваш ник");
 
@@ -710,6 +712,9 @@ joinGroupForm.addEventListener("submit", async (e) => {
     currentDM = { chatId, otherUid };
     selectedGroup = null;
     localStorage.setItem("selectedGroup", "");
+
+    // Обновляем список ДМ чатов и UI
+    await loadDMChats();
     renderSidebar();
     startChat();
     closeJoinModal.onclick();
