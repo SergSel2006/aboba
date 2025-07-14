@@ -491,7 +491,7 @@
       <div class="modal-avatar" id="userModalAvatar" aria-hidden="true"></div>
       <h3 id="userModalNick"></h3>
       <p id="userModalStatus"></p>
-      <button id="userModalMsgBtn" disabled>💬 Написать (скоро)</button>
+      <button id="userModalMsgBtn" enabled>💬 Написать</button>
     </div>
   </div>
 
@@ -499,7 +499,7 @@
   <div id="joinGroupModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-content">
       <span id="closeJoinModal" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
-      <h3>Присоединиться к группе</h3>
+      <h3>Добавить группу/чат</h3>
       <form id="joinGroupForm">
         <input type="text" id="joinGroupName" placeholder="Название группы" required />
         <input type="text" id="joinGroupCode" placeholder="Код (если есть)" />
@@ -912,35 +912,44 @@
   }
 
   // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
-  chatInputForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!currentUser || !selectedGroup) return;
+chatInputForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser || (!selectedGroup && !currentDM)) return;
 
-    const text = messageInput.value.trim();
-    if (!text) return;
+  const text = messageInput.value.trim();
+  if (!text) return;
 
-    const data = {
-      text,
-      uid: currentUser.uid,
-      createdAt: serverTimestamp(),
-      edited: false,
-      type: "user",
-    };
+  const data = {
+    text,
+    uid: currentUser.uid,
+    createdAt: serverTimestamp(),
+    edited: false,
+    type: selectedGroup ? "user" : "dm",
+  };
 
-    try {
+  try {
+    if (selectedGroup) {
       await addDoc(
         collection(db, "groups", selectedGroup, "messages"),
         data
       );
-      messageInput.value = "";
-      updateCharCount();
       drafts[selectedGroup] = "";
-    } catch (err) {
-      alert("Ошибка отправки: " + err.message);
+    } else if (currentDM?.chatId) {
+      await addDoc(
+        collection(db, "dmChats", currentDM.chatId, "messages"),
+        data
+      );
+      drafts[currentDM.chatId] = "";
     }
-  });
 
- const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    messageInput.value = "";
+    updateCharCount();
+  } catch (err) {
+    alert("Ошибка отправки: " + err.message);
+  }
+});
+
+const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
 // Обработка нажатия клавиш Enter и Shift+Enter с учётом мобильных и ПК
 messageInput.addEventListener("keydown", (e) => {
@@ -967,6 +976,11 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
+// Получаем айди для ЛС
+function getDMChatId(uid1, uid2) {
+  return [uid1, uid2].sort().join("_"); // стабильный порядок
+}
+
 // Автоматический ресайз textarea по содержимому
 function autoResizeTextarea() {
   messageInput.style.height = "auto";
@@ -977,7 +991,11 @@ function autoResizeTextarea() {
 messageInput.addEventListener("input", () => {
   autoResizeTextarea();
   updateCharCount();
-  if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+  if (selectedGroup) {
+    drafts[selectedGroup] = messageInput.value;
+  } else if (currentDM?.chatId) {
+    drafts[currentDM.chatId] = messageInput.value;
+  }
 });
 
 // Обновляем счетчик символов и кнопку отправки
@@ -991,15 +1009,23 @@ const updateCharCount = () => {
 
 // Рендерим черновик и обновляем интерфейс
 function renderDraft() {
-  messageInput.value = (selectedGroup && drafts[selectedGroup]) || "";
+  if (selectedGroup) {
+    messageInput.value = drafts[selectedGroup] || "";
+  } else if (currentDM?.chatId) {
+    messageInput.value = drafts[currentDM.chatId] || "";
+  } else {
+    messageInput.value = "";
+  }
   autoResizeTextarea();
   updateCharCount();
 }
 
 // Сохраняем черновик перед уходом со страницы
 window.addEventListener("beforeunload", () => {
-  if (selectedGroup && messageInput.value.trim())
-    drafts[selectedGroup] = messageInput.value;
+  const txt = messageInput.value.trim();
+  if (!txt) return;
+  if (selectedGroup) drafts[selectedGroup] = txt;
+  else if (currentDM?.chatId) drafts[currentDM.chatId] = txt;
 });
 
 updateCharCount();
@@ -1034,10 +1060,12 @@ async function openUserModal(uid) {
   userModalStatus.textContent = prof.status || "Нет статуса";
 
   userModalMsgBtn.textContent = "Написать";
-  userModalMsgBtn.disabled = true;
+  userModalMsgBtn.disabled = false;
 
   userProfileModal.style.display = "flex";
   userProfileModal.setAttribute("aria-hidden", "false");
+
+  userModalMsgBtn.dataset.uid = uid;
 }
 
 closeUserModalBtn.onclick = () => {
@@ -1052,6 +1080,67 @@ userProfileModal.onclick = (e) => {
 userProfileModal.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeUserModalBtn.onclick();
 });
+
+userModalMsgBtn.onclick = () => {
+  const uid = userModalMsgBtn.dataset.uid;
+  if (!uid || uid === currentUser.uid) return;
+
+  const chatId = getDMChatId(currentUser.uid, uid);
+  openDMChat(chatId, uid);
+  userProfileModal.style.display = "none";
+};
+
+async function openDMChat(chatId, otherUid) {
+  clearMessages(); // очищаем
+  renderDraft(); // подгружаем черновик
+
+  const q = query(
+    collection(db, "dmChats", chatId, "messages"),
+    orderBy("createdAt", "asc")
+  );
+
+  if (unsubscribe) unsubscribe();
+
+  unsubscribe = onSnapshot(q, async (snap) => {
+    clearMessages();
+    for (const docSnap of snap.docs) {
+      const d = docSnap.data();
+      const prof = await loadProfile(d.uid || "");
+
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "msg";
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar clickable";
+      avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+      avatar.onclick = () => openUserModal(d.uid);
+      avatar.tabIndex = 0;
+
+      const cont = document.createElement("div");
+      cont.className = "content";
+
+      const head = document.createElement("div");
+      head.className = "msg-header";
+
+      const nick = document.createElement("span");
+      nick.textContent = prof.nick || "Безымянный";
+      nick.style.color = prof.color || "#ccc";
+
+      const time = document.createElement("span");
+      time.textContent = formatTime(d.createdAt?.toDate?.() || new Date());
+
+      head.append(nick, time);
+      cont.append(head, document.createTextNode(d.text || ""));
+      msgDiv.append(avatar, cont);
+      messagesDiv.appendChild(msgDiv);
+    }
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+
+  selectedGroup = null; // сбрасываем обычную группу
+  currentDM = { chatId, otherUid };
+}
 
 </script>
 
