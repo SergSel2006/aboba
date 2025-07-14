@@ -800,6 +800,26 @@
     statusCounter.textContent = 80 - profileStatus.value.length;
   }
 
+   async function loadDMChats() {
+  const q = query(collection(db, "dmChats"));
+  const snap = await getDocs(q);
+  const dmChats = [];
+
+  snap.forEach((docSnap) => {
+    const chatId = docSnap.id;
+    if (!chatId.includes(currentUser.uid)) return;
+
+    const parts = chatId.split("_");
+    const otherUid = parts.find((uid) => uid !== currentUser.uid);
+    if (!otherUid) return;
+
+    dmChats.push({ chatId, otherUid });
+  });
+
+  return dmChats;
+}
+   
+   
   // Рендерим сайдбар
   async function renderSidebar() {
   groupList.innerHTML = "";
@@ -1135,25 +1155,6 @@ async function loadUserGroups() {
       groups.push({ id: docSnap.id, name: data.name || docSnap.id });
     }
   });
-
-  async function loadDMChats() {
-  const q = query(collection(db, "dmChats"));
-  const snap = await getDocs(q);
-  const dmChats = [];
-
-  snap.forEach((docSnap) => {
-    const chatId = docSnap.id;
-    if (!chatId.includes(currentUser.uid)) return;
-
-    const parts = chatId.split("_");
-    const otherUid = parts.find((uid) => uid !== currentUser.uid);
-    if (!otherUid) return;
-
-    dmChats.push({ chatId, otherUid });
-  });
-
-  return dmChats;
-}
 
 
   renderSidebar();
