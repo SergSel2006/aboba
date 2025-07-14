@@ -1063,7 +1063,7 @@ async function startChat() {
 
 async function openDMChat(chatId, otherUid) {
   selectedGroup = null;
-  currentDM = { chatId, otherUid };
+  currentDM = { chatId, otherUid: uid };
   localStorage.setItem("selectedGroup", "");
   renderSidebar();
   startChat();
