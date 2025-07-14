@@ -714,7 +714,8 @@ joinGroupForm.addEventListener("submit", async (e) => {
     startChat();
     closeJoinModal.onclick();
 
-    location.reload();
+    addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
+    //location.reload();
   } catch (err) {
     showErr("Ошибка: " + err.message);
   }
