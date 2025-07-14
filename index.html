@@ -800,20 +800,20 @@
     statusCounter.textContent = 80 - profileStatus.value.length;
   }
 
-   async function loadDMChats() {
-  const q = query(collection(db, "dmChats"));
+import { where } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+
+async function loadDMChats() {
+  const q = query(
+    collection(db, "dmChats"),
+    where("uids", "array-contains", currentUser.uid)
+  );
   const snap = await getDocs(q);
   const dmChats = [];
 
   snap.forEach((docSnap) => {
-    const chatId = docSnap.id;
-    if (!chatId.includes(currentUser.uid)) return;
-
-    const parts = chatId.split("_");
-    const otherUid = parts.find((uid) => uid !== currentUser.uid);
-    if (!otherUid) return;
-
-    dmChats.push({ chatId, otherUid });
+    const { uids } = docSnap.data();
+    const otherUid = uids.find((u) => u !== currentUser.uid);
+    if (otherUid) dmChats.push({ chatId: docSnap.id, otherUid });
   });
 
   return dmChats;
@@ -1046,12 +1046,19 @@ chatInputForm.addEventListener("submit", async (e) => {
       );
       drafts[selectedGroup] = "";
     } else if (currentDM?.chatId) {
-      await addDoc(
-        collection(db, "dmChats", currentDM.chatId, "messages"),
-        data
-      );
-      drafts[currentDM.chatId] = "";
-    }
+  // Создаём/обновляем метадату чата (массив участников)
+  await setDoc(
+    doc(db, "dmChats", currentDM.chatId),
+    { uids: [currentUser.uid, currentDM.otherUid] },
+    { merge: true }
+  );
+
+  await addDoc(
+    collection(db, "dmChats", currentDM.chatId, "messages"),
+    data
+  );
+  drafts[currentDM.chatId] = "";
+}
 
     messageInput.value = "";
     updateCharCount();
