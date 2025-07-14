@@ -943,12 +943,54 @@ async function loadDMChats() {
   }
 
   // Запускаем подписку на сообщения выбранной группы
-  async function startChat() {
-    if (unsubscribe) unsubscribe();
-    clearMessages();
-    renderDraft();
-    if (!selectedGroup) return;
+async function startChat() {
+  if (unsubscribe) unsubscribe();
+  clearMessages();
+  renderDraft();
 
+  if (currentDM) {
+    const q = query(
+      collection(db, "dmChats", currentDM.chatId, "messages"),
+      orderBy("createdAt", "asc")
+    );
+
+    unsubscribe = onSnapshot(q, async (snap) => {
+      clearMessages();
+      for (const docSnap of snap.docs) {
+        const d = docSnap.data();
+        const prof = await loadProfile(d.uid || "");
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "msg";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar clickable";
+        avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+        avatar.onclick = () => openUserModal(d.uid);
+        avatar.tabIndex = 0;
+
+        const cont = document.createElement("div");
+        cont.className = "content";
+
+        const head = document.createElement("div");
+        head.className = "msg-header";
+
+        const nick = document.createElement("span");
+        nick.textContent = prof.nick || "Безымянный";
+        nick.style.color = prof.color || "#ccc";
+
+        const time = document.createElement("span");
+        time.textContent = formatTime(d.createdAt?.toDate?.() || new Date());
+        time.title = d.createdAt?.toDate?.()?.toLocaleString() || "";
+
+        head.append(nick, time);
+        cont.append(head, document.createTextNode(d.text || ""));
+        msgDiv.append(avatar, cont);
+        messagesDiv.appendChild(msgDiv);
+      }
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  } else if (selectedGroup) {
     const q = query(
       collection(db, "groups", selectedGroup, "messages"),
       orderBy("createdAt", "asc")
@@ -979,9 +1021,7 @@ async function loadDMChats() {
         const avatar = document.createElement("div");
         avatar.className = "avatar clickable";
         const prof = await loadProfile(d.uid || "");
-        avatar.style.backgroundImage = `url(${
-          prof.avatar || "https://i.imgur.com/4AiXzf8.png"
-        })`;
+        avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
         avatar.title = prof.nick || "Безымянный";
         avatar.onclick = () => openUserModal(d.uid);
         avatar.tabIndex = 0;
@@ -1019,6 +1059,15 @@ async function loadDMChats() {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
   }
+}
+
+async function openDMChat(chatId, otherUid) {
+  selectedGroup = null;
+  currentDM = { chatId, otherUid };
+  localStorage.setItem("selectedGroup", "");
+  renderSidebar();
+  startChat();
+}
 
   // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
 chatInputForm.addEventListener("submit", async (e) => {
@@ -1196,20 +1245,24 @@ userProfileModal.onclick = (e) => {
 
 userProfileModal.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeUserModalBtn.onclick();
-});
+};
 
 userModalMsgBtn.onclick = () => {
   const uid = userModalMsgBtn.dataset.uid;
   if (!uid || uid === currentUser.uid) return;
 
   const chatId = getDMChatId(currentUser.uid, uid);
+  selectedGroup = null;
+  currentDM = { chatId, otherUid: uid }; // ✅ вот это главное исправление
+  localStorage.setItem("selectedGroup", ""); // очищаем
   openDMChat(chatId, uid);
+  renderSidebar(); // чтобы выделение ЛС сработало
   userProfileModal.style.display = "none";
 };
 
 async function openDMChat(chatId, otherUid) {
-  clearMessages(); // очищаем
-  renderDraft(); // подгружаем черновик
+  clearMessages();
+  renderDraft();
 
   const q = query(
     collection(db, "dmChats", chatId, "messages"),
@@ -1255,11 +1308,14 @@ async function openDMChat(chatId, otherUid) {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 
-  selectedGroup = null; // сбрасываем обычную группу
+  selectedGroup = null;
   currentDM = { chatId, otherUid };
-}
 
-</script>
+  // чтобы вверху отобразилось "ЛС с ..."
+  const prof = await loadProfile(otherUid);
+  groupNameDisplay.textContent = "ЛС с " + (prof.nick || "Безымянный");
+}
+ </script>
 
 
 </body>
