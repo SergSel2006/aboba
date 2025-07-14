@@ -480,6 +480,7 @@
     <div id="profilePanel" role="region" aria-label="Панель настроек профиля" tabindex="-1">
       <form id="profileForm" novalidate>
         <input id="profileNick" placeholder="Ник" autocomplete="off" spellcheck="false" aria-label="Ник" />
+        <p id="profileNickError" style="color:#f44336; display:none; font-size:14px; margin-top:4px;"></p>
         <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" spellcheck="false" aria-label="URL аватара" />
         <input type="color" id="profileColor" title="Цвет ника" aria-label="Цвет ника" />
         <textarea
@@ -794,6 +795,23 @@
     e.preventDefault();
     if (!currentUser) return;
 
+    const newNick = profileNick.value.trim();
+if (!newNick) return;
+
+const currentNick = profilesCache[currentUser.uid]?.nick || "";
+if (newNick !== currentNick) {
+  const q = query(collection(db, "profiles"), where("nick", "==", newNick));
+  const res = await getDocs(q);
+  if (!res.empty) {
+    profileNickError.textContent = "Ник уже занят. Попробуйте другой.";
+    profileNickError.style.display = "block";
+    return;
+  }
+}
+
+profileNickError.style.display = "none"; // если всё ок — скрываем ошибку
+
+
     await setDoc(doc(db, "profiles", currentUser.uid), {
       nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
       avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
@@ -820,6 +838,11 @@
     profileColor.value = d.color || "#cccccc";
     profileStatus.value = d.status || "";
     statusCounter.textContent = 80 - profileStatus.value.length;
+
+    profileNick.addEventListener("input", () => {
+  profileNickError.style.display = "none";
+});
+
   }
 
 async function loadDMChats() {
