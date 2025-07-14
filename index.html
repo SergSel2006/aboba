@@ -834,13 +834,13 @@ profileForm.addEventListener("submit", async (e) => {
   profilePanel.style.display = "none";
   profileBtn.setAttribute("aria-expanded", "false");
   profilesCache[currentUser.uid] = {
-    nick: newNick,
+    nick: profileNick.value.trim(),
     avatar: profileAvatar.value.trim(),
     color: profileColor.value,
-    status: profileStatus.value.trim()
+    status: profileStatus.value.trim(),
   };
-  loadUserProfile();
   addSystemMessage("Профиль сохранён");
+  location.reload(); // ⬅️ вот она, перезагрузка
 });
 
   // Загружаем профиль пользователя
