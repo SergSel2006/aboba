@@ -479,7 +479,7 @@
 
     <div id="profilePanel" role="region" aria-label="Панель настроек профиля" tabindex="-1">
       <form id="profileForm" novalidate>
-        <input id="profileNick" placeholder="Ник" autocomplete="off" spellcheck="false" aria-label="Ник" />
+        <input id="profileNick" maxlength="30" placeholder="Ник" autocomplete="off" spellcheck="false" aria-label="Ник" />
         <p id="profileNickError" style="color:#f44336; display:none; font-size:14px; margin-top:4px;"></p>
         <input id="profileAvatar" placeholder="Аватар URL" autocomplete="off" spellcheck="false" aria-label="URL аватара" />
         <input type="color" id="profileColor" title="Цвет ника" aria-label="Цвет ника" />
@@ -807,11 +807,17 @@ profileForm.addEventListener("submit", async (e) => {
 
   const newNick = profileNick.value.trim();
 
-  if (!newNick) {
-    profileNickError.textContent = "Ник не может быть пустым.";
-    profileNickError.style.display = "block";
-    return;
-  }
+if (!newNick) {
+  profileNickError.textContent = "Ник не может быть пустым.";
+  profileNickError.style.display = "block";
+  return;
+}
+
+if (newNick.length > 30) {
+  profileNickError.textContent = "Ник слишком длинный (макс. 30 символов).";
+  profileNickError.style.display = "block";
+  return;
+}
 
   const currentNick = profilesCache[currentUser.uid]?.nick || "";
   if (newNick !== currentNick) {
