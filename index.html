@@ -661,17 +661,19 @@
 
   // Отправка формы добавления группы
   joinGroupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    joinGroupError.style.display = "none";
+  e.preventDefault();
+  joinGroupError.style.display = "none";
 
-    const name = joinGroupName.value.trim();
-    const code = joinGroupCode.value.trim();
-    const pass = joinGroupPassword.value.trim();
-    if (!currentUser || !name) return;
+  const name = joinGroupName.value.trim(); // может быть id группы или ник
+  const code = joinGroupCode.value.trim();
+  const pass = joinGroupPassword.value.trim();
 
-    try {
-      const snap = await getDoc(doc(db, "groups", name));
-      if (!snap.exists()) return showErr("Группа не найдена.");
+  if (!currentUser || !name) return;
+
+  try {
+    // 1. Сначала пробуем как группу
+    const snap = await getDoc(doc(db, "groups", name));
+    if (snap.exists()) {
       const g = snap.data();
 
       if (g.type === "invite" && g.inviteCode !== code)
@@ -689,19 +691,38 @@
         groups.push({ id: name, name: g.name });
 
       selectedGroup = name;
-      localStorage.setItem('selectedGroup', selectedGroup);
+      localStorage.setItem("selectedGroup", selectedGroup);
       renderSidebar();
       startChat();
       closeJoinModal.onclick();
-    } catch (err) {
-      showErr("Ошибка: " + err.message);
+      return;
     }
 
-    function showErr(msg) {
-      joinGroupError.textContent = msg;
-      joinGroupError.style.display = "block";
-    }
-  });
+    // 2. Если не группа — ищем пользователя по нику
+    const q = query(collection(db, "profiles"), where("nick", "==", name));
+    const res = await getDocs(q);
+    if (res.empty) return showErr("Ни группа, ни пользователь с таким ником не найдены");
+    
+    const userDoc = res.docs[0]; // берём первого найденного
+    const otherUid = userDoc.id;
+    if (otherUid === currentUser.uid) return showErr("Это ваш ник");
+
+    const chatId = getDMChatId(currentUser.uid, otherUid);
+    currentDM = { chatId, otherUid };
+    selectedGroup = null;
+    localStorage.setItem("selectedGroup", "");
+    renderSidebar();
+    startChat();
+    closeJoinModal.onclick();
+  } catch (err) {
+    showErr("Ошибка: " + err.message);
+  }
+
+  function showErr(msg) {
+    joinGroupError.textContent = msg;
+    joinGroupError.style.display = "block";
+  }
+});
 
   // Вход через Google
   googleLoginBtn.onclick = () => {
