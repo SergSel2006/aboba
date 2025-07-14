@@ -626,6 +626,312 @@
   let selectedGroup = null;
   let currentDM = null;
   let unsubscribe = null;
+
+   let currentUser = null;
+  let groups = [];
+  let selectedGroup = null;
+  let currentDM = null;
+  let unsubscribe = null;
+  const profilesCache = {};
+  const drafts = {};
+
+  // Главное — добавляем глобальный массив для ЛС
+  let dmChats = [];
+
+  // Загружаем ЛС-чаты и обновляем dmChats глобально
+  async function loadDMChats() {
+    if (!currentUser) return;
+    const q = query(
+      collection(db, "dmChats"),
+      where("uids", "array-contains", currentUser.uid)
+    );
+    const snap = await getDocs(q);
+    dmChats = [];
+
+    snap.forEach((docSnap) => {
+      const { uids } = docSnap.data();
+      const otherUid = uids.find((u) => u !== currentUser.uid);
+      if (otherUid) dmChats.push({ chatId: docSnap.id, otherUid });
+    });
+  }
+
+  // Загружаем группы пользователя
+  async function loadUserGroups() {
+    groups = [];
+
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef);
+    const snap = await getDocs(q);
+
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.allowed && data.allowed.includes(currentUser.uid)) {
+        groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+      }
+    });
+  }
+
+  // Рендерим сайдбар — используем глобальный dmChats вместо возвращаемого массива
+  async function renderSidebar() {
+    groupList.innerHTML = "";
+
+    await loadDMChats();
+
+    if (dmChats.length) {
+      const dmHeader = document.createElement("div");
+      dmHeader.className = "sidebar-divider";
+      dmHeader.textContent = "ЛС";
+      groupList.appendChild(dmHeader);
+
+      for (const dm of dmChats) {
+        const prof = await loadProfile(dm.otherUid);
+        const item = document.createElement("div");
+        item.className =
+          "group-item" + (currentDM?.chatId === dm.chatId ? " active" : "");
+        item.tabIndex = 0;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+
+        const nick = document.createElement("span");
+        nick.textContent = prof.nick || "Безымянный";
+        nick.style.color = prof.color || "#ccc";
+        nick.className = "nick";
+
+        item.append(avatar, nick);
+
+        item.onclick = () => {
+          selectedGroup = null;
+          currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
+          localStorage.setItem("selectedGroup", "");
+          renderSidebar();
+          startChat();
+        };
+
+        item.onkeydown = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            item.onclick();
+          }
+        };
+
+        groupList.appendChild(item);
+      }
+    }
+
+    if (groups.length) {
+      const groupHeader = document.createElement("div");
+      groupHeader.className = "sidebar-divider";
+      groupHeader.textContent = "Группы";
+      groupList.appendChild(groupHeader);
+
+      groups.forEach((g) => {
+        const div = document.createElement("div");
+        div.className = "group-item" + (g.id === selectedGroup ? " active" : "");
+        div.textContent = g.name;
+        div.tabIndex = 0;
+
+        div.onclick = () => {
+          if (g.id !== selectedGroup) {
+            selectedGroup = g.id;
+            currentDM = null;
+            localStorage.setItem("selectedGroup", selectedGroup);
+            renderSidebar();
+            startChat();
+          }
+        };
+
+        div.onkeydown = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            div.onclick();
+          }
+        };
+
+        groupList.appendChild(div);
+      });
+    }
+
+    groupList.appendChild(openJoinModalBtn);
+
+    groupNameDisplay.textContent =
+      selectedGroup
+        ? groups.find((g) => g.id === selectedGroup)?.name || "—"
+        : currentDM
+        ? "ЛС с " + (await loadProfile(currentDM.otherUid)).nick || "Безымянный"
+        : "—";
+  }
+
+  // Открываем ЛС-чат с нужным собеседником
+  async function openDMChat(chatId, otherUid) {
+    selectedGroup = null;
+    currentDM = { chatId, otherUid };
+    localStorage.setItem("selectedGroup", "");
+    renderSidebar();
+    startChat();
+  }
+
+  // Запускаем подписку и рендер сообщений в текущем чате (группа или ЛС)
+  async function startChat() {
+    if (unsubscribe) unsubscribe();
+    clearMessages();
+    renderDraft();
+
+    if (currentDM) {
+      const q = query(
+        collection(db, "dmChats", currentDM.chatId, "messages"),
+        orderBy("createdAt", "asc")
+      );
+
+      unsubscribe = onSnapshot(q, async (snap) => {
+        clearMessages();
+        for (const docSnap of snap.docs) {
+          const d = docSnap.data();
+          const prof = await loadProfile(d.uid || "");
+
+          const msgDiv = document.createElement("div");
+          msgDiv.className = "msg";
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar clickable";
+          avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+          avatar.onclick = () => openUserModal(d.uid);
+          avatar.tabIndex = 0;
+
+          const cont = document.createElement("div");
+          cont.className = "content";
+
+          const head = document.createElement("div");
+          head.className = "msg-header";
+
+          const nick = document.createElement("span");
+          nick.textContent = prof.nick || "Безымянный";
+          nick.style.color = prof.color || "#ccc";
+
+          const time = document.createElement("span");
+          time.textContent = formatTime(d.createdAt?.toDate?.() || new Date());
+          time.title = d.createdAt?.toDate?.()?.toLocaleString() || "";
+
+          head.append(nick, time);
+          cont.append(head, document.createTextNode(d.text || ""));
+          msgDiv.append(avatar, cont);
+          messagesDiv.appendChild(msgDiv);
+        }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    } else if (selectedGroup) {
+      const q = query(
+        collection(db, "groups", selectedGroup, "messages"),
+        orderBy("createdAt", "asc")
+      );
+      let lastDate = "";
+
+      unsubscribe = onSnapshot(q, async (snap) => {
+        clearMessages();
+        lastDate = "";
+        for (const docSnap of snap.docs) {
+          const d = docSnap.data();
+          if (!d.createdAt) continue;
+
+          const createdAt = d.createdAt.toDate();
+          const dateStr = formatDate(createdAt);
+
+          if (dateStr !== lastDate) {
+            lastDate = dateStr;
+            const div = document.createElement("div");
+            div.className = "date-divider";
+            div.textContent = dateStr;
+            messagesDiv.appendChild(div);
+          }
+
+          const msgDiv = document.createElement("div");
+          msgDiv.className = "msg";
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar clickable";
+          const prof = await loadProfile(d.uid || "");
+          avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
+          avatar.title = prof.nick || "Безымянный";
+          avatar.onclick = () => openUserModal(d.uid);
+          avatar.tabIndex = 0;
+
+          const cont = document.createElement("div");
+          cont.className = "content";
+
+          const head = document.createElement("div");
+          head.className = "msg-header";
+
+          const nick = document.createElement("span");
+          nick.textContent = prof.nick || "Безымянный";
+          nick.style.color = prof.color || "#ccc";
+
+          const time = document.createElement("span");
+          time.textContent = formatTime(createdAt);
+          time.title = createdAt.toLocaleString();
+
+          head.append(nick, time);
+
+          if (d.edited) {
+            const ed = document.createElement("span");
+            ed.className = "msg-edited";
+            ed.textContent = "(ред.)";
+            head.appendChild(ed);
+          }
+
+          const body = document.createElement("div");
+          body.textContent = d.text || "";
+
+          cont.append(head, body);
+          msgDiv.append(avatar, cont);
+          messagesDiv.appendChild(msgDiv);
+        }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+  }
+
+  // Отправка сообщений — без изменений, кроме контроля dmChats
+  chatInputForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentUser || (!selectedGroup && !currentDM)) return;
+
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    const data = {
+      text,
+      uid: currentUser.uid,
+      createdAt: serverTimestamp(),
+      edited: false,
+      type: selectedGroup ? "user" : "dm",
+    };
+
+    try {
+      if (selectedGroup) {
+        await addDoc(collection(db, "groups", selectedGroup, "messages"), data);
+        drafts[selectedGroup] = "";
+      } else if (currentDM?.chatId) {
+        await setDoc(
+          doc(db, "dmChats", currentDM.chatId),
+          { uids: [currentUser.uid, currentDM.otherUid] },
+          { merge: true }
+        );
+        await addDoc(
+          collection(db, "dmChats", currentDM.chatId, "messages"),
+          data
+        );
+        drafts[currentDM.chatId] = "";
+      }
+
+      messageInput.value = "";
+      updateCharCount();
+    } catch (err) {
+      alert("Ошибка отправки: " + err.message);
+    }
+  });
+
+   
   const profilesCache = {};
   const drafts = {};
 
@@ -1312,18 +1618,39 @@ userProfileModal.addEventListener("keydown", (e) => {
 });
 
 userModalMsgBtn.onclick = () => {
-  const uid = userModalMsgBtn.dataset.uid;
-  if (!uid || uid === currentUser.uid) return;
+    const uid = userModalMsgBtn.dataset.uid;
+    if (!uid || uid === currentUser.uid) return;
 
-  const chatId = getDMChatId(currentUser.uid, uid);
-  selectedGroup = null;
-  currentDM = { chatId, otherUid: uid }; // ✅ вот это главное исправление
-  localStorage.setItem("selectedGroup", ""); // очищаем
-  openDMChat(chatId, uid);
-  renderSidebar(); // чтобы выделение ЛС сработало
-  userProfileModal.style.display = "none";
-};
+    const chatId = getDMChatId(currentUser.uid, uid);
+    selectedGroup = null;
+    currentDM = { chatId, otherUid: uid };
+    localStorage.setItem("selectedGroup", "");
+    openDMChat(chatId, uid);
+    renderSidebar();
+    userProfileModal.style.display = "none";
+  };
 
+    // При инициализации/логине загружаем группы и ЛС, чтобы сразу показать актуальный сайдбар
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await loadUserGroups();
+      await loadDMChats();
+      await renderSidebar();
+      startChat();
+    } else {
+      currentUser = null;
+      groups = [];
+      dmChats = [];
+      selectedGroup = null;
+      currentDM = null;
+      if (unsubscribe) unsubscribe();
+      clearMessages();
+      renderSidebar();
+    }
+  });
+   
  </script>
 
 
