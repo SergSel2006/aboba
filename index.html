@@ -952,10 +952,44 @@ chatInputForm.addEventListener("submit", async (e) => {
 
 const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
-// Обработка нажатия клавиш Enter и Shift+Enter с учётом мобильных и ПК
+// Обработка отправки формы (по Enter или по кнопке)
+chatInputForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+
+  const text = messageInput.value.trim();
+  if (!text) return;
+
+  const chatPath = selectedGroup
+    ? ["groups", selectedGroup, "messages"]
+    : currentDM
+    ? ["dmChats", currentDM.chatId, "messages"]
+    : null;
+
+  if (!chatPath) return;
+
+  const data = {
+    text,
+    uid: currentUser.uid,
+    createdAt: serverTimestamp(),
+    edited: false,
+    type: "user",
+  };
+
+  try {
+    await addDoc(collection(db, ...chatPath), data);
+    messageInput.value = "";
+    updateCharCount();
+    if (selectedGroup) drafts[selectedGroup] = "";
+    if (currentDM) drafts[currentDM.chatId] = "";
+  } catch (err) {
+    alert("Ошибка отправки: " + err.message);
+  }
+});
+
+// Enter + ShiftEnter поведение
 messageInput.addEventListener("keydown", (e) => {
   if (isMobile) {
-    // На мобилах: Enter без Shift — вставляем перенос строки
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const start = messageInput.selectionStart;
@@ -967,7 +1001,6 @@ messageInput.addEventListener("keydown", (e) => {
       updateCharCount();
     }
   } else {
-    // На десктопах: Enter без Shift — отправляем сообщение
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (!chatInputForm.querySelector("button[type=submit]").disabled) {
@@ -977,29 +1010,19 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Получаем айди для ЛС
-function getDMChatId(uid1, uid2) {
-  return [uid1, uid2].sort().join("_"); // стабильный порядок
-}
-
-// Автоматический ресайз textarea по содержимому
+// Авто-ресайз + символы + черновик
 function autoResizeTextarea() {
   messageInput.style.height = "auto";
   messageInput.style.height = messageInput.scrollHeight + "px";
 }
 
-// Вешаем обработчик на ввод для ресайза, обновления счётчика и сохранения черновика
 messageInput.addEventListener("input", () => {
   autoResizeTextarea();
   updateCharCount();
-  if (selectedGroup) {
-    drafts[selectedGroup] = messageInput.value;
-  } else if (currentDM?.chatId) {
-    drafts[currentDM.chatId] = messageInput.value;
-  }
+  if (selectedGroup) drafts[selectedGroup] = messageInput.value;
+  if (currentDM) drafts[currentDM.chatId] = messageInput.value;
 });
 
-// Обновляем счетчик символов и кнопку отправки
 const updateCharCount = () => {
   const len = messageInput.value.length;
   const left = 1000 - len;
@@ -1008,28 +1031,24 @@ const updateCharCount = () => {
     !len || len > 1000;
 };
 
-// Рендерим черновик и обновляем интерфейс
 function renderDraft() {
-  if (selectedGroup) {
-    messageInput.value = drafts[selectedGroup] || "";
-  } else if (currentDM?.chatId) {
-    messageInput.value = drafts[currentDM.chatId] || "";
-  } else {
-    messageInput.value = "";
-  }
+  messageInput.value =
+    (selectedGroup && drafts[selectedGroup]) ||
+    (currentDM && drafts[currentDM.chatId]) ||
+    "";
   autoResizeTextarea();
   updateCharCount();
 }
 
-// Сохраняем черновик перед уходом со страницы
 window.addEventListener("beforeunload", () => {
-  const txt = messageInput.value.trim();
-  if (!txt) return;
-  if (selectedGroup) drafts[selectedGroup] = txt;
-  else if (currentDM?.chatId) drafts[currentDM.chatId] = txt;
+  if (selectedGroup && messageInput.value.trim())
+    drafts[selectedGroup] = messageInput.value;
+  if (currentDM && messageInput.value.trim())
+    drafts[currentDM.chatId] = messageInput.value;
 });
 
 updateCharCount();
+
 
 // Загружаем группы пользователя из Firestore
 async function loadUserGroups() {
