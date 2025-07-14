@@ -843,22 +843,6 @@ profileForm.addEventListener("submit", async (e) => {
   addSystemMessage("Профиль сохранён");
 });
 
-// Загружаем профиль пользователя
-async function loadUserProfile() {
-  const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-  const d = snap.exists() ? snap.data() : {};
-  profileNick.value = d.nick || "";
-  profileAvatar.value = d.avatar || "";
-  profileColor.value = d.color || "#cccccc";
-  profileStatus.value = d.status || "";
-  statusCounter.textContent = 80 - profileStatus.value.length;
-
-  profileNick.addEventListener("input", () => {
-    profileNickError.style.display = "none";
-  });
-}
-
-
   // Загружаем профиль пользователя
   async function loadUserProfile() {
     const snap = await getDoc(doc(db, "profiles", currentUser.uid));
