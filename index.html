@@ -1061,12 +1061,13 @@ async function startChat() {
   }
 }
 
+// ЕСЛИ хочешь открыть ЛС-чат
 async function openDMChat(chatId, otherUid) {
-  selectedGroup = null;
-  currentDM = { chatId, otherUid: uid };
-  localStorage.setItem("selectedGroup", "");
-  renderSidebar();
-  startChat();
+  selectedGroup = null;                    // гасим выбранную группу
+  currentDM = { chatId, otherUid };        // сохраняем собеседника
+  localStorage.setItem("selectedGroup", ""); // чистим сохранённую группу
+  renderSidebar();                         // подсветить ЛС в сайдбаре
+  startChat();                             // единая подписка и рендер
 }
 
   // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
@@ -1260,61 +1261,6 @@ userModalMsgBtn.onclick = () => {
   userProfileModal.style.display = "none";
 };
 
-async function openDMChat(chatId, otherUid) {
-  clearMessages();
-  renderDraft();
-
-  const q = query(
-    collection(db, "dmChats", chatId, "messages"),
-    orderBy("createdAt", "asc")
-  );
-
-  if (unsubscribe) unsubscribe();
-
-  unsubscribe = onSnapshot(q, async (snap) => {
-    clearMessages();
-    for (const docSnap of snap.docs) {
-      const d = docSnap.data();
-      const prof = await loadProfile(d.uid || "");
-
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "msg";
-
-      const avatar = document.createElement("div");
-      avatar.className = "avatar clickable";
-      avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
-      avatar.onclick = () => openUserModal(d.uid);
-      avatar.tabIndex = 0;
-
-      const cont = document.createElement("div");
-      cont.className = "content";
-
-      const head = document.createElement("div");
-      head.className = "msg-header";
-
-      const nick = document.createElement("span");
-      nick.textContent = prof.nick || "Безымянный";
-      nick.style.color = prof.color || "#ccc";
-
-      const time = document.createElement("span");
-      time.textContent = formatTime(d.createdAt?.toDate?.() || new Date());
-
-      head.append(nick, time);
-      cont.append(head, document.createTextNode(d.text || ""));
-      msgDiv.append(avatar, cont);
-      messagesDiv.appendChild(msgDiv);
-    }
-
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  });
-
-  selectedGroup = null;
-  currentDM = { chatId, otherUid };
-
-  // чтобы вверху отобразилось "ЛС с ..."
-  const prof = await loadProfile(otherUid);
-  groupNameDisplay.textContent = "ЛС с " + (prof.nick || "Безымянный");
-}
  </script>
 
 
