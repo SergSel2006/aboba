@@ -641,38 +641,37 @@
     return d.toLocaleDateString();
   };
 
-  // Открытие и закрытие модалки добавления группы
-  openJoinModalBtn.onclick = () => {
-    joinModal.style.display = "flex";
-    joinModal.setAttribute("aria-hidden", "false");
-    joinGroupError.style.display = "none";
-    joinGroupName.value = joinGroupCode.value = joinGroupPassword.value = "";
-    joinGroupName.focus();
-  };
-  closeJoinModal.onclick = () => {
-    joinModal.style.display = "none";
-    joinModal.setAttribute("aria-hidden", "true");
-  };
-  joinModal.onclick = (e) => {
-    if (e.target === joinModal) closeJoinModal.onclick();
-  };
-  joinModal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeJoinModal.onclick();
-  });
+// Открытие и закрытие модалки добавления группы
+openJoinModalBtn.onclick = () => {
+  joinModal.style.display = "flex";
+  joinModal.setAttribute("aria-hidden", "false");
+  joinGroupError.style.display = "none";
+  joinGroupName.value = joinGroupCode.value = joinGroupPassword.value = "";
+  joinGroupName.focus();
+};
+closeJoinModal.onclick = () => {
+  joinModal.style.display = "none";
+  joinModal.setAttribute("aria-hidden", "true");
+};
+joinModal.onclick = (e) => {
+  if (e.target === joinModal) closeJoinModal.onclick();
+};
+joinModal.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeJoinModal.onclick();
+});
 
-  // Отправка формы добавления группы
-  joinGroupForm.addEventListener("submit", async (e) => {
+// Отправка формы добавления группы
+joinGroupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   joinGroupError.style.display = "none";
 
-  const name = joinGroupName.value.trim(); // может быть id группы или ник
+  const name = joinGroupName.value.trim();
   const code = joinGroupCode.value.trim();
   const pass = joinGroupPassword.value.trim();
 
   if (!currentUser || !name) return;
 
   try {
-    // 1. Сначала пробуем как группу
     const snap = await getDoc(doc(db, "groups", name));
     if (snap.exists()) {
       const g = snap.data();
@@ -699,12 +698,11 @@
       return;
     }
 
-    // 2. Если не группа — ищем пользователя по нику
     const q = query(collection(db, "profiles"), where("nick", "==", name));
     const res = await getDocs(q);
     if (res.empty) return showErr("Ни группа, ни пользователь с таким ником не найдены");
-    
-    const userDoc = res.docs[0]; // берём первого найденного
+
+    const userDoc = res.docs[0];
     const otherUid = userDoc.id;
     if (otherUid === currentUser.uid) return showErr("Это ваш ник");
 
@@ -725,109 +723,141 @@
   }
 });
 
-  // Вход через Google
-  googleLoginBtn.onclick = () => {
-    loginMsg.textContent = "";
-    signInWithPopup(auth, new GoogleAuthProvider()).catch(
-      (e) => (loginMsg.textContent = "Ошибка входа: " + e.message)
-    );
-  };
+// Вход через Google
+googleLoginBtn.onclick = () => {
+  loginMsg.textContent = "";
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(
+    (e) => (loginMsg.textContent = "Ошибка входа: " + e.message)
+  );
+};
 
-  // Выход
-  logoutBtn.onclick = () => {
+// Выход
+logoutBtn.onclick = () => {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+  signOut(auth);
+};
+
+// Отслеживаем изменение авторизации
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (user) {
+    loginForm.style.display = "none";
+    chatLayout.style.display = "flex";
+    profileBtn.style.display = "flex";
+    await loadUserProfile();
+
+    const currentNick = profileNick.value.trim().toLowerCase();
+    if (!currentNick || currentNick === "безымянный") {
+      profilePanel.style.display = "block";
+      profileBtn.setAttribute("aria-expanded", "true");
+      profilePanel.focus();
+      addSystemMessage("Пожалуйста, выбери уникальный ник для профиля");
+      return;
+    }
+
+    await loadUserGroups();
+
+    const savedGroup = localStorage.getItem("selectedGroup");
+    if (savedGroup && groups.some(g => g.id === savedGroup)) {
+      selectedGroup = savedGroup;
+    } else {
+      selectedGroup = groups.length ? groups[0].id : null;
+    }
+
+    renderSidebar();
+    startChat();
+  } else {
     if (unsubscribe) {
       unsubscribe();
       unsubscribe = null;
     }
-    signOut(auth);
-  };
+    loginForm.style.display = "flex";
+    chatLayout.style.display = "none";
+    profileBtn.style.display = "none";
+    groups = [];
+    selectedGroup = null;
+    groupList.innerHTML = "";
+    clearMessages();
+    localStorage.removeItem("selectedGroup");
+  }
+});
 
-  // Отслеживаем изменение авторизации
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (user) {
-      loginForm.style.display = "none";
-      chatLayout.style.display = "flex";
-      profileBtn.style.display = "flex";
-      await loadUserProfile();
-      await loadUserGroups();
+// Обновляем счётчик символов статуса
+profileStatus.addEventListener("input", () => {
+  statusCounter.textContent = 80 - profileStatus.value.length;
+});
 
-      const savedGroup = localStorage.getItem('selectedGroup');
-      if (savedGroup && groups.some(g => g.id === savedGroup)) {
-        selectedGroup = savedGroup;
-      } else {
-        selectedGroup = groups.length ? groups[0].id : null;
-      }
+// Открыть/закрыть панель профиля
+profileBtn.onclick = () => {
+  const open = profilePanel.style.display === "block";
+  profilePanel.style.display = open ? "none" : "block";
+  profileBtn.setAttribute("aria-expanded", String(!open));
+  if (!open) profilePanel.focus();
+};
 
-      renderSidebar();
-      startChat();
-    } else {
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
-      }
-      loginForm.style.display = "flex";
-      chatLayout.style.display = "none";
-      profileBtn.style.display = "none";
-      groups = [];
-      selectedGroup = null;
-      groupList.innerHTML = "";
-      clearMessages();
-      localStorage.removeItem('selectedGroup');
-    }
-  });
+// Сохраняем профиль
+profileForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
 
-  // Обновляем счетчик символов статуса
-  profileStatus.addEventListener("input", () => {
-    statusCounter.textContent = 80 - profileStatus.value.length;
-  });
+  profileNickError.style.display = "none";
 
-  // Открыть/закрыть панель профиля
-  profileBtn.onclick = () => {
-    const open = profilePanel.style.display === "block";
-    profilePanel.style.display = open ? "none" : "block";
-    profileBtn.setAttribute("aria-expanded", String(!open));
-    if (!open) profilePanel.focus();
-  };
+  const newNick = profileNick.value.trim();
 
-  // Сохраняем профиль
-  profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    const newNick = profileNick.value.trim();
-if (!newNick) return;
-
-const currentNick = profilesCache[currentUser.uid]?.nick || "";
-if (newNick !== currentNick) {
-  const q = query(collection(db, "profiles"), where("nick", "==", newNick));
-  const res = await getDocs(q);
-  if (!res.empty) {
-    profileNickError.textContent = "Ник уже занят. Попробуйте другой.";
+  if (!newNick) {
+    profileNickError.textContent = "Ник не может быть пустым.";
     profileNickError.style.display = "block";
     return;
   }
+
+  const currentNick = profilesCache[currentUser.uid]?.nick || "";
+  if (newNick !== currentNick) {
+    const q = query(collection(db, "profiles"), where("nick", "==", newNick));
+    const res = await getDocs(q);
+    if (!res.empty && res.docs.some(doc => doc.id !== currentUser.uid)) {
+      profileNickError.textContent = "Ник уже занят. Попробуйте другой.";
+      profileNickError.style.display = "block";
+      return;
+    }
+  }
+
+  await setDoc(doc(db, "profiles", currentUser.uid), {
+    nick: newNick,
+    avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
+    color: profileColor.value,
+    status: profileStatus.value.trim()
+  }, { merge: true });
+
+  profilePanel.style.display = "none";
+  profileBtn.setAttribute("aria-expanded", "false");
+  profilesCache[currentUser.uid] = {
+    nick: newNick,
+    avatar: profileAvatar.value.trim(),
+    color: profileColor.value,
+    status: profileStatus.value.trim()
+  };
+  loadUserProfile();
+  addSystemMessage("Профиль сохранён");
+});
+
+// Загружаем профиль пользователя
+async function loadUserProfile() {
+  const snap = await getDoc(doc(db, "profiles", currentUser.uid));
+  const d = snap.exists() ? snap.data() : {};
+  profileNick.value = d.nick || "";
+  profileAvatar.value = d.avatar || "";
+  profileColor.value = d.color || "#cccccc";
+  profileStatus.value = d.status || "";
+  statusCounter.textContent = 80 - profileStatus.value.length;
+
+  profileNick.addEventListener("input", () => {
+    profileNickError.style.display = "none";
+  });
 }
 
-profileNickError.style.display = "none"; // если всё ок — скрываем ошибку
-
-
-    await setDoc(doc(db, "profiles", currentUser.uid), {
-      nick: profileNick.value.trim() || currentUser.displayName || "Безымянный",
-      avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-      color: profileColor.value,
-      status: profileStatus.value.trim(),
-    });
-
-    profilePanel.style.display = "none";
-    profilesCache[currentUser.uid] = {
-      nick: profileNick.value.trim(),
-      avatar: profileAvatar.value.trim(),
-      color: profileColor.value,
-      status: profileStatus.value.trim(),
-    };
-    addSystemMessage("Профиль сохранён");
-  });
 
   // Загружаем профиль пользователя
   async function loadUserProfile() {
