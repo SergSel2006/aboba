@@ -1193,45 +1193,6 @@ userModalMsgBtn.onclick = () => {
   userProfileModal.style.display = "none";
 };
 
-// === Инициализация Firebase и переменные ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  onSnapshot,
-  orderBy,
-  serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  // Твой конфиг
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser = null;
-let groups = [];
-let dmChats = [];
-let selectedGroup = localStorage.getItem("selectedGroup") || null;
-let currentDM = null;
-let unsubscribe = null;
-let drafts = {};
-let profilesCache = {};
-
 // === Обработчик изменения статуса авторизации ===
 onAuthStateChanged(auth, async (user) => {
   if (user) {
