@@ -553,6 +553,7 @@
     getFirestore,
     collection,
     query,
+    where,
     orderBy,
     onSnapshot,
     addDoc,
@@ -799,8 +800,6 @@
     profileStatus.value = d.status || "";
     statusCounter.textContent = 80 - profileStatus.value.length;
   }
-
-import { collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 
 async function loadDMChats() {
   const q = query(
