@@ -453,6 +453,33 @@
   background: #4a90e2;
   color: white;
 }
+      .reaction-btn,
+.reaction-add-btn {
+  background: #2a2a2a;
+  border: none;
+  border-radius: 6px;
+  color: #ddd;
+  padding: 2px 6px;
+  margin: 2px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+.reaction-btn:hover,
+.reaction-add-btn:hover {
+  background: #444;
+}
+.reacted {
+  background: #4a90e2 !important;
+  color: #fff;
+}
+.msg-reactions {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 
     }
 
@@ -1100,6 +1127,17 @@ for (const [emoji, uids] of Object.entries(emojiCounts)) {
 
   btn.onclick = () => toggleReaction(docSnap.id, emoji);
   reactionContainer.appendChild(btn);
+
+  const addBtn = document.createElement("button");
+addBtn.className = "reaction-add-btn";
+addBtn.textContent = "➕";
+addBtn.onclick = () => {
+  const emoji = prompt("Выберите эмодзи:");
+  if (!emoji) return;
+  toggleReaction(docSnap.id, emoji);
+};
+reactionContainer.appendChild(addBtn);
+
 }
 
 cont.appendChild(reactionContainer);
@@ -1197,6 +1235,17 @@ for (const [emoji, uids] of Object.entries(emojiCounts)) {
 
   btn.onclick = () => toggleReaction(docSnap.id, emoji);
   reactionContainer.appendChild(btn);
+
+  const addBtn = document.createElement("button");
+addBtn.className = "reaction-add-btn";
+addBtn.textContent = "➕";
+addBtn.onclick = () => {
+  const emoji = prompt("Выберите эмодзи:");
+  if (!emoji) return;
+  toggleReaction(docSnap.id, emoji);
+};
+reactionContainer.appendChild(addBtn);
+
 }
 
 cont.appendChild(reactionContainer);
