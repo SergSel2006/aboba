@@ -1,0 +1,72 @@
+// globals.js
+
+// DOM-элементы
+export const loginForm = document.getElementById("loginForm");
+export const googleLoginBtn = document.getElementById("googleLoginBtn");
+export const loginMsg = document.getElementById("loginMsg");
+export const chatLayout = document.getElementById("chatLayout");
+export const groupList = document.getElementById("groupList");
+export const groupNameDisplay = document.getElementById("groupNameDisplay");
+export const messagesDiv = document.getElementById("messages");
+export const chatInputForm = document.getElementById("chatInput");
+export const messageInput = document.getElementById("messageInput");
+export const charCount = document.getElementById("charCount");
+export const profileBtn = document.getElementById("profileBtn");
+export const profilePanel = document.getElementById("profilePanel");
+export const profileForm = document.getElementById("profileForm");
+export const profileNick = document.getElementById("profileNick");
+export const profileNickError = document.getElementById("profileNickError");
+export const profileAvatar = document.getElementById("profileAvatar");
+export const profileColor = document.getElementById("profileColor");
+export const profileStatus = document.getElementById("profileStatus");
+export const statusCounter = document.getElementById("statusCounter");
+export const logoutBtn = document.getElementById("logoutBtn");
+
+export const userProfileModal = document.getElementById("userProfileModal");
+export const closeUserModalBtn = document.getElementById("closeUserModal");
+export const userModalAvatar = document.getElementById("userModalAvatar");
+export const userModalNick = document.getElementById("userModalNick");
+export const userModalStatus = document.getElementById("userModalStatus");
+export const userModalMsgBtn = document.getElementById("userModalMsgBtn");
+
+export const joinModal = document.getElementById("joinGroupModal");
+export const closeJoinModal = document.getElementById("closeJoinModal");
+export const openJoinModalBtn = document.getElementById("openJoinModalBtn");
+export const joinGroupForm = document.getElementById("joinGroupForm");
+export const joinGroupName = document.getElementById("joinGroupName");
+export const joinGroupCode = document.getElementById("joinGroupCode");
+export const joinGroupPassword = document.getElementById("joinGroupPassword");
+export const joinGroupError = document.getElementById("joinGroupError");
+
+// Состояния
+export let currentUser = null;
+export let groups = [];
+export let selectedGroup = null;
+export let currentDM = null;
+export let unsubscribe = null;
+export const profilesCache = {};
+export const drafts = {};
+
+// Флаги
+export const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+// Функции обновления состояний (для других модулей)
+export function setCurrentUser(user) {
+  currentUser = user;
+}
+
+export function setGroups(g) {
+  groups = g;
+}
+
+export function setSelectedGroup(sg) {
+  selectedGroup = sg;
+}
+
+export function setCurrentDM(dm) {
+  currentDM = dm;
+}
+
+export function setUnsubscribe(fn) {
+  unsubscribe = fn;
+}
