@@ -430,6 +430,29 @@
   padding: 6px 10px;
   cursor: pointer;
 }
+      .msg-reactions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.reaction-btn {
+  background: #2a2a2a;
+  border: none;
+  border-radius: 14px;
+  padding: 2px 8px;
+  font-size: 0.9em;
+  cursor: pointer;
+  color: #ccc;
+  transition: background 0.2s ease;
+}
+.reaction-btn:hover {
+  background: #444;
+}
+.reaction-btn.reacted {
+  background: #4a90e2;
+  color: white;
+}
 
     }
 
@@ -1052,6 +1075,35 @@ async function startChat() {
 
         head.append(nick, time);
         cont.append(head, document.createTextNode(d.text || ""));
+        // === РЕАКЦИИ ===
+const reactionContainer = document.createElement("div");
+reactionContainer.className = "msg-reactions";
+reactionContainer.dataset.msgId = docSnap.id;
+reactionContainer.dataset.group = "";
+reactionContainer.dataset.chat = currentDM.chatId;
+
+const currentReactions = d.reactions || [];
+const emojiCounts = {};
+const userEmojis = [];
+
+for (const r of currentReactions) {
+  if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = [];
+  emojiCounts[r.emoji].push(r.uid);
+  if (r.uid === currentUser.uid) userEmojis.push(r.emoji);
+}
+
+for (const [emoji, uids] of Object.entries(emojiCounts)) {
+  const btn = document.createElement("button");
+  btn.className = "reaction-btn";
+  btn.textContent = emoji + " " + uids.length;
+  if (uids.includes(currentUser.uid)) btn.classList.add("reacted");
+
+  btn.onclick = () => toggleReaction(docSnap.id, emoji);
+  reactionContainer.appendChild(btn);
+}
+
+cont.appendChild(reactionContainer);
+
         msgDiv.append(avatar, cont);
         messagesDiv.appendChild(msgDiv);
       }
@@ -1120,6 +1172,35 @@ async function startChat() {
         body.textContent = d.text || "";
 
         cont.append(head, body);
+        // === РЕАКЦИИ ===
+const reactionContainer = document.createElement("div");
+reactionContainer.className = "msg-reactions";
+reactionContainer.dataset.msgId = docSnap.id;
+reactionContainer.dataset.group = selectedGroup;
+reactionContainer.dataset.chat = "";
+
+const currentReactions = d.reactions || [];
+const emojiCounts = {};
+const userEmojis = [];
+
+for (const r of currentReactions) {
+  if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = [];
+  emojiCounts[r.emoji].push(r.uid);
+  if (r.uid === currentUser.uid) userEmojis.push(r.emoji);
+}
+
+for (const [emoji, uids] of Object.entries(emojiCounts)) {
+  const btn = document.createElement("button");
+  btn.className = "reaction-btn";
+  btn.textContent = emoji + " " + uids.length;
+  if (uids.includes(currentUser.uid)) btn.classList.add("reacted");
+
+  btn.onclick = () => toggleReaction(docSnap.id, emoji);
+  reactionContainer.appendChild(btn);
+}
+
+cont.appendChild(reactionContainer);
+
         msgDiv.append(avatar, cont);
         messagesDiv.appendChild(msgDiv);
       }
@@ -1330,6 +1411,32 @@ userModalMsgBtn.onclick = () => {
   addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
   //location.reload();
 };
+
+   async function toggleReaction(messageId, emoji) {
+  const isGroup = !!selectedGroup;
+  const ref = isGroup
+    ? doc(db, "groups", selectedGroup, "messages", messageId)
+    : doc(db, "dmChats", currentDM.chatId, "messages", messageId);
+
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  if (!data) return;
+
+  const reactions = data.reactions || [];
+  const userReactions = reactions.filter(r => r.uid === currentUser.uid);
+  const alreadyReacted = userReactions.some(r => r.emoji === emoji);
+
+  let newReactions;
+  if (alreadyReacted) {
+    // Снять реакцию
+    newReactions = reactions.filter(r => !(r.uid === currentUser.uid && r.emoji === emoji));
+  } else {
+    if (userReactions.length >= 2) return alert("Можно только 2 реакции");
+    newReactions = [...reactions, { uid: currentUser.uid, emoji }];
+  }
+
+  await updateDoc(ref, { reactions: newReactions });
+}
 
  </script>
 
