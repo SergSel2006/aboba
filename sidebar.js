@@ -1,7 +1,6 @@
 import { loadProfile, openDMChat, startChat, renderSidebar } from "./chat.js";
 import { currentDM, groups, selectedGroup, localStorage, addSystemMessage } from "./globals.js";
 
-
 const groupList = document.getElementById("groupList");
 const groupNameDisplay = document.getElementById("groupNameDisplay");
 const openJoinModalBtn = document.getElementById("openJoinModalBtn");
