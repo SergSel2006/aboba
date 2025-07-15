@@ -1,4 +1,3 @@
-
 import { db, currentUser, drafts, profilesCache } from "./globals.js";
 import {
   collection,
