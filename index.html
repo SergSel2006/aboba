@@ -431,6 +431,73 @@
   cursor: pointer;
 }
 
+      /* ===== ИЗМЕНЕНИЯ К CSS ===== */
+
+/* 2. Анимация появления сообщений */
+.msg {
+  animation: fadeIn 0.2s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3. Тень под нижней панелью ввода */
+#chatInput {
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 4. Цвет активной группы */
+.group-item.active {
+  background: #4a90e2;
+  color: #fff;
+}
+
+/* 5. Больше пространства между сообщениями */
+#messages {
+  gap: 1em;
+}
+
+/* 6. Обводка аватарки */
+.avatar {
+  border: 1px solid #444;
+}
+
+/* 7. Скругление инпута сообщения */
+#messageInput {
+  border-radius: 8px;
+}
+
+/* 8. Hover эффект на кнопку отправки */
+#chatInput button:hover:enabled {
+  background: #4a90e2;
+  color: #fff;
+}
+
+/* 9. Тень под модалками */
+.modal-content {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+/* 10. Кастомный скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
     }
 
     /* Общее для интерактивных элементов */
@@ -452,6 +519,15 @@
 
     <div id="chatLayout" role="main" aria-live="polite" aria-atomic="false">
       <aside id="groupList" role="list" aria-label="Список групп чата"></aside>
+      <!-- ДОБАВЬ кнопку ➕ на панель групп -->
+  <button
+    id="openJoinModalBtn"
+    title="Добавить группу"
+    aria-label="Добавить группу"
+    style="margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
+  >
+    ➕ Добавить группу
+  </button>
       <main id="chatArea">
         <div id="groupNameDisplay" aria-live="polite" aria-atomic="true"></div>
         <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
@@ -535,16 +611,6 @@
       </form>
     </div>
   </div>
-
-  <!-- ДОБАВЬ кнопку ➕ на панель групп -->
-  <button
-    id="openJoinModalBtn"
-    title="Добавить группу"
-    aria-label="Добавить группу"
-    style="margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
-  >
-    ➕ Добавить группу
-  </button>
 </body>
 </html>
 
