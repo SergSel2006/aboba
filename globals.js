@@ -1,5 +1,4 @@
 // globals.js
-
 // DOM-элементы
 export const loginForm = document.getElementById("loginForm");
 export const googleLoginBtn = document.getElementById("googleLoginBtn");
