@@ -713,6 +713,9 @@ joinGroupForm.addEventListener("submit", async (e) => {
     renderSidebar();
     startChat();
     closeJoinModal.onclick();
+
+    addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
+    //location.reload();
   } catch (err) {
     showErr("Ошибка: " + err.message);
   }
@@ -1323,6 +1326,9 @@ userModalMsgBtn.onclick = () => {
   openDMChat(chatId, uid);
   renderSidebar(); // чтобы выделение ЛС сработало
   userProfileModal.style.display = "none";
+
+  addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
+  //location.reload();
 };
 
  </script>
