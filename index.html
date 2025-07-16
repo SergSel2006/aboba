@@ -761,6 +761,11 @@ logoutBtn.onclick = () => {
     unsubscribe = null;
   }
   signOut(auth);
+
+  profileBtn.style.display = "none";
+  profilePanel.style.display = "none";
+  profileBtn.setAttribute("aria-expanded", "false");
+
   updateChatInputVisibility();
 };
 
@@ -802,6 +807,8 @@ onAuthStateChanged(auth, async (user) => {
     loginForm.style.display = "flex";
     chatLayout.style.display = "none";
     profileBtn.style.display = "none";
+    profilePanel.style.display = "none";
+    profileBtn.setAttribute("aria-expanded", "false");
     groups = [];
     selectedGroup = null;
     groupList.innerHTML = "";
@@ -1010,7 +1017,8 @@ if (dmChats.length) {
     });
   }
 
-  if (currentUser) {
+  openJoinModalBtn.remove();
+if (currentUser) {
   groupList.appendChild(openJoinModalBtn);
 }
 
