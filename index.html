@@ -926,10 +926,18 @@ if (dmChats.length) {
 
       item.onclick = () => {
         selectedGroup = null;
-        currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
-        localStorage.setItem("selectedGroup", ""); // очистим
-        startChat();
-        renderSidebar();
+currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
+localStorage.setItem("selectedGroup", "");
+
+// Создаём чат-документ, если его ещё нет
+await setDoc(
+  doc(db, "dmChats", dm.chatId),
+  { uids: [currentUser.uid, dm.otherUid] },
+  { merge: true }
+);
+
+renderSidebar();
+startChat();
       };
 
       item.onkeydown = (e) => {
@@ -1329,10 +1337,22 @@ userModalMsgBtn.onclick = () => {
 
   const chatId = getDMChatId(currentUser.uid, uid);
   selectedGroup = null;
-  currentDM = { chatId, otherUid: uid }; // ✅ вот это главное исправление
-  localStorage.setItem("selectedGroup", ""); // очищаем
-  openDMChat(chatId, uid);
-  renderSidebar(); // чтобы выделение ЛС сработало
+  selectedGroup = null;
+currentDM = { chatId, otherUid: uid };
+localStorage.setItem("selectedGroup", "");
+
+// Создаём чат-документ, если его нет
+await setDoc(
+  doc(db, "dmChats", chatId),
+  { uids: [currentUser.uid, uid] },
+  { merge: true }
+);
+
+renderSidebar();
+startChat();
+userProfileModal.style.display = "none";
+addSystemMessage("ЛС создан! Можете написать сообщение.");
+  
   userProfileModal.style.display = "none";
 
   addSystemMessage("ЛС создан!");
