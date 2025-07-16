@@ -1036,7 +1036,11 @@ async function startChat() {
   renderDraft();
 
   if (currentDM) {
-    await ensureDMChatExists(currentDM.chatId, currentUser.uid, currentDM.otherUid);
+    await setDoc(
+  doc(db, "dmChats", currentDM.chatId),
+  { uids: [currentUser.uid, currentDM.otherUid] },
+  { merge: true }
+);
 
 const q = query(
   collection(db, "dmChats", currentDM.chatId, "messages"),
