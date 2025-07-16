@@ -205,6 +205,11 @@
       margin-left: 6px;
       user-select: none;
     }
+    
+    #chatInput.hidden {
+  display: none !important;
+    }
+
     #chatInput {
       position: fixed;
       bottom: env(safe-area-inset-bottom, 0);
@@ -642,6 +647,16 @@
     return d.toLocaleDateString();
   };
 
+   function updateChatInputVisibility() { // Видимость строки ввода сообщения
+  const chatInput = document.getElementById("chatInput");
+  if (selectedGroup || currentDM) {
+    chatInput.classList.remove("hidden");
+  } else {
+    chatInput.classList.add("hidden");
+  }
+}
+
+
 // Открытие и закрытие модалки добавления группы
 openJoinModalBtn.onclick = () => {
   joinModal.style.display = "flex";
@@ -743,6 +758,7 @@ logoutBtn.onclick = () => {
     unsubscribe = null;
   }
   signOut(auth);
+  updateChatInputVisibility();
 };
 
 // Отслеживаем изменение авторизации
@@ -937,6 +953,8 @@ if (dmChats.length) {
 
   await renderSidebar();
   startChat();
+
+        updateChatInputVisibility();
 };
 
 
@@ -972,6 +990,8 @@ if (dmChats.length) {
           localStorage.setItem("selectedGroup", "");
           renderSidebar();
           startChat();
+
+          updateChatInputVisibility();
         }
       };
 
