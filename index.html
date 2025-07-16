@@ -1359,6 +1359,9 @@ userModalMsgBtn.onclick = async () => {
   addSystemMessage("ЛС создан! Можете написать сообщение.");
   
   await openDMChat(chatId, uid);
+  // Сброс ввода и обновление кнопки
+  messageInput.value = "";
+  updateCharCount();
 };
 
  </script>
