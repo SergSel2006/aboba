@@ -805,6 +805,7 @@ onAuthStateChanged(auth, async (user) => {
     clearMessages();
     localStorage.removeItem("selectedGroup");
   }
+  updateChatInputVisibility();
 });
 
 // Обновляем счётчик символов статуса
