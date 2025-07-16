@@ -717,7 +717,6 @@ joinGroupForm.addEventListener("submit", async (e) => {
     closeJoinModal.onclick();
 
     addSystemMessage("ЛС создан!");
-renderSidebar();
 startChat();
   } catch (err) {
     showErr("Ошибка: " + err.message);
@@ -1312,9 +1311,6 @@ async function loadUserGroups() {
       groups.push({ id: docSnap.id, name: data.name || docSnap.id });
     }
   });
-
-
-  renderSidebar();
 }
 
 // Модалка пользователя: открытие с заполнением данных
