@@ -1036,12 +1036,14 @@ async function startChat() {
   renderDraft();
 
   if (currentDM) {
-    const q = query(
-      collection(db, "dmChats", currentDM.chatId, "messages"),
-      orderBy("createdAt", "asc")
-    );
+    await ensureDMChatExists(currentDM.chatId, currentUser.uid, currentDM.otherUid);
 
-    unsubscribe = onSnapshot(q, async (snap) => {
+const q = query(
+  collection(db, "dmChats", currentDM.chatId, "messages"),
+  orderBy("createdAt", "asc")
+);
+unsubscribe = onSnapshot(q, async (snap) => {
+
       clearMessages();
       for (const docSnap of snap.docs) {
         const d = docSnap.data();
