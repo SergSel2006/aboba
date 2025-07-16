@@ -924,21 +924,22 @@ if (dmChats.length) {
 
       item.append(avatar, nick);
 
-      item.onclick = () => {
-        selectedGroup = null;
-currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
-localStorage.setItem("selectedGroup", "");
+      item.onclick = async () => {
+  selectedGroup = null;
+  currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
+  localStorage.setItem("selectedGroup", "");
 
-// Создаём чат-документ, если его ещё нет
-await setDoc(
-  doc(db, "dmChats", dm.chatId),
-  { uids: [currentUser.uid, dm.otherUid] },
-  { merge: true }
-);
+  // Создаём чат-документ, если его ещё нет
+  await setDoc(
+    doc(db, "dmChats", dm.chatId),
+    { uids: [currentUser.uid, dm.otherUid] },
+    { merge: true }
+  );
 
-renderSidebar();
-startChat();
-      };
+  await renderSidebar();
+  startChat();
+};
+
 
       item.onkeydown = (e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -988,12 +989,15 @@ startChat();
 
   groupList.appendChild(openJoinModalBtn);
 
+  if (selectedGroup) {
   groupNameDisplay.textContent =
-    selectedGroup
-      ? groups.find((g) => g.id === selectedGroup)?.name || "—"
-      : currentDM
-      ? "ЛС с " + (await loadProfile(currentDM.otherUid)).nick || "Безымянный"
-      : "—";
+    groups.find((g) => g.id === selectedGroup)?.name || "—";
+} else if (currentDM) {
+  const prof = await loadProfile(currentDM.otherUid);
+  groupNameDisplay.textContent = "ЛС с " + (prof.nick || "Безымянный");
+} else {
+  groupNameDisplay.textContent = "—";
+}
 }
 
   // Добавляем системное сообщение (типа "Профиль сохранён")
