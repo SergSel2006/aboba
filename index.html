@@ -1150,11 +1150,20 @@ async function startChat() {
 
 // ЕСЛИ хочешь открыть ЛС-чат
 async function openDMChat(chatId, otherUid) {
-  selectedGroup = null;                    // гасим выбранную группу
-  currentDM = { chatId, otherUid };        // сохраняем собеседника
-  localStorage.setItem("selectedGroup", ""); // чистим сохранённую группу
-  renderSidebar();                         // подсветить ЛС в сайдбаре
-  startChat();                             // единая подписка и рендер
+  selectedGroup = null;
+currentDM = { chatId, otherUid };
+localStorage.setItem("selectedGroup", "");
+
+// Создаём/обновляем чат-документ заранее, чтобы Firestore разрешил чтение
+await setDoc(
+  doc(db, "dmChats", chatId),
+  { uids: [currentUser.uid, otherUid] },
+  { merge: true }
+);
+
+renderSidebar();
+startChat();
+
 }
 
   // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
@@ -1340,24 +1349,11 @@ userModalMsgBtn.onclick = async () => {
   if (!uid || uid === currentUser.uid) return;
 
   const chatId = getDMChatId(currentUser.uid, uid);
-  selectedGroup = null;
-  currentDM = { chatId, otherUid: uid };
-  localStorage.setItem("selectedGroup", "");
-
-  // Создаём чат-документ, если его нет
-  await setDoc(
-    doc(db, "dmChats", chatId),
-    { uids: [currentUser.uid, uid] },
-    { merge: true }
-  );
-
   userProfileModal.style.display = "none";
   addSystemMessage("ЛС создан! Можете написать сообщение.");
-
-  await renderSidebar();
-  await startChat();
+  
+  await openDMChat(chatId, uid);
 };
-
 
  </script>
 
