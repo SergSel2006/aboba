@@ -763,7 +763,8 @@ logoutBtn.onclick = () => {
   signOut(auth);
 
   profileBtn.style.display = "none";
-  profilePanel.style.display = "none";
+profilePanel.style.display = "none";
+openJoinModalBtn.style.display = "none";
   profileBtn.setAttribute("aria-expanded", "false");
 
   updateChatInputVisibility();
@@ -776,6 +777,7 @@ onAuthStateChanged(auth, async (user) => {
     loginForm.style.display = "none";
     chatLayout.style.display = "flex";
     profileBtn.style.display = "flex";
+    openJoinModalBtn.style.display = "block";
     await loadUserProfile();
 
     const currentNick = profileNick.value.trim().toLowerCase();
@@ -1017,9 +1019,13 @@ if (dmChats.length) {
     });
   }
 
-  openJoinModalBtn.remove();
-if (currentUser) {
-  groupList.appendChild(openJoinModalBtn);
+  if (currentUser) {
+  if (!groupList.contains(openJoinModalBtn)) {
+    groupList.appendChild(openJoinModalBtn);
+  }
+  openJoinModalBtn.style.display = "block";
+} else {
+  openJoinModalBtn.style.display = "none";
 }
 
   if (selectedGroup) {
