@@ -1335,34 +1335,29 @@ userProfileModal.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeUserModalBtn.onclick();
 });
 
-userModalMsgBtn.onclick = () => {
+userModalMsgBtn.onclick = async () => {
   const uid = userModalMsgBtn.dataset.uid;
   if (!uid || uid === currentUser.uid) return;
 
   const chatId = getDMChatId(currentUser.uid, uid);
   selectedGroup = null;
-  selectedGroup = null;
-currentDM = { chatId, otherUid: uid };
-localStorage.setItem("selectedGroup", "");
+  currentDM = { chatId, otherUid: uid };
+  localStorage.setItem("selectedGroup", "");
 
-// Создаём чат-документ, если его нет
-await setDoc(
-  doc(db, "dmChats", chatId),
-  { uids: [currentUser.uid, uid] },
-  { merge: true }
-);
+  // Создаём чат-документ, если его нет
+  await setDoc(
+    doc(db, "dmChats", chatId),
+    { uids: [currentUser.uid, uid] },
+    { merge: true }
+  );
 
-renderSidebar();
-startChat();
-userProfileModal.style.display = "none";
-addSystemMessage("ЛС создан! Можете написать сообщение.");
-  
   userProfileModal.style.display = "none";
+  addSystemMessage("ЛС создан! Можете написать сообщение.");
 
-  addSystemMessage("ЛС создан!");
-renderSidebar();
-startChat();
+  await renderSidebar();
+  await startChat();
 };
+
 
  </script>
 
