@@ -448,6 +448,25 @@
   </style>
 </head>
 <body>
+
+  <div id="splashScreen" style="
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: #111;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: monospace, monospace;
+  font-size: 3em;
+  z-index: 9999;
+  user-select: none;
+">
+  <div id="splashText">абоба.</div>
+  <div id="splashSubText" style="margin-top: 0.5em; font-size: 1.5em; color: #aaa;"></div>
+</div>
+
   <div id="app">
     <div id="loginForm" role="region" aria-label="Форма входа">
       <h2>Войти через Google</h2>
@@ -656,6 +675,39 @@
   }
 }
 
+   //СПЛЭШИ
+   const splashScreen = document.getElementById("splashScreen");
+const splashText = document.getElementById("splashText");
+const splashSubText = document.getElementById("splashSubText");
+
+const baseText = "абоба";
+const dots = [".", "..", "..."];
+let dotIndex = 0;
+
+const subTexts = ["абобус", "лабобу", "абоба", "абобан", "абобчик", "абобенко"];
+let subIndex = 0;
+
+function updateSplash() {
+  splashText.textContent = baseText + dots[dotIndex];
+  dotIndex = (dotIndex + 1) % dots.length;
+
+  splashSubText.textContent = subTexts[subIndex];
+  subIndex = Math.floor(Math.random() * subTexts.length);
+}
+
+const splashInterval = setInterval(updateSplash, 500);
+
+// Функция скрытия сплэша, вызывай после загрузки
+function hideSplash() {
+  clearInterval(splashInterval);
+  splashScreen.style.display = "none";
+}
+
+// Пример: скрыть сплэш через 3 секунды
+// hideSplash();
+
+// Ты должен вызвать hideSplash(), когда всё загрузится (авторизация, данные и т.п.)
+
 
 // Открытие и закрытие модалки добавления группы
 openJoinModalBtn.onclick = () => {
@@ -801,7 +853,10 @@ onAuthStateChanged(auth, async (user) => {
 
     renderSidebar();
     startChat();
+
+    hideSplash();
   } else {
+    hideSplash();
     if (unsubscribe) {
       unsubscribe();
       unsubscribe = null;
