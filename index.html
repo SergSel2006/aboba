@@ -993,7 +993,7 @@ if (dmChats.length) {
     groups.find((g) => g.id === selectedGroup)?.name || "—";
 } else if (currentDM) {
   const prof = await loadProfile(currentDM.otherUid);
-  groupNameDisplay.textContent = "ЛС с " + (prof.nick || "Безымянный");
+  groupNameDisplay.textContent = "" + (prof.nick || "Безымянный"); //ЛС с
 } else {
   groupNameDisplay.textContent = "—";
 }
