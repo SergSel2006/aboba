@@ -623,6 +623,7 @@
 
   let currentUser = null;
   let groups = [];
+   let dmChats = [];
   let selectedGroup = null;
   let currentDM = null;
   let unsubscribe = null;
@@ -692,6 +693,7 @@ joinGroupForm.addEventListener("submit", async (e) => {
 
       selectedGroup = name;
       localStorage.setItem("selectedGroup", selectedGroup);
+      localStorage.setItem("selectedGroup", "");
       renderSidebar();
       startChat();
       closeJoinModal.onclick();
@@ -714,8 +716,9 @@ joinGroupForm.addEventListener("submit", async (e) => {
     startChat();
     closeJoinModal.onclick();
 
-    addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
-    //location.reload();
+    addSystemMessage("ЛС создан!");
+renderSidebar();
+startChat();
   } catch (err) {
     showErr("Ошибка: " + err.message);
   }
@@ -762,6 +765,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     await loadUserGroups();
+    await loadDMChats();
 
     const savedGroup = localStorage.getItem("selectedGroup");
     if (savedGroup && groups.some(g => g.id === savedGroup)) {
@@ -841,15 +845,19 @@ if (newNick.length > 30) {
   }, { merge: true });
 
   profilePanel.style.display = "none";
-  profileBtn.setAttribute("aria-expanded", "false");
-  profilesCache[currentUser.uid] = {
-    nick: profileNick.value.trim(),
-    avatar: profileAvatar.value.trim(),
-    color: profileColor.value,
-    status: profileStatus.value.trim(),
-  };
-  addSystemMessage("Профиль сохранён");
-  location.reload(); // ⬅️ вот она, перезагрузка
+profileBtn.setAttribute("aria-expanded", "false");
+profilesCache[currentUser.uid] = {
+  nick: profileNick.value.trim(),
+  avatar: profileAvatar.value.trim(),
+  color: profileColor.value,
+  status: profileStatus.value.trim(),
+};
+addSystemMessage("Профиль сохранён");
+
+// Обновляем профиль в UI без перезагрузки
+await loadUserProfile();
+renderSidebar();
+startChat();
 });
 
   // Загружаем профиль пользователя
@@ -869,47 +877,46 @@ if (newNick.length > 30) {
   }
 
 async function loadDMChats() {
+  dmChats = []; // глобальный массив для ЛС
+
   const q = query(
     collection(db, "dmChats"),
     where("uids", "array-contains", currentUser.uid)
   );
   const snap = await getDocs(q);
-  const dmChats = [];
 
   snap.forEach((docSnap) => {
     const { uids } = docSnap.data();
     const otherUid = uids.find((u) => u !== currentUser.uid);
     if (otherUid) dmChats.push({ chatId: docSnap.id, otherUid });
   });
-
-  return dmChats;
 }
+
    
   // Рендерим сайдбар
   async function renderSidebar() {
   groupList.innerHTML = "";
 
-  // Загружаем ДМ-чаты
-  const dms = await loadDMChats();
+    // Загружаем ДМ-чаты
+ await loadDMChats();
 
-  if (dms.length) {
-    const dmHeader = document.createElement("div");
-    dmHeader.className = "sidebar-divider";
-    dmHeader.textContent = "ЛС";
-    groupList.appendChild(dmHeader);
+if (dmChats.length) {
+  const dmHeader = document.createElement("div");
+  dmHeader.className = "sidebar-divider";
+  dmHeader.textContent = "ЛС";
+  groupList.appendChild(dmHeader);
 
-    for (const dm of dms) {
-      const prof = await loadProfile(dm.otherUid);
-      const item = document.createElement("div");
-      item.className =
-        "group-item" +
-        (currentDM?.chatId === dm.chatId ? " active" : "");
-      item.tabIndex = 0;
+  for (const dm of dmChats) {
+    const prof = await loadProfile(dm.otherUid);
+    const item = document.createElement("div");
+    item.className =
+      "group-item" +
+      (currentDM?.chatId === dm.chatId ? " active" : "");
+    item.tabIndex = 0;
 
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
-
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.style.backgroundImage = `url(${prof.avatar || "https://i.imgur.com/4AiXzf8.png"})`;
       const nick = document.createElement("span");
       nick.textContent = prof.nick || "Безымянный";
       nick.style.color = prof.color || "#ccc";
@@ -954,6 +961,7 @@ async function loadDMChats() {
           selectedGroup = g.id;
           currentDM = null;
           localStorage.setItem("selectedGroup", selectedGroup);
+          localStorage.setItem("selectedGroup", "");
           renderSidebar();
           startChat();
         }
@@ -1327,8 +1335,9 @@ userModalMsgBtn.onclick = () => {
   renderSidebar(); // чтобы выделение ЛС сработало
   userProfileModal.style.display = "none";
 
-  addSystemMessage("ЛС создан! Отправьте сообщение и обновите страницу.");
-  //location.reload();
+  addSystemMessage("ЛС создан!");
+renderSidebar();
+startChat();
 };
 
  </script>
