@@ -711,8 +711,10 @@ joinGroupForm.addEventListener("submit", async (e) => {
       localStorage.setItem("selectedGroup", "");
       renderSidebar();
       startChat();
+      updateChatInputVisibility();
       closeJoinModal.onclick();
       return;
+
     }
 
     const q = query(collection(db, "profiles"), where("nick", "==", name));
@@ -732,7 +734,8 @@ joinGroupForm.addEventListener("submit", async (e) => {
     closeJoinModal.onclick();
 
     addSystemMessage("ЛС создан!");
-startChat();
+    startChat();
+    updateChatInputVisibility();   // ← добавили
   } catch (err) {
     showErr("Ошибка: " + err.message);
   }
@@ -1007,7 +1010,9 @@ if (dmChats.length) {
     });
   }
 
+  if (currentUser) {
   groupList.appendChild(openJoinModalBtn);
+}
 
   if (selectedGroup) {
   groupNameDisplay.textContent =
@@ -1189,7 +1194,7 @@ await setDoc(
 
 renderSidebar();
 startChat();
-
+updateChatInputVisibility();
 }
 
   // Отправка сообщений (Enter — отправка, Shift+Enter — перенос)
