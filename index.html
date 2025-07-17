@@ -1078,9 +1078,11 @@ if (dmChats.length) {
   if (!groupList.contains(openJoinModalBtn)) {
     groupList.appendChild(openJoinModalBtn);
   }
-  openJoinModalBtn.style.display = "block";
+  openJoinModalBtn.style.display = "flex";  // или "inline-block", зависит от стиля
+  openJoinModalBtn.disabled = false;
 } else {
   openJoinModalBtn.style.display = "none";
+  openJoinModalBtn.disabled = true;
 }
 
   if (selectedGroup) {
