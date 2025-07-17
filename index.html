@@ -446,15 +446,15 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-family: monospace, monospace;
-  font-size: 3em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 2em;
   z-index: 9999;
   user-select: none;
 }
 
 #splashSubText {
   margin-top: 0.5em;
-  font-size: 1.5em;
+  font-size: 1rem;
   color: #aaa;
 }
 
@@ -706,7 +706,7 @@ const baseText = "абоба";
 const dots = [".", "..", "..."];
 let dotIndex = 0;
 
-const subTexts = ["абобус", "лабобу", "абоба", "абобан", "абобчик", "абобик"];
+const subTexts = ["абобус", "лабобу", "абоба", "окак", "абобно", "абобик"];
 let subIndex = 0;
 
 function updateSplash() {
@@ -717,7 +717,7 @@ function updateSplash() {
   subIndex = Math.floor(Math.random() * subTexts.length);
 }
 
-const splashInterval = setInterval(updateSplash, 500);
+const splashInterval = setInterval(updateSplash, 1000); //время смены сплэша
 
 // Функция скрытия сплэша, вызывай после загрузки
 function hideSplash() {
