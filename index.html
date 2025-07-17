@@ -471,20 +471,7 @@
 </head>
 <body>
 
-  <div id="splashScreen" style="
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  background: #111;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-family: monospace, monospace;
-  font-size: 3em;
-  z-index: 9999;
-  user-select: none;
-">
+  <div id="splashScreen">
   <div id="splashText">абоба.</div>
   <div id="splashSubText" style="margin-top: 0.5em; font-size: 1.5em; color: #aaa;"></div>
 </div>
@@ -698,7 +685,7 @@
 }
 
    //СПЛЭШИ
-   const splashScreen = document.getElementById("splashScreen");
+const splashScreen = document.getElementById("splashScreen");
 const splashText = document.getElementById("splashText");
 const splashSubText = document.getElementById("splashSubText");
 
