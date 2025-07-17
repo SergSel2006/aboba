@@ -480,13 +480,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-  font-size: clamp(20px, 4vw, 36px);
+  font-family: 'Quicksand', sans-serif;
+  font-size: 2.6em;
   z-index: 9999;
   user-select: none;
 ">
   <div id="splashText">абоба.</div>
-  <div id="splashSubText" style="margin-top: 0.5em; font-size: 1rem; color: #aaa;"></div>
+  <div id="splashSubText" style="margin-top: 0.5em; font-size: 1.3rem; color: #aaa;"></div>
 </div>
 
   <div id="app">
@@ -706,7 +706,7 @@ const baseText = "абоба";
 const dots = [".", "..", "..."];
 let dotIndex = 0;
 
-const subTexts = ["абобус", "лабобу", "абоба", "абобан", "абобчик", "абобик"];
+const subTexts = ["абобус", "лабобу", "абоба", "ладно", "окак", "абобик"];
 let subIndex = 0;
 
 function updateSplash() {
@@ -717,7 +717,7 @@ function updateSplash() {
   subIndex = Math.floor(Math.random() * subTexts.length);
 }
 
-const splashInterval = setInterval(updateSplash, 500);
+const splashInterval = setInterval(updateSplash, 1000);
 
 // Функция скрытия сплэша, вызывай после загрузки
 function hideSplash() {
