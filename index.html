@@ -565,7 +565,7 @@
     id="openJoinModalBtn"
     title="Добавить группу"
     aria-label="Добавить группу"
-    style="margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
+    style="display: none; margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
   >
     ➕ Добавить группу
   </button>
@@ -826,6 +826,9 @@ openJoinModalBtn.style.display = "none";
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (user) {
+
+    openJoinModalBtn.style.display = "block";
+    
     loginForm.style.display = "none";
     chatLayout.style.display = "flex";
     profileBtn.style.display = "flex";
@@ -856,6 +859,9 @@ onAuthStateChanged(auth, async (user) => {
 
     hideSplash();
   } else {
+
+    openJoinModalBtn.style.display = "none";
+    
     hideSplash();
     if (unsubscribe) {
       unsubscribe();
