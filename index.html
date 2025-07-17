@@ -589,7 +589,7 @@
     aria-label="Добавить группу"
     style="display: none; margin:1em auto; padding:0.6em; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer;"
   >
-    ➕ Добавить группу
+    ➕
   </button>
 </body>
 </html>
@@ -1014,7 +1014,7 @@ async function loadDMChats() {
 if (dmChats.length) {
   const dmHeader = document.createElement("div");
   dmHeader.className = "sidebar-divider";
-  dmHeader.textContent = "ЛС";
+  dmHeader.textContent = "💬";
   groupList.appendChild(dmHeader);
 
   for (const dm of dmChats) {
@@ -1068,7 +1068,7 @@ if (dmChats.length) {
   if (groups.length) {
     const groupHeader = document.createElement("div");
     groupHeader.className = "sidebar-divider";
-    groupHeader.textContent = "Группы";
+    groupHeader.textContent = "👥";
     groupList.appendChild(groupHeader);
 
     groups.forEach((g) => {
