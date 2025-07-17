@@ -212,7 +212,7 @@
     }
 
     #chatInput {
-      position: flex; /*fixed-flex*/
+      position: fixed;
       bottom: env(safe-area-inset-bottom, 0);
       left: 0;
       right: 0;
@@ -402,7 +402,7 @@
         padding-bottom: 90px;
       }
       #chatInput {
-        position: flex;
+        position: fixed;
         bottom: env(safe-area-inset-bottom, 0);
         left: 0;
         right: 0;
@@ -446,15 +446,15 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 2em;
+  font-family: monospace, monospace;
+  font-size: 3em;
   z-index: 9999;
   user-select: none;
 }
 
 #splashSubText {
   margin-top: 0.5em;
-  font-size: 1rem;
+  font-size: 1.5em;
   color: #aaa;
 }
 
@@ -471,9 +471,22 @@
 </head>
 <body>
 
-  <div id="splashScreen">
+  <div id="splashScreen" style="
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: #111;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: monospace, monospace;
+  font-size: 3em;
+  z-index: 9999;
+  user-select: none;
+">
   <div id="splashText">абоба.</div>
-  <div id="splashSubText"></div>
+  <div id="splashSubText" style="margin-top: 0.5em; font-size: 1.5em; color: #aaa;"></div>
 </div>
 
   <div id="app">
@@ -508,7 +521,7 @@
       <button type="submit" disabled>Отправить</button>
     </form>
 
-  <button id="profileBtn" title="Настройки профиля" aria-haspopup="true" aria-expanded="false">⚙</button>
+    <button id="profileBtn" title="Настройки профиля" aria-haspopup="true" aria-expanded="false">⚙</button>
 
     <div id="profilePanel" role="region" aria-label="Панель настроек профиля" tabindex="-1">
       <form id="profileForm" novalidate>
@@ -685,7 +698,7 @@
 }
 
    //СПЛЭШИ
-const splashScreen = document.getElementById("splashScreen");
+   const splashScreen = document.getElementById("splashScreen");
 const splashText = document.getElementById("splashText");
 const splashSubText = document.getElementById("splashSubText");
 
@@ -693,7 +706,7 @@ const baseText = "абоба";
 const dots = [".", "..", "..."];
 let dotIndex = 0;
 
-const subTexts = ["абобус", "лабобу", "абоба", "окак", "абобно", "абобик"];
+const subTexts = ["абобус", "лабобу", "абоба", "абобан", "абобчик", "абобик"];
 let subIndex = 0;
 
 function updateSplash() {
@@ -704,7 +717,7 @@ function updateSplash() {
   subIndex = Math.floor(Math.random() * subTexts.length);
 }
 
-const splashInterval = setInterval(updateSplash, 1000); //время смены сплэша
+const splashInterval = setInterval(updateSplash, 500);
 
 // Функция скрытия сплэша, вызывай после загрузки
 function hideSplash() {
