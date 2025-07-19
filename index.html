@@ -36,13 +36,6 @@
   margin: auto;
   animation: fadeIn 1s ease-in;
 }
-/*сплэш2*/
-    #app {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
     #chatLayout {
       flex: 1;
       display: flex;
@@ -469,6 +462,40 @@
   color: #aaa;
 }
 
+#onboarding {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.95);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.onboarding-inner {
+  background: #222;
+  padding: 20px 30px;
+  border-radius: 12px;
+  max-width: 90%;
+  text-align: left;
+  box-shadow: 0 0 10px #000;
+}
+
+#onboarding button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #444;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+
     }
 
     /* Общее для интерактивных элементов */
@@ -506,6 +533,21 @@
       <button id="googleLoginBtn" aria-label="Войти через Google">🔐 Войти с Google</button>
       <p id="loginMsg" role="alert" aria-live="assertive"></p>
     </div>
+    
+    <div id="onboarding" style="display:none;">
+  <div class="onboarding-inner">
+    <h2>Добро пожаловать 👋</h2>
+    <p>Здесь можно:</p>
+    <ul>
+      <li>Чатиться в группах</li>
+      <li>Писать в ЛС</li>
+      <li>Выбирать ник</li>
+      <li>Скоро — постить как в твиттере</li>
+    </ul>
+    <label><input type="checkbox" id="dontShowAgain"> Больше не показывать</label>
+    <button id="onboardingOk">Пон</button>
+  </div>
+</div>
 
     <div id="chatLayout" role="main" aria-live="polite" aria-atomic="false">
       <aside id="groupList" role="list" aria-label="Список групп чата"></aside>
@@ -602,13 +644,6 @@
   >
     ➕
   </button>
-  
-  <div id="splashInstructions" class="splash-text">
-  👋 Добро пожаловать в Абобу!<br>
-  🔐 Войдите, чтобы начать общение.<br>
-  🌀 Здесь есть группы, чаты и скоро — фид, как в TikTok.<br>
-  🧪 Проект в альфе, баги — это стиль.
-</div>
 
 </body>
 </html>
