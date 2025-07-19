@@ -1539,6 +1539,24 @@ userModalMsgBtn.onclick = async () => {
   updateCharCount();
 };
 
+document.addEventListener("DOMContentLoaded", () => {
+  const onboardingShown = localStorage.getItem("onboardingShown");
+  const onboarding = document.getElementById("onboarding");
+  const onboardingOk = document.getElementById("onboardingOk");
+  const dontShowAgain = document.getElementById("dontShowAgain");
+
+  if (!onboardingShown) {
+    onboarding.style.display = "flex";
+  }
+
+  onboardingOk.addEventListener("click", () => {
+    if (dontShowAgain.checked) {
+      localStorage.setItem("onboardingShown", "true");
+    }
+    onboarding.style.display = "none";
+  });
+});
+
    //font Moirai One
  </script>
 
