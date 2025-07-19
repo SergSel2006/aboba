@@ -1554,6 +1554,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("onboardingShown", "true");
     }
     onboarding.style.display = "none";
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 });
 
