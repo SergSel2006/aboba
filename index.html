@@ -73,7 +73,7 @@
       background: #1c1c1c;
       padding: 1em;
       overflow-y: auto;
-      display: sticky;
+      display: flex;
       flex-direction: column;
       border-right: 1px solid #2a2a2a;
     }
@@ -381,41 +381,55 @@
       color: #aaa;
       user-select: none;
     }
-    @media (max-width: 768px) {
-      #groupList {
-        width: 100%;
-        height: 50px;
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 0.3em 0.6em;
-        border-bottom: 1px solid #2a2a2a;
-        border-right: none;
-      }
-      .group-item {
-        flex: 0 0 auto;
-        margin: 0 0.3em;
-        padding: 0.5em 0.8em;
-        border-radius: 20px;
-        font-size: 0.9em;
-      }
-      #chatLayout {
-        flex-direction: column;
-      }
-      #messages {
-        padding: 0.5em 1em;
-        padding-bottom: 90px;
-      }
-      #chatInput {
-        position: fixed;
-        bottom: env(safe-area-inset-bottom, 0);
-        left: 0;
-        right: 0;
-        padding: 0 0.5em;
-      }
-      #profilePanel {
-        right: 5vw;
-        width: 90vw;
-      }
+   @media (max-width: 768px) {
+  #groupList {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #1c1c1c;
+    width: 100%;
+    height: 50px;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.3em 0.6em;
+    border-bottom: 1px solid #2a2a2a;
+    border-right: none;
+  }
+
+  .group-item {
+    flex: 0 0 auto;
+    margin: 0 0.3em;
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+
+  #chatLayout {
+    flex-direction: column;
+  }
+
+  #messages {
+    padding: 0.5em 1em;
+    padding-bottom: 90px;
+    margin-top: 50px; /* <<< отступ под закреплённый #groupList */
+  }
+
+  #chatInput {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 0;
+    right: 0;
+    padding: 0 0.5em;
+  }
+
+  #profilePanel {
+    right: 5vw;
+    width: 90vw;
+  }
+}
+
 
       .sidebar-divider {
   padding: 6px 10px;
