@@ -1,4 +1,5 @@
 //СПЛЭШИ
+"use strict";
 const splashScreen = document.getElementById("splashScreen");
 const splashText = document.getElementById("splashText");
 const splashSubText = document.getElementById("splashSubText");

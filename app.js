@@ -15,7 +15,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
+import { updateCharCount } from "./input.js";
 
+"use strict";
 const loginForm = document.getElementById("loginForm");
 const chatLayout = document.getElementById("chatLayout");
 const groupList = document.getElementById("groupList");
@@ -23,7 +25,6 @@ const groupNameDisplay = document.getElementById("groupNameDisplay");
 const messagesDiv = document.getElementById("messages");
 const chatInputForm = document.getElementById("chatInput");
 const messageInput = document.getElementById("messageInput");
-const charCount = document.getElementById("charCount");
 const profileBtn = document.getElementById("profileBtn");
 const profilePanel = document.getElementById("profilePanel");
 const profileForm = document.getElementById("profileForm");
@@ -56,8 +57,8 @@ let dmChats = [];
 let selectedGroup = null;
 let currentDM = null;
 let unsubscribe = null;
-const profilesCache = {};
-const drafts = {};
+let profilesCache = {};
+let drafts = {};
 
 
 function updateChatInputVisibility() { // Видимость строки ввода сообщения
@@ -619,9 +620,10 @@ async function openDMChat(chatId, otherUid) {
 chatInputForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser || (!selectedGroup && !currentDM)) return;
-
     const text = messageInput.value.trim();
     if (!text) return;
+    messageInput.value = "";
+    updateCharCount();
 
     const data = {
         text,
@@ -653,34 +655,9 @@ chatInputForm.addEventListener("submit", async (e) => {
             drafts[currentDM.chatId] = "";
         }
 
-        messageInput.value = "";
-        updateCharCount();
     } catch (err) {
         alert("Ошибка отправки: " + err.message);
-    }
-});
-
-const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-// Обработка нажатия клавиш Enter и Shift+Enter с учётом мобильных и ПК
-messageInput.addEventListener("keydown", (e) => {
-    e.preventDefault();
-    if (isMobile) {
-        // На мобилах: Enter без Shift — вставляем перенос строки
-        if (e.key !== "Enter" || e.shiftKey) return;
-        const start = messageInput.selectionStart;
-        const end = messageInput.selectionEnd;
-        messageInput.value =
-        messageInput.value.substring(0, start) + "\n" + messageInput.value.substring(end);
-        messageInput.selectionStart = messageInput.selectionEnd = start + 1;
-        autoResizeTextarea();
-        updateCharCount();
-    } else {
-        // На десктопах: Enter без Shift — отправляем сообщение
-        if (e.key !== "Enter" || e.shiftKey) return;
-        if (!chatInputForm.querySelector("button[type=submit]").disabled) {
-            chatInputForm.dispatchEvent(new Event("submit", { cancelable: true }));
-        }
+        messageInput.value = text
     }
 });
 
@@ -694,26 +671,6 @@ function autoResizeTextarea() {
     messageInput.style.height = "auto";
     messageInput.style.height = messageInput.scrollHeight + "px";
 }
-
-// Вешаем обработчик на ввод для ресайза, обновления счётчика и сохранения черновика
-messageInput.addEventListener("input", () => {
-    autoResizeTextarea();
-    updateCharCount();
-    if (selectedGroup) {
-        drafts[selectedGroup] = messageInput.value;
-    } else if (currentDM?.chatId) {
-        drafts[currentDM.chatId] = messageInput.value;
-    }
-});
-
-// Обновляем счетчик символов и кнопку отправки
-const updateCharCount = () => {
-    const len = messageInput.value.length;
-    const left = 1000 - len;
-    charCount.textContent = left;
-    chatInputForm.querySelector("button[type=submit]").disabled =
-    !len || len > 1000;
-};
 
 // Рендерим черновик и обновляем интерфейс
 function renderDraft() {
@@ -731,7 +688,10 @@ function renderDraft() {
 // Сохраняем черновик перед уходом со страницы
 window.addEventListener("beforeunload", () => {
     const txt = messageInput.value.trim();
-    localStorage.setItem("draft", txt) // ИИ явно сделал какую-то дичь, когда можно было бы просто сохранить тескт черновика)))
+    if (txt) {
+        if (currentDM?.chatId) {drafts[currentDM.chatId] = txt;} else {drafts[selectedGroup] = txt}
+    }
+    localStorage.setItem("drafts", JSON.stringify(drafts)) // ИИ явно сделал какую-то дичь, когда можно было бы просто сохранить тескт черновиков)))
 });
 
 updateCharCount();
@@ -817,5 +777,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
     selectedGroup = localStorage.getItem("selectedGroup")
+    drafts = JSON.parse(localStorage.getItem("drafts"))
 
 });

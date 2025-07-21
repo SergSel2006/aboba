@@ -1,4 +1,5 @@
 // globals.js
+"use strict";
 // константные значения
 export const CHAR_LIMIT = 1000
 export const VERSION = "0.0.1-alpha"
