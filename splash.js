@@ -8,7 +8,7 @@ const baseText = "абоба";
 const dots = [".", "..", "..."];
 let dotIndex = 0;
 
-const subTexts = ["абобус", "лабобу", "абоба", "ладно", "окак", "абобик"];
+const subTexts = ["абобус", "лабобу", "абоба", "ладно", "окак", "абобик", "баобаб"];
 let subIndex = 0;
 
 function updateSplash() {
