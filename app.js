@@ -16,7 +16,7 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
 import { updateCharCount } from "./input.js";
-import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDrafts, addGroup, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts } from "./globals.js"
+import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDrafts, setDMChats, addGroup, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts } from "./globals.js"
 
 
 const loginForm = document.getElementById("loginForm");
@@ -307,7 +307,7 @@ async function loadDMChats() {
                     where("uids", "array-contains", currentUser.uid)
     );
     const snap = await getDocs(q);
-    setDMChat({})
+    setDMChats({})
 
     snap.forEach((docSnap) => {
         const { uids } = docSnap.data();
