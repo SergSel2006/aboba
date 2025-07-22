@@ -307,7 +307,7 @@ async function loadDMChats() {
                     where("uids", "array-contains", currentUser.uid)
     );
     const snap = await getDocs(q);
-    setDMChats({})
+    setDMChat([])
 
     snap.forEach((docSnap) => {
         const { uids } = docSnap.data();
