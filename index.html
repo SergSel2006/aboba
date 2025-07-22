@@ -7,6 +7,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>абоба</title>
   <style>
+    /*ТЕХНИЧЕСКИЕ РАБОТЫ*/
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+    .message-box {
+      max-width: 90%;
+      font-size: 1.5rem;
+      background-color: #222;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    
     /* ===== RESET ===== */
     * {
       box-sizing: border-box;
@@ -528,6 +558,23 @@
 </head>
 <body>
 
+
+
+  
+  
+  
+    <div class="overlay">
+    <div class="message-box">
+      Ведутся технические работы.<br />
+      Приносим извинения за предоставленные неудобства!
+    </div>
+  </div>
+
+
+  
+
+  
+  
   <div id="splashScreen" style="
   position: fixed;
   top:0; left:0; right:0; bottom:0;
