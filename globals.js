@@ -1,8 +1,14 @@
 // globals.js
+"use strict";
+// константные значения
+export const CHAR_LIMIT = 1000
+export const VERSION = "0.0.1-alpha"
+
 // DOM-элементы
 export const loginForm = document.getElementById("loginForm");
 export const googleLoginBtn = document.getElementById("googleLoginBtn");
 export const loginMsg = document.getElementById("loginMsg");
+export const mainLayout = document.getElementById('mainLayout');
 export const chatLayout = document.getElementById("chatLayout");
 export const groupList = document.getElementById("groupList");
 export const groupNameDisplay = document.getElementById("groupNameDisplay");
@@ -41,10 +47,13 @@ export const joinGroupError = document.getElementById("joinGroupError");
 export let currentUser = null;
 export let groups = [];
 export let selectedGroup = null;
+export let selectedChat = {"id": null, "isGroup": false};
 export let currentDM = null;
 export let unsubscribe = null;
-export const profilesCache = {};
-export const drafts = {};
+export let drafts = {};
+
+//Переписываем состояния и некоторые другие вещи в один конструкт User
+export let User = {"id": currentUser, "groups": groups, "selectedChat": selectedChat, "unsubscribe": unsubscribe, "drafts": drafts}
 
 // Флаги
 export const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
