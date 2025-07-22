@@ -16,8 +16,9 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
 import { updateCharCount } from "./input.js";
+import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDrafts, addGroup, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts } from "./globals.js"
 
-"use strict";
+
 const loginForm = document.getElementById("loginForm");
 const chatLayout = document.getElementById("chatLayout");
 const groupList = document.getElementById("groupList");
@@ -51,15 +52,7 @@ const joinGroupCode = document.getElementById("joinGroupCode");
 const joinGroupPassword = document.getElementById("joinGroupPassword");
 const joinGroupError = document.getElementById("joinGroupError");
 
-let currentUser = null;
-let groups = [];
-let dmChats = [];
-let selectedGroup = null;
-let currentDM = null;
-let unsubscribe = null;
-let profilesCache = {};
-let drafts = {};
-
+let profilesCache = [];
 
 function updateChatInputVisibility() { // Видимость строки ввода сообщения
     const chatInput = document.getElementById("chatInput");
@@ -122,9 +115,9 @@ joinGroupForm.addEventListener("submit", async (e) => {
             }
 
             if (!groups.some((gr) => gr.id === name))
-                groups.push({ id: name, name: g.name });
+                addGroup({ id: name, name: g.name });
 
-            selectedGroup = name;
+            setSelectedGroup(name);
             localStorage.setItem("selectedGroup", selectedGroup);
 //            localStorage.setItem("selectedGroup", "");  // Это настолько гениальный мув, что я его оставлю тут)
             renderSidebar();
@@ -144,8 +137,8 @@ joinGroupForm.addEventListener("submit", async (e) => {
         if (otherUid === currentUser.uid) return showErr("Это ваш ник");
 
         const chatId = getDMChatId(currentUser.uid, otherUid);
-        currentDM = { chatId, otherUid };
-        selectedGroup = null;
+        setCurrentDM({ chatId: chatId, otherUid: otherUid });
+        setSelectedGroup(null);
         localStorage.setItem("selectedGroup", "");
         renderSidebar();
         startChat();
@@ -166,7 +159,7 @@ joinGroupForm.addEventListener("submit", async (e) => {
 
 // Отслеживаем изменение авторизации
 onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
+    setCurrentUser(user);
     if (user) {
 
         openJoinModalBtn.style.display = "block";
@@ -191,9 +184,9 @@ onAuthStateChanged(auth, async (user) => {
 
         const savedGroup = localStorage.getItem("selectedGroup");
         if (savedGroup && groups.some(g => g.id === savedGroup)) {
-            selectedGroup = savedGroup;
+            setSelectedGroup(savedGroup);
         } else {
-            selectedGroup = groups.length ? groups[0].id : null;
+            setSelectedGroup(groups.length ? groups[0].id : null);
         }
 
         renderSidebar();
@@ -207,15 +200,15 @@ onAuthStateChanged(auth, async (user) => {
         hideSplash();
         if (unsubscribe) {
             unsubscribe();
-            unsubscribe = null;
+            setUnsubscribe(null);
         }
         loginForm.style.display = "flex";
         chatLayout.style.display = "none";
         profileBtn.style.display = "none";
         profilePanel.style.display = "none";
         profileBtn.setAttribute("aria-expanded", "false");
-        groups = [];
-        selectedGroup = null;
+        setGroups([]);
+        setSelectedGroup(null);
         groupList.innerHTML = "";
         clearMessages();
         localStorage.removeItem("selectedGroup");
@@ -308,7 +301,6 @@ async function loadUserProfile() {
 }
 
 async function loadDMChats() {
-    dmChats = []; // глобальный массив для ЛС
 
     const q = query(
         collection(db, "dmChats"),
@@ -319,7 +311,7 @@ async function loadDMChats() {
     snap.forEach((docSnap) => {
         const { uids } = docSnap.data();
         const otherUid = uids.find((u) => u !== currentUser.uid);
-        if (otherUid) dmChats.push({ chatId: docSnap.id, otherUid });
+        if (otherUid) addDMchat({ chatId: docSnap.id, otherUid });
     });
 }
 
@@ -356,8 +348,8 @@ async function renderSidebar() {
             item.append(avatar, nick);
 
             item.onclick = async () => {
-                selectedGroup = null;
-                currentDM = { chatId: dm.chatId, otherUid: dm.otherUid };
+                setSelectedGroup(null);
+                setCurrentDM({ chatId: dm.chatId, otherUid: dm.otherUid });
                 localStorage.setItem("selectedGroup", "");
 
                 // Создаём чат-документ, если его ещё нет
@@ -400,10 +392,10 @@ async function renderSidebar() {
 
             div.onclick = () => {
                 if (g.id !== selectedGroup) {
-                    selectedGroup = g.id;
-                    currentDM = null;
+                    setSelectedGroup(g.id);
+                    setCurrentDM(null);
                     localStorage.setItem("selectedGroup", selectedGroup);
-                    localStorage.setItem("selectedGroup", "");
+//                    localStorage.setItem("selectedGroup", ""); // да что же это за гениальный ИИ такой...
                     renderSidebar();
                     startChat();
 
@@ -490,7 +482,7 @@ async function startChat() {
             collection(db, "dmChats", currentDM.chatId, "messages"),
                         orderBy("createdAt", "asc")
         );
-        unsubscribe = onSnapshot(q, async (snap) => {
+        setUnsubscribe(onSnapshot(q, async (snap) => {
 
             clearMessages();
             for (const docSnap of snap.docs) {
@@ -526,7 +518,7 @@ async function startChat() {
                 messagesDiv.appendChild(msgDiv);
             }
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        });
+        }));
     } else if (selectedGroup) {
         const q = query(
             collection(db, "groups", selectedGroup, "messages"),
@@ -534,7 +526,7 @@ async function startChat() {
         );
         let lastDate = "";
 
-        unsubscribe = onSnapshot(q, async (snap) => {
+        setUnsubscribe(onSnapshot(q, async (snap) => {
             clearMessages();
             lastDate = "";
             for (const docSnap of snap.docs) {
@@ -594,14 +586,14 @@ async function startChat() {
                 messagesDiv.appendChild(msgDiv);
             }
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        });
+        }));
     }
 }
 
 // ЕСЛИ хочешь открыть ЛС-чат
 async function openDMChat(chatId, otherUid) {
-    selectedGroup = null;
-    currentDM = { chatId, otherUid };
+    setSelectedGroup(null);
+    setCurrentDM({ chatId: chatId, otherUid: otherUid });
     localStorage.setItem("selectedGroup", "");
 
     // Создаём/обновляем чат-документ заранее, чтобы Firestore разрешил чтение
@@ -685,20 +677,10 @@ function renderDraft() {
     updateCharCount();
 }
 
-// Сохраняем черновик перед уходом со страницы
-window.addEventListener("beforeunload", () => {
-    const txt = messageInput.value.trim();
-    if (txt) {
-        if (currentDM?.chatId) {drafts[currentDM.chatId] = txt;} else {drafts[selectedGroup] = txt}
-    }
-    localStorage.setItem("drafts", JSON.stringify(drafts)) // ИИ явно сделал какую-то дичь, когда можно было бы просто сохранить тескт черновиков)))
-});
-
 updateCharCount();
 
 // Загружаем группы пользователя из Firestore
 async function loadUserGroups() {
-    groups = [];
 
     const groupsRef = collection(db, "groups");
     const q = query(groupsRef);
@@ -707,7 +689,7 @@ async function loadUserGroups() {
     snap.forEach((docSnap) => {
         const data = docSnap.data();
         if (data.allowed && data.allowed.includes(currentUser.uid)) {
-            groups.push({ id: docSnap.id, name: data.name || docSnap.id });
+            addGroup({ id: docSnap.id, name: data.name || docSnap.id });
         }
     });
 }
@@ -776,7 +758,4 @@ document.addEventListener("DOMContentLoaded", () => {
         onboarding.style.display = "none";
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
-    selectedGroup = localStorage.getItem("selectedGroup")
-    drafts = JSON.parse(localStorage.getItem("drafts"))
-
 });

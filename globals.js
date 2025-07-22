@@ -1,5 +1,5 @@
 // globals.js
-"use strict";
+
 // константные значения
 export const CHAR_LIMIT = 1000
 export const VERSION = "0.0.1-alpha"
@@ -44,16 +44,14 @@ export const joinGroupPassword = document.getElementById("joinGroupPassword");
 export const joinGroupError = document.getElementById("joinGroupError");
 
 // Состояния
-export let currentUser = null;
+export let currentUser;
 export let groups = [];
 export let selectedGroup = null;
 export let selectedChat = {"id": null, "isGroup": false};
 export let currentDM = null;
 export let unsubscribe = null;
 export let drafts = {};
-
-//Переписываем состояния и некоторые другие вещи в один конструкт User
-export let User = {"id": currentUser, "groups": groups, "selectedChat": selectedChat, "unsubscribe": unsubscribe, "drafts": drafts}
+export let dmChats = [];
 
 // Флаги
 export const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -67,6 +65,10 @@ export function setGroups(g) {
   groups = g;
 }
 
+export function addGroup(g) {
+  groups.push(g)
+}
+
 export function setSelectedGroup(sg) {
   selectedGroup = sg;
 }
@@ -77,4 +79,16 @@ export function setCurrentDM(dm) {
 
 export function setUnsubscribe(fn) {
   unsubscribe = fn;
+}
+
+export function setDrafts(dr) {
+  drafts = dr
+}
+
+export function setDMChats(dmc) {
+  dmChats = dmc
+}
+
+export function addDMchat(dmc) {
+  dmChats.push(dmc)
 }

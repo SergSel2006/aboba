@@ -570,7 +570,13 @@
 </div>
 
     <div id="chatLayout" role="main" aria-live="polite" aria-atomic="false">
-      <aside id="groupList" role="list" aria-label="Список групп чата"></aside>
+      <aside id="groupList" role="list" aria-label="Список групп чата" style="height: 100%;
+      position: fixed;
+      z-index: 0;
+      top: 0;
+      left: 0;
+      overflow-x: hidden;
+      "></aside>
       <main id="chatArea">
         <div id="groupNameDisplay" aria-live="polite" aria-atomic="true"></div>
         <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
