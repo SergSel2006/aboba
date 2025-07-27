@@ -1,5 +1,6 @@
 //СПЛЭШИ
 
+// @ts-check
 const splashScreen = document.getElementById("splashScreen");
 const splashText = document.getElementById("splashText");
 const splashSubText = document.getElementById("splashSubText");
@@ -25,4 +26,24 @@ const splashInterval = setInterval(updateSplash, 1000);
 export function hideSplash() {
     clearInterval(splashInterval);
     splashScreen.style.display = "none";
+    showOnboarding()
+}
+
+function showOnboarding() {
+    const onboardingShown = localStorage.getItem("onboardingShown");
+    const onboarding = document.getElementById("onboarding");
+    const onboardingOk = document.getElementById("onboardingOk");
+    const dontShowAgain = document.getElementById("dontShowAgain");
+
+    if (!onboardingShown) {
+        onboarding.style.display = "flex";
+    }
+
+    onboardingOk.addEventListener("click", () => {
+        if (dontShowAgain.checked) {
+            localStorage.setItem("onboardingShown", "true");
+        }
+        onboarding.style.display = "none";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 }

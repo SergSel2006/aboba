@@ -1,6 +1,6 @@
 import { messageInput, chatInputForm, charCount, isMobile, CHAR_LIMIT } from "./globals.js";
 
-
+// @ts-check
 // Обработка нажатия клавиш Enter и Shift+Enter с учётом мобильных и ПК
 messageInput.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || e.shiftKey) return;

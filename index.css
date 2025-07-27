@@ -423,6 +423,7 @@ color: #888;
     height: 50px;
     flex-direction: row;
     padding: 0.3em 0.6em;
+    overflow-y: auto;
     border-bottom: 1px solid #2a2a2a;
     border-right: none;
     }

@@ -43,6 +43,7 @@ export const joinGroupCode = document.getElementById("joinGroupCode");
 export const joinGroupPassword = document.getElementById("joinGroupPassword");
 export const joinGroupError = document.getElementById("joinGroupError");
 
+// @ts-check
 // Состояния
 export let currentUser;
 export let groups = [];
@@ -52,6 +53,7 @@ export let currentDM = null;
 export let unsubscribe = null;
 export let drafts = {};
 export let dmChats = [];
+export let profilesCache = {};
 
 // Флаги
 export const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -91,4 +93,12 @@ export function setDMChats(dmc) {
 
 export function addDMchat(dmc) {
   dmChats.push(dmc)
+}
+
+export function setProfilesCache(pc) {
+  profilesCache = pc
+}
+
+export function addProfileCache(key, pc) {
+  profilesCache[key] = pc
 }

@@ -4,6 +4,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.3.0/firebase
 import { firebaseConfig } from "./firebase-config.js"
 import { googleLoginBtn, logoutBtn } from "./globals.js"
 
+// @ts-check
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);

@@ -16,8 +16,10 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
 import { updateCharCount } from "./input.js";
-import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDrafts, setDMChats, addGroup, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts } from "./globals.js"
+import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDMChats, addGroup, addProfileCache, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts, profilesCache } from "./globals.js"
+import "./storage.js"
 
+// @ts-check
 
 const loginForm = document.getElementById("loginForm");
 const chatLayout = document.getElementById("chatLayout");
@@ -51,8 +53,6 @@ const joinGroupName = document.getElementById("joinGroupName");
 const joinGroupCode = document.getElementById("joinGroupCode");
 const joinGroupPassword = document.getElementById("joinGroupPassword");
 const joinGroupError = document.getElementById("joinGroupError");
-
-let profilesCache = [];
 
 function updateChatInputVisibility() { // Видимость строки ввода сообщения
     const chatInput = document.getElementById("chatInput");
@@ -270,12 +270,12 @@ profileForm.addEventListener("submit", async (e) => {
 
     profilePanel.style.display = "none";
     profileBtn.setAttribute("aria-expanded", "false");
-    profilesCache[currentUser.uid] = {
+    addProfileCache(currentUser.uid, {
         nick: profileNick.value.trim(),
                              avatar: profileAvatar.value.trim(),
                              color: profileColor.value,
                              status: profileStatus.value.trim(),
-    };
+    });
     addSystemMessage("Профиль сохранён");
 
     // Обновляем профиль в UI без перезагрузки
@@ -286,8 +286,7 @@ profileForm.addEventListener("submit", async (e) => {
 
 // Загружаем профиль пользователя
 async function loadUserProfile() {
-    const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const d = snap.exists() ? snap.data() : {};
+    let d = loadProfile(currentUser.uid)
     profileNick.value = d.nick || "";
     profileAvatar.value = d.avatar || "";
     profileColor.value = d.color || "#cccccc";
@@ -458,7 +457,7 @@ async function loadProfile(uid) {
     try {
         const snap = await getDoc(doc(db, "profiles", uid));
         const data = snap.exists() ? snap.data() : {};
-        profilesCache[uid] = data;
+        addProfileCache(uid, data);
         return data;
     } catch (e) {
         console.warn("Ошибка загрузки профиля", e);
@@ -596,6 +595,7 @@ async function openDMChat(chatId, otherUid) {
     setSelectedGroup(null);
     setCurrentDM({ chatId: chatId, otherUid: otherUid });
     localStorage.setItem("selectedGroup", "");
+    localStorage.setItem("currentDM". JSON.stringify(currentDM))
 
     // Создаём/обновляем чат-документ заранее, чтобы Firestore разрешил чтение
     await setDoc(
@@ -741,22 +741,3 @@ userModalMsgBtn.onclick = async () => {
     messageInput.value = "";
     updateCharCount();
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-    const onboardingShown = localStorage.getItem("onboardingShown");
-    const onboarding = document.getElementById("onboarding");
-    const onboardingOk = document.getElementById("onboardingOk");
-    const dontShowAgain = document.getElementById("dontShowAgain");
-
-    if (!onboardingShown) {
-        onboarding.style.display = "flex";
-    }
-
-    onboardingOk.addEventListener("click", () => {
-        if (dontShowAgain.checked) {
-            localStorage.setItem("onboardingShown", "true");
-        }
-        onboarding.style.display = "none";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-});
