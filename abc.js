@@ -1,19 +1,25 @@
 // @ts-check
 
-class abcMessage {
+export class abcMessage {
+    type; // Тип сообщения, чтобы случайно не показывать, так назовём, сообщения-приглашения...
     id;
     author;
     content;
-    sent;
+    sent; // Отправлено ли это сообщение или принятно. Удобно если захочется сделать отправленные сообщения с другой стороны приходящим.
+    chat; // что-то из abcChat, источник этого сообщения.
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
     }
     serialise() {
         throw new Error("serialise not implemented")
+        // Хотя здесь есть serialise, не стоит хранить и передавать
+        // незашифрованные сообщени. Мы тут ради шифрования всё это затеяли вообще-то
+        // (Хотя на самом деле нет лол)
     }
 }
-class abcEncMessage extends abcMessage {
+// Это тот самый класс, который можно хранить и передавать. decrypt обязань возвращать что-то из abcMessage типов
+export class abcEncMessage extends abcMessage {
     encKeyDigest;
 
     constructor() {
@@ -21,12 +27,16 @@ class abcEncMessage extends abcMessage {
         if (this.constructor === abcEncMessage) throw new Error("Cannot instantiate Base Class");
     }
     decrypt() {
+        // самое интересное, не будет требовать ничего для расшифровки.
+        // Ключ расшифровки есть в this.chat.psk, а encKeyDigest проверяется, и должен всегда совпадать
+        // проме сообщений-приглашений, у которых для проверки encKeyDigest используется публичный ключ
+        // пользователя, а для расшифровки - приватный. Как-то так.
         throw new Error("decrypt not implemented")
     }
 }
 
-class abcUser {
-    id;
+export class abcUser {
+    // id был убран из User, так как это не его часть.
     privateKey;
     publicKey;
     profile;
@@ -40,7 +50,8 @@ class abcUser {
     }
 }
 
-class abcProfile {
+export class abcProfile {
+    id;
     nick;
     avatar;
     color;
@@ -54,15 +65,31 @@ class abcProfile {
     }
 }
 
-class abcChat {
+// Чат будет иметь свой один симмеричный ключ. Им будут шифроваться все сообщения, кроме тех,
+// что необходимы для "приглашения" нового участника в чат (отправка этого самого ключа ему)
+export class abcChat {
     id;
     psk;
     messages;
+    members; // Думаю, список профилей для чатов не помешает...
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
     }
     serialise() {
         throw new Error("serialise not implemented")
+    }
+    generateInviteMessage() {
+        // Требует профиль в качестве аргумента. Возвращает что-то из abcEncMessage, подготовленного для отправки.
+        throw new Error("generateInviteMessage not implemented")
+    }
+    encryptMessage() {
+        // Требует abcMessage, возвращает abcEncMessage, логично...
+        throw new Error("encryptMessage not implemented")
+    }
+    setupFetch() {
+        // Докидываем мощно фетчем сообщений (Возможно, в другом потоке даже...).
+        // наверное должен генерировать эвенты при получении новых сообщений..
+        throw new  Error("setupFetch not implemented")
     }
 }
