@@ -5,7 +5,6 @@ class abcMessage {
     author;
     content;
     sent;
-    encKeyDigest;
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
@@ -15,6 +14,8 @@ class abcMessage {
     }
 }
 class abcEncMessage extends abcMessage {
+    encKeyDigest;
+
     constructor() {
         super()
         if (this.constructor === abcEncMessage) throw new Error("Cannot instantiate Base Class");
