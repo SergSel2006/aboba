@@ -90,6 +90,6 @@ export class abcChat {
     setupFetch() {
         // Докидываем мощно фетчем сообщений (Возможно, в другом потоке даже...).
         // наверное должен генерировать эвенты при получении новых сообщений..
-        throw new  Error("setupFetch not implemented")
+        throw new Error("setupFetch not implemented")
     }
 }

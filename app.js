@@ -119,7 +119,7 @@ joinGroupForm.addEventListener("submit", async (e) => {
 
             setSelectedGroup(name);
             localStorage.setItem("selectedGroup", selectedGroup);
-//            localStorage.setItem("selectedGroup", "");  // Это настолько гениальный мув, что я его оставлю тут)
+            //            localStorage.setItem("selectedGroup", "");  // Это настолько гениальный мув, что я его оставлю тут)
             renderSidebar();
             startChat();
             updateChatInputVisibility();
@@ -264,17 +264,17 @@ profileForm.addEventListener("submit", async (e) => {
     await setDoc(doc(db, "profiles", currentUser.uid), {
         nick: newNick,
         avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-                 color: profileColor.value,
-                 status: profileStatus.value.trim()
+        color: profileColor.value,
+        status: profileStatus.value.trim()
     }, { merge: true });
 
     profilePanel.style.display = "none";
     profileBtn.setAttribute("aria-expanded", "false");
     addProfileCache(currentUser.uid, {
         nick: profileNick.value.trim(),
-                             avatar: profileAvatar.value.trim(),
-                             color: profileColor.value,
-                             status: profileStatus.value.trim(),
+        avatar: profileAvatar.value.trim(),
+        color: profileColor.value,
+        status: profileStatus.value.trim(),
     });
     addSystemMessage("Профиль сохранён");
 
@@ -303,7 +303,7 @@ async function loadDMChats() {
 
     const q = query(
         collection(db, "dmChats"),
-                    where("uids", "array-contains", currentUser.uid)
+        where("uids", "array-contains", currentUser.uid)
     );
     const snap = await getDocs(q);
     setDMChats([])
@@ -333,8 +333,8 @@ async function renderSidebar() {
             const prof = await loadProfile(dm.otherUid);
             const item = document.createElement("div");
             item.className =
-            "group-item" +
-            (currentDM?.chatId === dm.chatId ? " active" : "");
+                "group-item" +
+                (currentDM?.chatId === dm.chatId ? " active" : "");
             item.tabIndex = 0;
 
             const avatar = document.createElement("div");
@@ -355,8 +355,8 @@ async function renderSidebar() {
                 // Создаём чат-документ, если его ещё нет
                 await setDoc(
                     doc(db, "dmChats", dm.chatId),
-                             { uids: [currentUser.uid, dm.otherUid] },
-                             { merge: true }
+                    { uids: [currentUser.uid, dm.otherUid] },
+                    { merge: true }
                 );
 
                 await renderSidebar();
@@ -386,7 +386,7 @@ async function renderSidebar() {
         groups.forEach((g) => {
             const div = document.createElement("div");
             div.className =
-            "group-item" + (g.id === selectedGroup ? " active" : "");
+                "group-item" + (g.id === selectedGroup ? " active" : "");
             div.textContent = g.name;
             div.tabIndex = 0;
 
@@ -395,7 +395,7 @@ async function renderSidebar() {
                     setSelectedGroup(g.id);
                     setCurrentDM(null);
                     localStorage.setItem("selectedGroup", selectedGroup);
-//                    localStorage.setItem("selectedGroup", ""); // да что же это за гениальный ИИ такой...
+                    //                    localStorage.setItem("selectedGroup", ""); // да что же это за гениальный ИИ такой...
                     renderSidebar();
                     startChat();
 
@@ -427,7 +427,7 @@ async function renderSidebar() {
 
     if (selectedGroup) {
         groupNameDisplay.textContent =
-        groups.find((g) => g.id === selectedGroup)?.name || "—";
+            groups.find((g) => g.id === selectedGroup)?.name || "—";
     } else if (currentDM) {
         const prof = await loadProfile(currentDM.otherUid);
         groupNameDisplay.textContent = "" + (prof.nick || "Безымянный"); //ЛС с
@@ -474,13 +474,13 @@ async function startChat() {
     if (currentDM) {
         await setDoc(
             doc(db, "dmChats", currentDM.chatId),
-                     { uids: [currentUser.uid, currentDM.otherUid] },
-                     { merge: true }
+            { uids: [currentUser.uid, currentDM.otherUid] },
+            { merge: true }
         );
 
         const q = query(
             collection(db, "dmChats", currentDM.chatId, "messages"),
-                        orderBy("createdAt", "asc")
+            orderBy("createdAt", "asc")
         );
         setUnsubscribe(onSnapshot(q, async (snap) => {
 
@@ -522,7 +522,7 @@ async function startChat() {
     } else if (selectedGroup) {
         const q = query(
             collection(db, "groups", selectedGroup, "messages"),
-                        orderBy("createdAt", "asc")
+            orderBy("createdAt", "asc")
         );
         let lastDate = "";
 
@@ -595,13 +595,13 @@ async function openDMChat(chatId, otherUid) {
     setSelectedGroup(null);
     setCurrentDM({ chatId: chatId, otherUid: otherUid });
     localStorage.setItem("selectedGroup", "");
-    localStorage.setItem("currentDM". JSON.stringify(currentDM))
+    localStorage.setItem("currentDM".JSON.stringify(currentDM))
 
     // Создаём/обновляем чат-документ заранее, чтобы Firestore разрешил чтение
     await setDoc(
         doc(db, "dmChats", chatId),
-                 { uids: [currentUser.uid, otherUid] },
-                 { merge: true }
+        { uids: [currentUser.uid, otherUid] },
+        { merge: true }
     );
 
     renderSidebar();
@@ -630,20 +630,20 @@ chatInputForm.addEventListener("submit", async (e) => {
         if (selectedGroup) {
             await addDoc(
                 collection(db, "groups", selectedGroup, "messages"),
-                         data
+                data
             );
             drafts[selectedGroup] = "";
         } else if (currentDM?.chatId) {
             // Создаём/обновляем метадату чата (массив участников)
             await setDoc(
                 doc(db, "dmChats", currentDM.chatId),
-                         { uids: [currentUser.uid, currentDM.otherUid] },
-                         { merge: true }
+                { uids: [currentUser.uid, currentDM.otherUid] },
+                { merge: true }
             );
 
             await addDoc(
                 collection(db, "dmChats", currentDM.chatId, "messages"),
-                         data
+                data
             );
             drafts[currentDM.chatId] = "";
         }
