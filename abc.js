@@ -7,6 +7,7 @@ export class abcMessage {
     content;
     sent; // Отправлено ли это сообщение или принятно. Удобно если захочется сделать отправленные сообщения с другой стороны приходящим.
     chat; // что-то из abcChat, источник этого сообщения.
+    encrypted = false;
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
@@ -21,6 +22,7 @@ export class abcMessage {
 // Это тот самый класс, который можно хранить и передавать. decrypt обязань возвращать что-то из abcMessage типов
 export class abcEncMessage extends abcMessage {
     encKeyDigest;
+    encrypted = true;
 
     constructor() {
         super()
