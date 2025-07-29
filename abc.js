@@ -23,12 +23,13 @@ export class abcMessage {
 export class abcEncMessage extends abcMessage {
     encKeyDigest;
     encrypted = true;
+    iv;
 
     constructor() {
         super()
         if (this.constructor === abcEncMessage) throw new Error("Cannot instantiate Base Class");
     }
-    decrypt() {
+    async decrypt() {
         // самое интересное, не будет требовать ничего для расшифровки.
         // Ключ расшифровки есть в this.chat.psk, а encKeyDigest проверяется, и должен всегда совпадать
         // проме сообщений-приглашений, у которых для проверки encKeyDigest используется публичный ключ
