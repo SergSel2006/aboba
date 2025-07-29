@@ -38,8 +38,9 @@ export class abcEncMessage extends abcMessage {
 export class abcUser {
     // id был убран из User, так как это не его часть.
     privateKey;
-    publicKey;
     profile;
+    // После пары минут обдумывания, User вообще должен быть локальным классом для удобства работы с ним
+    // А вот Profile имеет всю публичную информацию
 
 
     constructor() {
@@ -56,6 +57,7 @@ export class abcProfile {
     avatar;
     color;
     status;
+    publicKey;
 
     constructor() {
         if (this.constructor === abcProfile) throw new Error("Cannot instantiate Base Class");
