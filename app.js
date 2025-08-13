@@ -1,4 +1,24 @@
-import { db, auth } from "./auth.js"
+const regServiceWorker = async () => {
+    if ("serviceWorker" in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register("/serviceWorker.js")
+            if (registration.installing) {
+                console.log("ServiceWorker is being installed")
+            } else if (registration.waiting) {
+                console.log("New ServiceWorker installed, waiting for activation")
+            } else if (registration.active) {
+                console.log("ServiceWorker was activated.")
+            }
+        }
+        catch (e) {
+            console.error(`ServiceWorker registration failed with {e}`)
+        }
+    }
+}
+regServiceWorker();
+
+import "./splash.js"
+import { db, auth } from "./auth.js";
 import { hideSplash } from "./splash.js";
 import {
     collection,
@@ -16,8 +36,11 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
 import { updateCharCount } from "./input.js";
-import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDrafts, setDMChats, addGroup, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts } from "./globals.js"
+import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDMChats, addGroup, addProfileCache, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts, profilesCache } from "./globals.js";
+import "./storage.js";
+import "./input.js";
 
+// @ts-check
 
 const loginForm = document.getElementById("loginForm");
 const chatLayout = document.getElementById("chatLayout");
@@ -52,7 +75,6 @@ const joinGroupCode = document.getElementById("joinGroupCode");
 const joinGroupPassword = document.getElementById("joinGroupPassword");
 const joinGroupError = document.getElementById("joinGroupError");
 
-let profilesCache = [];
 
 function updateChatInputVisibility() { // Видимость строки ввода сообщения
     const chatInput = document.getElementById("chatInput");
@@ -119,7 +141,7 @@ joinGroupForm.addEventListener("submit", async (e) => {
 
             setSelectedGroup(name);
             localStorage.setItem("selectedGroup", selectedGroup);
-//            localStorage.setItem("selectedGroup", "");  // Это настолько гениальный мув, что я его оставлю тут)
+            //            localStorage.setItem("selectedGroup", "");  // Это настолько гениальный мув, что я его оставлю тут)
             renderSidebar();
             startChat();
             updateChatInputVisibility();
@@ -168,7 +190,7 @@ onAuthStateChanged(auth, async (user) => {
         chatLayout.style.display = "flex";
         profileBtn.style.display = "flex";
         openJoinModalBtn.style.display = "block";
-        await loadUserProfile();
+        await loadUserProfile(user.uid);
 
         const currentNick = profileNick.value.trim().toLowerCase();
         if (!currentNick || currentNick === "безымянный") {
@@ -176,7 +198,7 @@ onAuthStateChanged(auth, async (user) => {
             profileBtn.setAttribute("aria-expanded", "true");
             profilePanel.focus();
             addSystemMessage("Пожалуйста, выбери уникальный ник для профиля");
-            return;
+            // return; //??? Зачем?
         }
 
         await loadUserGroups();
@@ -264,18 +286,18 @@ profileForm.addEventListener("submit", async (e) => {
     await setDoc(doc(db, "profiles", currentUser.uid), {
         nick: newNick,
         avatar: profileAvatar.value.trim() || "https://i.imgur.com/4AiXzf8.png",
-                 color: profileColor.value,
-                 status: profileStatus.value.trim()
+        color: profileColor.value,
+        status: profileStatus.value.trim()
     }, { merge: true });
 
     profilePanel.style.display = "none";
     profileBtn.setAttribute("aria-expanded", "false");
-    profilesCache[currentUser.uid] = {
+    addProfileCache(currentUser.uid, {
         nick: profileNick.value.trim(),
-                             avatar: profileAvatar.value.trim(),
-                             color: profileColor.value,
-                             status: profileStatus.value.trim(),
-    };
+        avatar: profileAvatar.value.trim(),
+        color: profileColor.value,
+        status: profileStatus.value.trim(),
+    });
     addSystemMessage("Профиль сохранён");
 
     // Обновляем профиль в UI без перезагрузки
@@ -286,8 +308,7 @@ profileForm.addEventListener("submit", async (e) => {
 
 // Загружаем профиль пользователя
 async function loadUserProfile() {
-    const snap = await getDoc(doc(db, "profiles", currentUser.uid));
-    const d = snap.exists() ? snap.data() : {};
+    let d = await loadProfile(currentUser.uid)
     profileNick.value = d.nick || "";
     profileAvatar.value = d.avatar || "";
     profileColor.value = d.color || "#cccccc";
@@ -304,7 +325,7 @@ async function loadDMChats() {
 
     const q = query(
         collection(db, "dmChats"),
-                    where("uids", "array-contains", currentUser.uid)
+        where("uids", "array-contains", currentUser.uid)
     );
     const snap = await getDocs(q);
     setDMChats([])
@@ -334,8 +355,8 @@ async function renderSidebar() {
             const prof = await loadProfile(dm.otherUid);
             const item = document.createElement("div");
             item.className =
-            "group-item" +
-            (currentDM?.chatId === dm.chatId ? " active" : "");
+                "group-item" +
+                (currentDM?.chatId === dm.chatId ? " active" : "");
             item.tabIndex = 0;
 
             const avatar = document.createElement("div");
@@ -356,8 +377,8 @@ async function renderSidebar() {
                 // Создаём чат-документ, если его ещё нет
                 await setDoc(
                     doc(db, "dmChats", dm.chatId),
-                             { uids: [currentUser.uid, dm.otherUid] },
-                             { merge: true }
+                    { uids: [currentUser.uid, dm.otherUid] },
+                    { merge: true }
                 );
 
                 await renderSidebar();
@@ -387,7 +408,7 @@ async function renderSidebar() {
         groups.forEach((g) => {
             const div = document.createElement("div");
             div.className =
-            "group-item" + (g.id === selectedGroup ? " active" : "");
+                "group-item" + (g.id === selectedGroup ? " active" : "");
             div.textContent = g.name;
             div.tabIndex = 0;
 
@@ -396,7 +417,7 @@ async function renderSidebar() {
                     setSelectedGroup(g.id);
                     setCurrentDM(null);
                     localStorage.setItem("selectedGroup", selectedGroup);
-//                    localStorage.setItem("selectedGroup", ""); // да что же это за гениальный ИИ такой...
+                    //                    localStorage.setItem("selectedGroup", ""); // да что же это за гениальный ИИ такой...
                     renderSidebar();
                     startChat();
 
@@ -428,7 +449,7 @@ async function renderSidebar() {
 
     if (selectedGroup) {
         groupNameDisplay.textContent =
-        groups.find((g) => g.id === selectedGroup)?.name || "—";
+            groups.find((g) => g.id === selectedGroup)?.name || "—";
     } else if (currentDM) {
         const prof = await loadProfile(currentDM.otherUid);
         groupNameDisplay.textContent = "" + (prof.nick || "Безымянный"); //ЛС с
@@ -458,7 +479,7 @@ async function loadProfile(uid) {
     try {
         const snap = await getDoc(doc(db, "profiles", uid));
         const data = snap.exists() ? snap.data() : {};
-        profilesCache[uid] = data;
+        addProfileCache(uid, data);
         return data;
     } catch (e) {
         console.warn("Ошибка загрузки профиля", e);
@@ -475,13 +496,13 @@ async function startChat() {
     if (currentDM) {
         await setDoc(
             doc(db, "dmChats", currentDM.chatId),
-                     { uids: [currentUser.uid, currentDM.otherUid] },
-                     { merge: true }
+            { uids: [currentUser.uid, currentDM.otherUid] },
+            { merge: true }
         );
 
         const q = query(
             collection(db, "dmChats", currentDM.chatId, "messages"),
-                        orderBy("createdAt", "asc")
+            orderBy("createdAt", "asc")
         );
         setUnsubscribe(onSnapshot(q, async (snap) => {
 
@@ -523,7 +544,7 @@ async function startChat() {
     } else if (selectedGroup) {
         const q = query(
             collection(db, "groups", selectedGroup, "messages"),
-                        orderBy("createdAt", "asc")
+            orderBy("createdAt", "asc")
         );
         let lastDate = "";
 
@@ -596,12 +617,13 @@ async function openDMChat(chatId, otherUid) {
     setSelectedGroup(null);
     setCurrentDM({ chatId: chatId, otherUid: otherUid });
     localStorage.setItem("selectedGroup", "");
+    localStorage.setItem("currentDM".JSON.stringify(currentDM))
 
     // Создаём/обновляем чат-документ заранее, чтобы Firestore разрешил чтение
     await setDoc(
         doc(db, "dmChats", chatId),
-                 { uids: [currentUser.uid, otherUid] },
-                 { merge: true }
+        { uids: [currentUser.uid, otherUid] },
+        { merge: true }
     );
 
     renderSidebar();
@@ -630,20 +652,20 @@ chatInputForm.addEventListener("submit", async (e) => {
         if (selectedGroup) {
             await addDoc(
                 collection(db, "groups", selectedGroup, "messages"),
-                         data
+                data
             );
             drafts[selectedGroup] = "";
         } else if (currentDM?.chatId) {
             // Создаём/обновляем метадату чата (массив участников)
             await setDoc(
                 doc(db, "dmChats", currentDM.chatId),
-                         { uids: [currentUser.uid, currentDM.otherUid] },
-                         { merge: true }
+                { uids: [currentUser.uid, currentDM.otherUid] },
+                { merge: true }
             );
 
             await addDoc(
                 collection(db, "dmChats", currentDM.chatId, "messages"),
-                         data
+                data
             );
             drafts[currentDM.chatId] = "";
         }
@@ -741,22 +763,3 @@ userModalMsgBtn.onclick = async () => {
     messageInput.value = "";
     updateCharCount();
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-    const onboardingShown = localStorage.getItem("onboardingShown");
-    const onboarding = document.getElementById("onboarding");
-    const onboardingOk = document.getElementById("onboardingOk");
-    const dontShowAgain = document.getElementById("dontShowAgain");
-
-    if (!onboardingShown) {
-        onboarding.style.display = "flex";
-    }
-
-    onboardingOk.addEventListener("click", () => {
-        if (dontShowAgain.checked) {
-            localStorage.setItem("onboardingShown", "true");
-        }
-        onboarding.style.display = "none";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-});

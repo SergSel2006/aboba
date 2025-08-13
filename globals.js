@@ -43,52 +43,62 @@ export const joinGroupCode = document.getElementById("joinGroupCode");
 export const joinGroupPassword = document.getElementById("joinGroupPassword");
 export const joinGroupError = document.getElementById("joinGroupError");
 
+// @ts-check
 // Состояния
 export let currentUser;
 export let groups = [];
 export let selectedGroup = null;
-export let selectedChat = {"id": null, "isGroup": false};
+export let selectedChat = { "id": null, "isGroup": false };
 export let currentDM = null;
 export let unsubscribe = null;
 export let drafts = {};
 export let dmChats = [];
+export let profilesCache = {};
 
 // Флаги
 export const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
 // Функции обновления состояний (для других модулей)
 export function setCurrentUser(user) {
-  currentUser = user;
+    currentUser = user;
 }
 
 export function setGroups(g) {
-  groups = g;
+    groups = g;
 }
 
 export function addGroup(g) {
-  groups.push(g)
+    groups.push(g)
 }
 
 export function setSelectedGroup(sg) {
-  selectedGroup = sg;
+    selectedGroup = sg;
 }
 
 export function setCurrentDM(dm) {
-  currentDM = dm;
+    currentDM = dm;
 }
 
 export function setUnsubscribe(fn) {
-  unsubscribe = fn;
+    unsubscribe = fn;
 }
 
 export function setDrafts(dr) {
-  drafts = dr
+    drafts = dr
 }
 
 export function setDMChats(dmc) {
-  dmChats = dmc
+    dmChats = dmc
 }
 
 export function addDMchat(dmc) {
-  dmChats.push(dmc)
+    dmChats.push(dmc)
+}
+
+export function setProfilesCache(pc) {
+    profilesCache = pc
+}
+
+export function addProfileCache(key, pc) {
+    profilesCache[key] = pc
 }
