@@ -1,4 +1,24 @@
-import { db, auth } from "./auth.js"
+const regServiceWorker = async () => {
+    if ("serviceWorker" in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register("/serviceWorker.js")
+            if (registration.installing) {
+                console.log("ServiceWorker is being installed")
+            } else if (registration.waiting) {
+                console.log("New ServiceWorker installed, waiting for activation")
+            } else if (registration.active) {
+                console.log("ServiceWorker was activated.")
+            }
+        }
+        catch (e) {
+            console.error(`ServiceWorker registration failed with {e}`)
+        }
+    }
+}
+regServiceWorker();
+
+import "./splash.js"
+import { db, auth } from "./auth.js";
 import { hideSplash } from "./splash.js";
 import {
     collection,
@@ -16,8 +36,9 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 import { formatDate, formatTime } from "./util.js";
 import { updateCharCount } from "./input.js";
-import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDMChats, addGroup, addProfileCache, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts, profilesCache } from "./globals.js"
-import "./storage.js"
+import { setCurrentUser, setGroups, setSelectedGroup, setCurrentDM, setUnsubscribe, setDMChats, addGroup, addProfileCache, groups, currentUser, selectedGroup, currentDM, unsubscribe, addDMchat, dmChats, drafts, profilesCache } from "./globals.js";
+import "./storage.js";
+import "./input.js";
 
 // @ts-check
 
@@ -53,6 +74,7 @@ const joinGroupName = document.getElementById("joinGroupName");
 const joinGroupCode = document.getElementById("joinGroupCode");
 const joinGroupPassword = document.getElementById("joinGroupPassword");
 const joinGroupError = document.getElementById("joinGroupError");
+
 
 function updateChatInputVisibility() { // Видимость строки ввода сообщения
     const chatInput = document.getElementById("chatInput");
@@ -168,7 +190,7 @@ onAuthStateChanged(auth, async (user) => {
         chatLayout.style.display = "flex";
         profileBtn.style.display = "flex";
         openJoinModalBtn.style.display = "block";
-        await loadUserProfile();
+        await loadUserProfile(user.uid);
 
         const currentNick = profileNick.value.trim().toLowerCase();
         if (!currentNick || currentNick === "безымянный") {
@@ -176,7 +198,7 @@ onAuthStateChanged(auth, async (user) => {
             profileBtn.setAttribute("aria-expanded", "true");
             profilePanel.focus();
             addSystemMessage("Пожалуйста, выбери уникальный ник для профиля");
-            return;
+            // return; //??? Зачем?
         }
 
         await loadUserGroups();
@@ -286,7 +308,7 @@ profileForm.addEventListener("submit", async (e) => {
 
 // Загружаем профиль пользователя
 async function loadUserProfile() {
-    let d = loadProfile(currentUser.uid)
+    let d = await loadProfile(currentUser.uid)
     profileNick.value = d.nick || "";
     profileAvatar.value = d.avatar || "";
     profileColor.value = d.color || "#cccccc";
