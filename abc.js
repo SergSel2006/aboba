@@ -8,6 +8,7 @@ export class abcMessage {
     sent; // Отправлено ли это сообщение или принятно. Удобно если захочется сделать отправленные сообщения с другой стороны приходящим.
     chat; // что-то из abcChat, источник этого сообщения.
     encrypted = false;
+    timestamp;
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
@@ -19,7 +20,7 @@ export class abcMessage {
         // (Хотя на самом деле нет лол)
     }
 }
-// Это тот самый класс, который можно хранить и передавать. decrypt обязань возвращать что-то из abcMessage типов
+// Это тот самый класс, который можно хранить и передавать. decrypt обязан возвращать что-то из abcMessage типов
 export class abcEncMessage extends abcMessage {
     encKeyDigest;
     encrypted = true;
@@ -77,6 +78,7 @@ export class abcChat {
     psk;
     messages;
     members; // Думаю, список профилей для чатов не помешает...
+    lastTimestamp; // время последнего полученного сообщения...
 
     constructor() {
         if (this.constructor === abcMessage) throw new Error("Cannot instantiate Base Class");
@@ -97,4 +99,7 @@ export class abcChat {
         // наверное должен генерировать эвенты при получении новых сообщений..
         throw new Error("setupFetch not implemented")
     }
-}
+    fetchMessages() {
+        // Попросту найти все сообщения...
+        throw new Error("fetchMessages not implemented")
+    }
